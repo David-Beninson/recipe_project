@@ -436,4 +436,6 @@ recipe_project/
 ---
 
 **Made by**: David Beninson and Oliver Radivan
+---
+
 **Last Updated**: June 2026
