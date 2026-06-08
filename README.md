@@ -435,5 +435,5 @@ recipe_project/
 
 ---
 
-**Made by**: Your Team  
+**Made by**: David Beninson 
 **Last Updated**: June 2026
