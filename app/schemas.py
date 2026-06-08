@@ -1,11 +1,15 @@
-from pydantic_settings import BaseSettings
+from pydantic import BaseModel
 
-#log in or log out schema
-class User(BaseSettings):
+class UserBase(BaseModel):
     user_name: str
     password: str
 
-#sign in new user schema
-class SignInUser(BaseSettings):
+class UserCreate(UserBase):
+    pass
+
+class UserOut(BaseModel):
     id: int
-    user:User
+    user_name: str
+
+    class Config:
+        orm_mode = True
