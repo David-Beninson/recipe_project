@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict
-from typing import Optional
+from typing import Optional, List
 
 class UserBase(BaseModel):
     user_name: str
@@ -19,3 +19,12 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     id: Optional[int] = None
+
+class RecipeSearchParams(BaseModel):
+    ingredients: str
+    number: int = 5
+
+class SubstituteResponse(BaseModel):
+    ingredient: str
+    substitutes: List[str]
+    message: str

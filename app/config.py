@@ -8,6 +8,8 @@ class Settings(BaseSettings):
     database_username: str
     secret_key: str
     algorithm: str
+    spoonacular_api_key:str
+    spoonacular_url:str
     model_config = SettingsConfigDict(env_file=".env")
 
 settings = Settings()
