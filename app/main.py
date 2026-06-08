@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import user
 from app.database import engine
 from app.models import Base
+from app.routers import user_router, auth_router
 
 app = FastAPI()
 origins = ["*"]
@@ -19,7 +19,8 @@ async def startup():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-app.include_router(user.router)
+app.include_router(user_router)
+app.include_router(auth_router)
 
 @app.get("/")
 def root():
