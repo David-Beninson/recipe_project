@@ -94,5 +94,3 @@ async def get_current_user(
     
     # Return the user object so endpoints can access current_user
     return user
-
-    return user
