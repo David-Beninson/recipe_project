@@ -5,6 +5,8 @@ from app.database import engine
 from app.models import Base
 from app.routers import user_router, auth_router, find_recipes
 from contextlib import asynccontextmanager
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -13,13 +15,8 @@ async def lifespan(app: FastAPI):
         await conn.run_sync(Base.metadata.create_all)
     yield
 
-
 app = FastAPI(lifespan=lifespan)
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
 
-
-app = FastAPI()
 origins = ["*"]
 app.add_middleware(
     CORSMiddleware,
@@ -33,17 +30,16 @@ app.include_router(user_router)
 app.include_router(auth_router)
 app.include_router(find_recipes)
 
+# 2. חיבור תיקיית הפרונטנד וקבצי ה-HTML
+app.mount("/static", StaticFiles(directory="frontend/client"), name="static")
 
 @app.get("/")
 def root():
-    """Health check endpoint - returns a simple message."""
     return {"message": "Hello World"}
-app.mount("/static", StaticFiles(directory="frontend/client"), name="static")
 
 @app.get("/login")
 def login_page():
     return FileResponse("frontend/client/loggingin.html")
-
 
 @app.get("/register")
 def register_page():
@@ -53,6 +49,5 @@ def register_page():
 def home_page():
     return FileResponse("frontend/client/home.html")
 
-
 if __name__ == "__main__":
-    uvicorn.run("client:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run("app.main:app", host="127.0.0.1", port=8000, reload=True)
