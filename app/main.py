@@ -1,6 +1,5 @@
-from app.config import settings
-
-print("DATABASE_HOSTNAME =", settings.database_hostname)
+import uvicorn
+from app.config import Settings as settings
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -61,3 +60,7 @@ def register_page():
 @app.get("/home")
 def home_page():
     return FileResponse("frontend/client/home.html")
+
+
+if __name__ == "__main__":
+    uvicorn.run("client:app", host="127.0.0.1", port=8000, reload=True)
