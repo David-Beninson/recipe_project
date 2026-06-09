@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Recipe App</title>
+  <link rel="stylesheet" href="home.css">
+</head>
+
+<body>
+
+  <nav>
+    <h1>🍴 Recipe App</h1>
+    <a href="loggingin.html">Log out</a>
+  </nav>
+
+  <div class="main-content">
+
+    <div class="sidebar">
+      <h3>Add Recipe</h3>
+      <form id="add-recipe-form">
+
+        <input type="text" id="title" placeholder="Recipe name" required><br>
+        <textarea id="ingredients" placeholder="Ingredients..." rows="4"></textarea><br>
+        <textarea id="instructions" placeholder="Instructions..." rows="4"></textarea><br>
+        <button type="submit">Add Recipe</button>
+
+      </form>
+    </div>
+
+    <div class="recipes">
+      <h2>My Recipes</h2>
+      <div id="recipe-list">
+        <!-- recipes will appear here -->
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>

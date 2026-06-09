@@ -1,6 +1,12 @@
+from app.config import settings
+
+print("DATABASE_HOSTNAME =", settings.database_hostname)
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import user
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 
 app = FastAPI()
@@ -15,6 +21,16 @@ app.add_middleware(
 
 app.include_router(user.router)
 
-@app.get("/")
-def root():
-    return {"message": "Hello World"}
+app.mount("/static", StaticFiles(directory="frontend/client"), name="static")
+
+@app.get("/login")
+def login_page():
+    return FileResponse("frontend/client/loggingin.html")
+
+@app.post("/register")
+def register_page():
+    return FileResponse("frontend/client/register.html")
+
+@app.get("/home")
+def home_page():
+    return FileResponse("frontend/client/home.html")
