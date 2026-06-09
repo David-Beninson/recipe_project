@@ -1,6 +1,3 @@
-from app.config import settings
-
-print("DATABASE_HOSTNAME =", settings.database_hostname)
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -27,7 +24,8 @@ app.mount("/static", StaticFiles(directory="frontend/client"), name="static")
 def login_page():
     return FileResponse("frontend/client/loggingin.html")
 
-@app.post("/register")
+
+@app.get("/register")
 def register_page():
     return FileResponse("frontend/client/register.html")
 
