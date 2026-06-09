@@ -1,0 +1,11 @@
+{% macro render_recipes(title="My Recipes", recipes=[]) %}
+<div class="recipes-container">
+    {% for recipe in recipes %}
+    <div class="recipe-item">
+        <h4>{{ recipe.name }}</h4>
+    </div>
+    {% else %}
+    <p>No recipes found.</p>
+    {% endfor %}
+</div>
+{% endmacro %}

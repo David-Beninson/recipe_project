@@ -1,6 +1,5 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, List
-
 
 # User-related request/response schemas
 class UserBase(BaseModel):
@@ -44,3 +43,35 @@ class SubstituteResponse(BaseModel):
     ingredient: str
     substitutes: List[str]
     message: str
+
+# --- Recipe Schemas (Using Pydantic) ---
+
+class Ingredient(BaseModel):
+    id: int
+    amount: float
+    unit: str
+    unit_long: str = Field(alias="unitLong")
+    unit_short: str = Field(alias="unitShort")
+    aisle: str
+    name: str
+    original: str
+    original_name: str = Field(alias="originalName")
+    meta: List[str]
+    image: str
+    extended_name: Optional[str] = Field(None, alias="extendedName")
+
+    model_config = ConfigDict(populate_by_name=True)
+
+class Recipe(BaseModel):
+    id: int
+    title: str
+    image: str
+    image_type: str = Field(alias="imageType")
+    used_ingredient_count: int = Field(alias="usedIngredientCount")
+    missed_ingredient_count: int = Field(alias="missedIngredientCount")
+    likes: int
+    missed_ingredients: List[Ingredient] = Field(alias="missedIngredients")
+    used_ingredients: List[Ingredient] = Field(alias="usedIngredients")
+    unused_ingredients: List[Ingredient] = Field(alias="unusedIngredients")
+
+    model_config = ConfigDict(populate_by_name=True)

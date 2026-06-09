@@ -1,8 +1,9 @@
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession  
 from sqlalchemy import select
 import httpx
-from app.schemas import RecipeSearchParams
+from app.schemas import RecipeSearchParams, Recipe as RecipeSchema 
 from ..config import settings
 from ..database import get_db
 from app import models 
@@ -13,7 +14,7 @@ from app.utils import oauth2
 router = APIRouter(prefix="/recipes", tags=["recipes"])
 
 
-@router.get("/find-by-ingredients")
+@router.get("/find-by-ingredients", response_model=List[RecipeSchema])
 async def find_recipes(
     params: RecipeSearchParams = Depends(),
     db: AsyncSession = Depends(get_db), 
@@ -51,21 +52,25 @@ async def find_recipes(
         
         data = response.json()
         
+        # Pydantic Models
+        recipes = [RecipeSchema.model_validate(item) for item in data]
+        
         # Process each recipe returned from API
-        for r_data in data:
-            # Check if recipe already exists in database (avoid duplicates)
-            stmt = select(models.Recipe).filter(models.Recipe.spoonacular_id == r_data['id'])
+        for recipe_obj in recipes:
+            # Check if recipe already exists in database
+            stmt = select(models.Recipe).filter(models.Recipe.spoonacular_id == recipe_obj.id)
             result = await db.execute(stmt)
             recipe = result.scalars().first()
             
             # If recipe is new, save it to database
             if not recipe:
                 recipe = models.Recipe(
-                    spoonacular_id=r_data['id'], 
-                    title=r_data['title'], 
-                    raw_data=r_data
+                    spoonacular_id=recipe_obj.id, 
+                    title=recipe_obj.title, 
+                    raw_data=recipe_obj.model_dump()
                 )
                 db.add(recipe)
+                await db.flush()
             
             # Link this recipe to the user's search
             new_search.recipes.append(recipe)
