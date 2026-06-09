@@ -1,4 +1,4 @@
-{% from 'components/recipe.html' import render_recipes %}
+{% from 'components/recipe.html' import render_recipes, mock_recipes %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -30,9 +30,8 @@
     </div>
 
     <div class="recipes">
-      <h2>My Recipes</h2>
       <div id="recipe-list">
-        {{ render_recipes(recipes=user_recipes) }}
+        {{ render_recipes(title="My Mock Recipes", recipes=mock_recipes) }}
       </div>
     </div>
   </section>

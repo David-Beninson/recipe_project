@@ -1,0 +1,18 @@
+.recipe-item {
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.recipe-item summary {
+    font-weight: bold;
+    outline: none;
+}
+
+.recipe-details {
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-top: 1px solid #eee;
+}
