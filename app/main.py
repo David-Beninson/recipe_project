@@ -1,8 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
-from app.database import AsyncSessionLocal, engine
+from app.database import SessionLocal, engine
 from app.models import Base, User
-import asyncio
 import os
 from functools import wraps
 from pathlib import Path
@@ -25,11 +24,7 @@ def init_db_sync():
         return
     
     try:
-        async def setup_tables():
-            async with engine.begin() as conn:
-                await conn.run_sync(Base.metadata.create_all)
-        
-        asyncio.run(setup_tables())
+        Base.metadata.create_all(engine)
         db_initialized = True
     except Exception as e:
         print(f"Database initialization error: {e}")
@@ -66,15 +61,11 @@ def login():
         
         # Check user in database
         try:
-            async def check_user():
-                async with AsyncSessionLocal() as db:
-                    from sqlalchemy import select
-                    stmt = select(User).filter(User.user_name == username)
-                    result = await db.execute(stmt)
-                    return result.scalars().first()
-            
-            user = asyncio.run(check_user())
-            
+            with SessionLocal() as db:
+                from sqlalchemy import select
+                stmt = select(User).filter(User.user_name == username)
+                user = db.execute(stmt).scalars().first()
+                        
             if user and check_password_hash(user.password, password):
                 session['user_id'] = user.id
                 session['username'] = user.user_name
@@ -115,25 +106,18 @@ def register():
         
         # Save user to database
         try:
-            async def create_user():
-                async with AsyncSessionLocal() as db:
-                    from sqlalchemy import select
-                    
-                    # Check if user already exists
-                    stmt = select(User).filter(User.user_name == username)
-                    result = await db.execute(stmt)
-                    if result.scalars().first():
-                        return None
-                    
-                    # Create new user with hashed password
+            with SessionLocal() as db:
+                from sqlalchemy import select
+                
+                stmt = select(User).filter(User.user_name == username)
+                result = db.execute(stmt)
+                if result.scalars().first():
+                    new_user = None
+                else:
                     hashed_password = generate_password_hash(password)
                     new_user = User(user_name=username, password=hashed_password)
                     db.add(new_user)
-                    await db.commit()
-                    await db.refresh(new_user)
-                    return new_user
-            
-            new_user = asyncio.run(create_user())
+                    db.commit()
             
             if new_user is None:
                 flash('Username already exists', 'error')
