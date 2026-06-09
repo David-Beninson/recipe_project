@@ -1,3 +1,7 @@
+from app.config import settings
+
+print("DATABASE_HOSTNAME =", settings.database_hostname)
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine
@@ -19,6 +23,12 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 # CORS configuration - allow all origins for frontend communication
+from app.routers import user
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
+
+app = FastAPI()
 origins = ["*"]
 app.add_middleware(
     CORSMiddleware,
@@ -38,3 +48,16 @@ app.include_router(find_recipes)
 def root():
     """Health check endpoint - returns a simple message."""
     return {"message": "Hello World"}
+app.mount("/static", StaticFiles(directory="frontend/client"), name="static")
+
+@app.get("/login")
+def login_page():
+    return FileResponse("frontend/client/loggingin.html")
+
+@app.post("/register")
+def register_page():
+    return FileResponse("frontend/client/register.html")
+
+@app.get("/home")
+def home_page():
+    return FileResponse("frontend/client/home.html")

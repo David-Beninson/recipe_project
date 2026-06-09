@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="login.css">
+</head>
+
+<body>
+
+  <div class="input-group">
+
+    <h3>create account</h3>
+    <form id="bubble" action="/register" method="post">
+
+      <label for="name">Username:</label><br>
+      <input type="text" id="name" name="name" required><br><br>
+
+      <label for="password">Password:</label><br>
+      <input type="password" id="password" name="password" required><br><br>
+
+      <label for="confirm">Confirm Password:</label><br>
+      <input type="password" id="confirm" name="confirm" required><br><br>
+
+      <p id="error" style="color:red; display:none">Passwords do not match!</p>
+
+      <input type="submit" value="create account">
+    </form>
+
+    <p id="link">aleady have an account?<a href="C:\Users\olive\OneDrive\Documents\python\myproject\firstwebsite\myfirstwebsite\recipe_project\frontend\client\loggingin.html"> log in</a></p>
+
+  </div>
+
+</body>
+</html>
