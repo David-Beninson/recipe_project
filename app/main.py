@@ -30,7 +30,6 @@ app.include_router(user_router)
 app.include_router(auth_router)
 app.include_router(find_recipes)
 
-# 2. חיבור תיקיית הפרונטנד וקבצי ה-HTML
 app.mount("/static", StaticFiles(directory="frontend/client"), name="static")
 
 @app.get("/")
