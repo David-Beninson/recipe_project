@@ -1,39 +1,39 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-  <title>Recipe App</title>
-  <link rel="stylesheet" href="home.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+  <title>Home - Recipe App</title>
 </head>
 
 <body>
-
-  <nav>
-    <h1>🍴 Recipe App</h1>
-    <a href="loggingin.html">Log out</a>
+  <nav id="main-nav">
+    <div class="nav-links">
+      <span>Welcome, {{ username }}!</span>
+      <a href="{{ url_for('logout') }}">Log out</a>
+    </div>
   </nav>
 
-  <div class="main-content">
-
+  <section class="main-content">
     <div class="sidebar">
       <h3>Add Recipe</h3>
       <form id="add-recipe-form">
-
         <input type="text" id="title" placeholder="Recipe name" required><br>
         <textarea id="ingredients" placeholder="Ingredients..." rows="4"></textarea><br>
         <textarea id="instructions" placeholder="Instructions..." rows="4"></textarea><br>
         <button type="submit">Add Recipe</button>
-
       </form>
     </div>
 
     <div class="recipes">
       <h2>My Recipes</h2>
       <div id="recipe-list">
-        <!-- recipes will appear here -->
+        <!-- Recipes will appear here -->
       </div>
     </div>
-
-  </div>
-
+  </section>
 </body>
+
 </html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+  <title>Sign Up - Recipe App</title>
+</head>
+
+<body>
+  <div class="input-group">
+    <h3>Create Account</h3>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }}">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+    <form id="bubble" method="post" onsubmit="return validatePasswords()">
+      <label for="name">Username:</label><br>
+      <input type="text" id="name" name="name" required><br><br>
+
+      <label for="password">Password:</label><br>
+      <input type="password" id="password" name="password" required><br><br>
+
+      <label for="confirm">Confirm Password:</label><br>
+      <input type="password" id="confirm" name="confirm" required><br><br>
+
+      <p id="error" style="color:red; display:none">Passwords do not match!</p>
+
+      <input type="submit" value="Create Account">
+    </form>
+
+    <p id="link">Already have an account? <a href="{{ url_for('login') }}">Log in</a></p>
+  </div>
+
+  <script>
+    function validatePasswords() {
+      const password = document.getElementById('password').value;
+      const confirm = document.getElementById('confirm').value;
+      const error = document.getElementById('error');
+
+      if (password !== confirm) {
+        error.style.display = 'block';
+        return false;
+      }
+      error.style.display = 'none';
+      return true;
+    }
+  </script>
+</body>
+
+</html>
