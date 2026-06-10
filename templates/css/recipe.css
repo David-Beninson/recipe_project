@@ -16,3 +16,47 @@
     background-color: #f9f9f9;
     border-top: 1px solid #eee;
 }
+
+.recipe-card {
+    background-color: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    margin: 20px auto;
+}
+
+.recipe-card h1 {
+    color: #e74c3c;
+    margin-bottom: 10px;
+}
+
+.info-section h3 {
+    color: #e74c3c;
+    margin-bottom: 10px;
+    border-bottom: 2px solid #e74c3c;
+    display: inline-block;
+}
+
+.info-section ul {
+    list-style-type: disc;
+    padding-left: 20px;
+}
+
+.instructions {
+    line-height: 1.6;
+    color: #444;
+}
+
+.recipe-actions a {
+    display: inline-block;
+    padding: 10px 15px;
+    background-color: #e74c3c;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background 0.3s;
+}
+
+.recipe-actions a:hover {
+    background-color: #c0392b;
+}

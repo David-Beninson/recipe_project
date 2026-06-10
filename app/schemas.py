@@ -36,6 +36,8 @@ class RecipeSearchParams(BaseModel):
     """Parameters for searching recipes by ingredients."""
     ingredients: str  # Comma-separated list of ingredients
     number: int = 5   # Number of recipes to return (default: 5)
+    ranking: int = 1
+    ignorePantry: bool = True
 
 
 class SubstituteResponse(BaseModel):

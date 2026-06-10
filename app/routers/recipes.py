@@ -43,7 +43,9 @@ async def find_recipes(
         response = await client.get(settings.spoonacular_url, params={
             "apiKey": settings.spoonacular_api_key,
             "ingredients": params.ingredients,
-            "number": params.number
+            "number": params.number,
+            "ranking": params.ranking,
+            "ignorePantry": params.ignorePantry
         })
         
         # Handle API errors
@@ -79,47 +81,84 @@ async def find_recipes(
         await db.commit()
         return data
 
+@router.get("/{recipe_id}/information")
+async def get_recipe_info(
+    recipe_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    # Check if recipe exists in DB first to save API calls
+    stmt = select(models.Recipe).filter(models.Recipe.spoonacular_id == recipe_id)
+    result = await db.execute(stmt)
+    recipe = result.scalars().first()
+    
+    # If found in DB, return stored data
+    if recipe and recipe.raw_data and "instructions" in recipe.raw_data:
+        return recipe.raw_data
 
+    # If not in DB, fetch from Spoonacular
+    info_url = f"https://api.spoonacular.com/recipes/{recipe_id}/information"
+    async with httpx.AsyncClient() as client:
+        response = await client.get(info_url, params={
+            "apiKey": settings.spoonacular_api_key,
+            "includeNutrition": True 
+        })
+        
+        if response.status_code != 200:
+            raise HTTPException(status_code=502, detail="Spoonacular API error")
+        
+        data = response.json()
+        
+        # Save or update recipe in DB
+        if not recipe:
+            recipe = models.Recipe(
+                spoonacular_id=recipe_id, 
+                title=data['title'], 
+                raw_data=data
+            )
+            db.add(recipe)
+        else:
+            recipe.raw_data = data
+            
+        await db.commit()
+        return data  
+    
 @router.get("/substitutes")
 async def get_substitutes(
-    ingredient: str, 
+    ingredient: str,
+    amount: float = None, 
+    unit: str = None,    
     db: AsyncSession = Depends(get_db)
 ):
-    """Get substitute ingredients for a given ingredient.
+    cache_key = f"{ingredient}_{amount}_{unit}"
     
-    Query parameters:
-        - ingredient: The ingredient to find substitutes for (e.g., "milk")
-        
-    Returns:
-        Dictionary with list of substitute ingredients
-        
-    Details:
-        - First checks if we have cached substitutes in database
-        - If not cached, fetches from Spoonacular API and caches for future use
-        - No authentication required for this endpoint
-    """
-    # Check if we already have substitutes cached for this ingredient
     stmt = select(models.IngredientSubstitute).filter(
-        models.IngredientSubstitute.ingredient_name == ingredient
+        models.IngredientSubstitute.ingredient_name == cache_key
     )
     result = await db.execute(stmt)
     cached = result.scalars().first()
     
-    # Return cached data if available
     if cached:
         return {"ingredient": ingredient, "substitutes": cached.substitutes}
 
-    # If not cached, fetch from Spoonacular API
-    url = f"https://api.spoonacular.com/food/ingredients/substitutes?ingredientName={ingredient}&apiKey={settings.spoonacular_api_key}"
+    # Fetch with optional parameters
+    params = {"ingredientName": ingredient, "apiKey": settings.spoonacular_api_key}
+    if amount: params["amount"] = amount
+    if unit: params["unit"] = unit
+
     async with httpx.AsyncClient() as client:
-        res = await client.get(url)
-        data = res.json()
+        response = await client.get("https://api.spoonacular.com/food/ingredients/substitutes", params=params)
         
-        # Cache the result for future requests
+        if response.status_code != 200:
+            raise HTTPException(status_code=502, detail="API error")
+            
+        data = response.json()
+        
+        # Save to DB with the unique cache key
         new_sub = models.IngredientSubstitute(
-            ingredient_name=ingredient, 
-            substitutes=data['substitutes']
+            ingredient_name=cache_key, 
+            substitutes=data.get('substitutes', [])
         )
         db.add(new_sub)
         await db.commit() 
+        
         return data
