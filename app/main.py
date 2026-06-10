@@ -131,9 +131,18 @@ def register():
     
     return render_template('components/register.html')
 
-@app.get("/home")
-def home_page():
-    return FileResponse("frontend/client/home.html")
+@app.route('/home')
+@login_required
+def home():
+    """Home page after login."""
+    return render_template('components/home.html', username=session.get('username'))
+
+@app.route('/logout')
+def logout():
+    """Logout user."""
+    session.clear()
+    flash('Logged out successfully', 'success')
+    return redirect(url_for('login'))
 
 if __name__ == '__main__':
     app.run(debug=True, host='127.0.0.1', port=5000)

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+  <title>Login - Recipe App</title>
+</head>
+
+<body>
+  <div class="input-group">
+    <h3>Log In</h3>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }}">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+    <form id="bubble" method="post">
+      <label for="name">Username:</label><br>
+      <input type="text" id="name" name="name" required><br><br>
+
+      <label for="password">Password:</label><br>
+      <input type="password" id="password" name="password" required><br><br>
+
+      <input type="submit" value="Log In">
+    </form>
+
+    <p id="link">Don't have an account? <a href="{{ url_for('register') }}">Sign up</a></p>
+  </div>
+</body>
+
+</html>
