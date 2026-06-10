@@ -77,3 +77,20 @@ class Recipe(BaseModel):
     unused_ingredients: List[Ingredient] = Field(alias="unusedIngredients")
 
     model_config = ConfigDict(populate_by_name=True)
+
+
+# --- Custom Recipe Schemas ---
+
+class CustomIngredient(BaseModel):
+    name: str
+    originalAmount: str
+    qty: float
+    unitString: str
+    usedQty: float
+
+
+class CustomRecipeCreate(BaseModel):
+    title: str
+    ingredients: List[CustomIngredient]
+    instructions: str
+    image: Optional[str] = None

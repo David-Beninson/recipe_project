@@ -279,6 +279,40 @@ Example response:
 }
 ```
 
+### 3. Add custom recipe
+
+`POST /recipes/custom`
+
+Requires authentication.
+
+Request body (JSON, matches `CustomRecipeCreate` Pydantic schema):
+
+```json
+{
+  "title": "Grandma's Tomato Soup",
+  "ingredients": [
+    {
+      "name": "tomato",
+      "originalAmount": "4 large tomatoes",
+      "qty": 4.0,
+      "unitString": "large tomatoes",
+      "usedQty": 4.0
+    }
+  ],
+  "instructions": "<p>Boil tomatoes, blend, and serve hot.</p>",
+  "image": ""
+}
+```
+
+Response:
+
+```json
+{
+  "id": 1,
+  "title": "Grandma's Tomato Soup"
+}
+```
+
 ---
 
 ## 🧠 Database models
@@ -291,6 +325,7 @@ The app uses SQLAlchemy ORM models defined in `app.models`.
   * `id`
   * `user_name` (unique)
   * `password` (bcrypt hashed)
+  * `custom_recipes` (relationship linking to custom recipes created by this user)
 
 ### User searches
 
@@ -302,11 +337,12 @@ The app uses SQLAlchemy ORM models defined in `app.models`.
 
 ### Recipes
 
-* recipes` table stores:
+* `recipes` table stores:
   * `id`
-  * `spoonacular_id` (unique external recipe ID)
+  * `spoonacular_id` (unique external recipe ID, optional/nullable for custom user recipes)
   * `title`
-  * `raw_data` (JSON payload from Spoonacular)
+  * `raw_data` (JSON payload from Spoonacular or custom user input)
+  * `user_id` (foreign key to users, nullable, linking custom recipes to their creator)
 
 ### Ingredient substitutes
 

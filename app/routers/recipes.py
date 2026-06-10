@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession  
 from sqlalchemy import select
 import httpx
-from app.schemas import RecipeSearchParams, Recipe as RecipeSchema 
+from app.schemas import RecipeSearchParams, Recipe as RecipeSchema, CustomRecipeCreate 
 from ..config import settings
 from ..database import get_db
 from app import models 
@@ -81,18 +81,73 @@ async def find_recipes(
         await db.commit()
         return data
 
+@router.post("/custom", response_model=dict)
+async def create_custom_recipe(
+    recipe_in: CustomRecipeCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: models.User = Depends(oauth2.get_current_user)
+):
+    """Create a new custom recipe."""
+    title = recipe_in.title
+    ingredients = recipe_in.ingredients
+    instructions = recipe_in.instructions
+    image = recipe_in.image
+    
+    # Format raw_data to match Spoonacular response style for templates compatibility
+    extended_ingredients = []
+    used_ingredients = []
+    for ing in ingredients:
+        ing_item = {
+            "id": hash(ing.name) % 1000000,
+            "name": ing.name,
+            "original": f"{ing.name} - {ing.originalAmount}",
+            "amount": float(ing.qty),
+            "unit": ing.unitString
+        }
+        extended_ingredients.append(ing_item)
+        used_ingredients.append(ing_item)
+        
+    raw_data = {
+        "title": title,
+        "image": image,
+        "extendedIngredients": extended_ingredients,
+        "instructions": instructions,
+        "likes": 0,
+        "usedIngredientCount": len(used_ingredients),
+        "usedIngredients": used_ingredients,
+        "missedIngredientCount": 0,
+        "missedIngredients": [],
+        "unusedIngredients": []
+    }
+    
+    db_recipe = models.Recipe(
+        title=title,
+        raw_data=raw_data,
+        user_id=current_user.id
+    )
+    db.add(db_recipe)
+    await db.commit()
+    await db.refresh(db_recipe)
+    
+    # Update raw_data with DB recipe ID for the UI
+    raw_data["id"] = db_recipe.id
+    db_recipe.raw_data = raw_data
+    await db.commit()
+    
+    return {"id": db_recipe.id, "title": title}
+
 @router.get("/{recipe_id}/information")
 async def get_recipe_info(
     recipe_id: int,
     db: AsyncSession = Depends(get_db),
 ):
-    # Check if recipe exists in DB first to save API calls
-    stmt = select(models.Recipe).filter(models.Recipe.spoonacular_id == recipe_id)
+    # Check if recipe exists in DB first (checking both DB ID and spoonacular_id)
+    stmt = select(models.Recipe).filter((models.Recipe.id == recipe_id) | (models.Recipe.spoonacular_id == recipe_id))
     result = await db.execute(stmt)
     recipe = result.scalars().first()
     
-    # If found in DB, return stored data
-    if recipe and recipe.raw_data and "instructions" in recipe.raw_data:
+    # If found in DB and contains instructions or is custom, return stored data
+    if recipe and recipe.raw_data and ("instructions" in recipe.raw_data or recipe.user_id is not None):
         return recipe.raw_data
 
     # If not in DB, fetch from Spoonacular

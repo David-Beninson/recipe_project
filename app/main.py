@@ -155,11 +155,61 @@ def home():
                         recipe_data['id'] = r.spoonacular_id
                         recipe_data['title'] = r.title
                         user_recipes.append(recipe_data)
+            
+            # Load custom recipes added by the user
+            custom_stmt = select(Recipe).filter(Recipe.user_id == session['user_id'])
+            custom_recipes = db.execute(custom_stmt).scalars().all()
+            for r in custom_recipes:
+                recipe_data = r.raw_data if r.raw_data else {}
+                recipe_data['id'] = r.id
+                recipe_data['title'] = r.title
+                user_recipes.append(recipe_data)
+                
     except Exception as e:
         print(f"Error fetching user recipes: {e}")
         user_recipes = []
         
     return render_template('home.html', username=session.get('username'), user_recipes=user_recipes)
+
+@app.route('/add_recipe', methods=['POST'])
+@login_required
+def add_recipe():
+    """Route to add a custom recipe."""
+    import json
+    title = request.form.get('title')
+    ingredients_raw = request.form.get('ingredients')
+    instructions = request.form.get('instructions')
+    
+    try:
+        ingredients = json.loads(ingredients_raw) if ingredients_raw else []
+    except Exception as e:
+        print(f"Error parsing ingredients JSON: {e}")
+        ingredients = []
+        
+    # Generate JWT token for authenticate with FastAPI
+    token = create_access_token(data={"user_id": session['user_id']})
+    headers = {"Authorization": f"Bearer {token}"}
+    
+    payload = {
+        "title": title,
+        "ingredients": ingredients,
+        "instructions": instructions,
+        "image": ""
+    }
+    
+    try:
+        with httpx.Client() as client:
+            response = client.post("http://127.0.0.1:8000/recipes/custom", headers=headers, json=payload, timeout=10.0)
+            if response.status_code == 200:
+                flash("Recipe added successfully!", "success")
+            else:
+                flash(f"Backend API error: {response.text}", "error")
+    except Exception as e:
+        print(f"Connection error to backend: {e}")
+        flash("Failed to connect to backend service.", "error")
+        
+    return redirect(url_for('home'))
+
 
 @app.route('/search', methods=['GET', 'POST'])
 @login_required

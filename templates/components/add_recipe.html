@@ -1,10 +1,13 @@
 {% macro add_recipes() %}
 <h3>Recipe Builder</h3>
-<form id="add-recipe-form">
-    <input type="text" id="recipe-title" placeholder="Recipe name" required><br><br>
+<form id="add-recipe-form" action="{{ url_for('add_recipe') }}" method="POST">
+    <input type="text" id="recipe-title" name="title" placeholder="Recipe name" required><br><br>
 
     <label for="recipe-image">Upload Image / Take Photo:</label><br>
     <input type="file" id="recipe-image" accept="image/*" capture="environment"><br><br>
+
+    <input type="hidden" name="ingredients" id="hidden-ingredients">
+    <input type="hidden" name="instructions" id="hidden-instructions">
 
     <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 15px;">
         <h4>Add Ingredients</h4>
@@ -195,5 +198,10 @@
 
         setupDragAndDrop();
     }
+
+    document.getElementById('add-recipe-form').addEventListener('submit', () => {
+        document.getElementById('hidden-ingredients').value = JSON.stringify(ingredientsList);
+        document.getElementById('hidden-instructions').value = instructionsZone.innerHTML;
+    });
 </script>
 {% endmacro %}
