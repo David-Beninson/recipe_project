@@ -6,10 +6,26 @@
 </head>
 
 <body>
+  <nav id="main-nav">
+    <div class="nav-brand">
+      <h2>🍴 Recipe App</h2>
+    </div>
 
-  <nav>
-    <h1>🍴 Recipe App</h1>
-    <a href="loggingin.html">Log out</a>
+    <div class="nav-search">
+      <form action="/search" method="get">
+        <select name="search_type">
+          <option value="title">By Title</option>
+          <option value="ingredient">By Ingredient</option>
+        </select>
+        <input type="text" name="query" placeholder="Search recipes..." required>
+        <button type="submit">Search</button>
+      </form>
+    </div>
+
+    <div class="nav-links">
+      <span>Welcome, {{ username }}!</span>
+      <a href="{{ url_for('logout') }}">Log out</a>
+    </div>
   </nav>
 
   <div class="main-content">
