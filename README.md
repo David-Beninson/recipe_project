@@ -3,11 +3,12 @@
 A recipe search application built with FastAPI for the backend and Flask for the main frontend page.
 
 This repository includes:
-- FastAPI API endpoints for recipe search and ingredient substitutes
+- FastAPI API endpoints for recipe search, ingredient substitutes, and custom recipes
+- Async database operations using SQLAlchemy ORM and PostgreSQL
 - JWT user authentication and signup
-- PostgreSQL data storage with SQLAlchemy ORM
 - HTTPX integration to call Spoonacular for recipes and substitutes
-- Flask-based main page with login/register/home views
+- Flask-based web frontend with modern pages and modular styling
+- Jinja2 layout inheritance and template components
 - Unit tests for authentication and recipe endpoints
 
 ---
@@ -16,10 +17,11 @@ This repository includes:
 
 This app lets users:
 - Create an account and log in
-- Search for recipes by ingredients
-- Receive ingredient substitute suggestions
-- Save search history to the database
-- Cache recipes and substitute results for faster future responses
+- Search for recipes by ingredients with a configurable quantity limit (1-5 recipes)
+- Receive ingredient substitute suggestions dynamically in the UI by clicking ingredients
+- Save custom user recipes (with custom ingredient quantities and instructions) to their profile
+- Save search history and cache recipe details/ingredient substitutes in the database
+- View saved searches and custom recipes on their personalized home dashboard
 
 The project is split into two main parts:
 - `app.fast_api`: the FastAPI backend
@@ -34,14 +36,14 @@ recipe_project/
 ├── app/
 │   ├── __init__.py
 │   ├── config.py          # Load .env settings
-│   ├── database.py        # Async SQLAlchemy database initialization
+│   ├── database.py        # Async/Sync SQLAlchemy database initialization
 │   ├── fast_api.py        # FastAPI app and route registration
-│   ├── main.py            # Flask main page and login/register routes
-│   ├── models.py          # SQLAlchemy ORM models for users, recipes, searches, substitutes
+│   ├── main.py            # Flask main page and routes
+│   ├── models.py          # SQLAlchemy ORM models (User, Recipe, UserSearch, IngredientSubstitute)
 │   ├── routers/
 │   │   ├── __init__.py
 │   │   ├── auth.py        # Login endpoint
-│   │   ├── recipes.py     # Recipe search and substitutes endpoints
+│   │   ├── recipes.py     # Recipe searches, custom recipes, and substitutes
 │   │   └── user.py        # Signup endpoint
 │   ├── schemas.py         # Pydantic request/response schemas
 │   └── utils/
@@ -49,20 +51,21 @@ recipe_project/
 │       ├── oauth2.py      # JWT token validation and auth dependency
 │       └── password_hashing.py  # Password hashing and verification
 ├── templates/
-│   ├── base.html        
-│   ├── login.html 
-│   ├── register.html
-│   ├── home.html
-│   ├── cooking_steps.html
-│   ├── search.html
+│   ├── base.html          # Base layout template with navigation
+│   ├── login.html         # Login page
+│   ├── register.html      # Registration page
+│   ├── home.html          # User dashboard showing searched and custom recipes
+│   ├── cooking_steps.html # Recipe details and interactive ingredients
+│   ├── search.html        # Recipe search page
 │   └── components/
-│       └── recipe.html    
+│       ├── add_recipe.html # Custom recipe form component
+│       └── recipe.html     # Recipe card renderer macro
 ├── static/
 │   └── css/
-│       ├── style.css      
-│       ├── auth.css  
-│       ├── recipe.css    
-│       └── search.css
+│       ├── style.css      # Core variables, layout, and global styles
+│       ├── auth.css       # Styling and glow effects for auth forms
+│       ├── home.css       # Dashboards and card grids layout
+│       └── search.css     # Search and filter specific styling
 ├── tests/
 │   ├── __init__.py
 │   ├── conftest.py
@@ -205,12 +208,11 @@ Requires authentication.
 Query parameters:
 
 * `ingredients` (required): comma-separated ingredient list, e.g. `chicken,rice,garlic`
-* `number` (optional): maximum number of recipes to return, default is `5`
+* `number` (optional): maximum number of recipes to return (configured in search page between 1 and 5, default is 1)
 
 Example:
-
 ```
-GET /recipes/find-by-ingredients?ingredients=chicken,rice&number=5
+GET /recipes/find-by-ingredients?ingredients=chicken,rice&number=1
 ```
 
 What this endpoint does:
@@ -252,20 +254,24 @@ Does not require authentication.
 Query parameters:
 
 * `ingredient` (required): ingredient name to look up substitutions for, e.g. `milk`
+* `amount` (optional): numeric quantity of the ingredient to substitute
+* `unit` (optional): measurement unit (e.g. `cups`, `grams`)
 
 Example:
 
 ```
-GET /recipes/substitutes?ingredient=milk
+GET /recipes/substitutes?ingredient=milk&amount=1&unit=cup
 ```
 
 What this endpoint does:
 
-* Checks whether substitute data is already cached in the database
+* Formulates a cache key by combining the lowercase, trimmed `ingredient`, optional `amount`, and optional `unit` (e.g. `"milk_1.0_cup"` or `"milk"`)
+* Checks whether substitute data is already cached in the `ingredient_substitutes` table under the generated cache key
 * If cached, returns the cached substitute list immediately
-* Otherwise calls Spoonacular substitute API
-* Stores the response in `ingredient_substitutes`
+* Otherwise, queries the Spoonacular substitute API
+* Caches the list of substitutes in `ingredient_substitutes` under the cache key
 * Returns the substitute data
+
 Example response:
 
 ```json
