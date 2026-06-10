@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Main stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Page-specific stylesheets -->
+    {% block extra_css %}{% endblock %}
+    <title>{% block title %}Recipe App{% endblock %}</title>
+</head>
+
+<body>
+    <!-- Main Navigation Bar -->
+    <nav id="main-nav">
+        <div class="welcome-nav">
+            <h2>🍴 Recipe App</h2>
+            <span>Welcome, {{ username }}!</span>
+        </div>
+
+        <div class="nav-links">
+            <a href="{{ url_for('recipes.home') }}">Home</a>
+            <a href="{{ url_for('recipes.search') }}">Find Recipes</a>
+            <a href="{{ url_for('auth.logout') }}">Log out</a>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <div id="content" class="main-content">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Scripts Section -->
+    {% block extra_js %}{% endblock %}
+
+    <script>
+        document.addEventListener('click', async (event) => {
+            const likeBtn = event.target.closest('.btn-like-ajax');
+            if (!likeBtn) return;
+            
+            event.preventDefault();
+            const recipeId = likeBtn.getAttribute('data-recipe-id');
+            try {
+                const response = await fetch(`/recipe/${recipeId}/like`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Update all buttons with this recipe ID
+                    document.querySelectorAll(`.btn-like-ajax[data-recipe-id="${recipeId}"]`).forEach(btn => {
+                        if (data.status === 'liked') {
+                            btn.classList.add('liked');
+                        } else {
+                            btn.classList.remove('liked');
+                        }
+                    });
+                    
+                    // Update all likes count displays with this recipe ID
+                    document.querySelectorAll(`.recipe-likes-count[data-recipe-id="${recipeId}"]`).forEach(span => {
+                        if (data.likes !== undefined) {
+                            span.textContent = data.likes;
+                        }
+                    });
+                }
+            } catch (e) {
+                console.error('Error toggling like:', e);
+            }
+        });
+    </script>
+</body>
+</html>

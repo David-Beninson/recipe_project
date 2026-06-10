@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% from "components/recipe.html" import render_recipes %}
+
+{% block title %}Find Recipes{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/search.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="search-container">
+    <div class="search-card">
+        <h1>🔍 Find Recipes</h1>
+
+        <!-- Search Form -->
+        <form method="post" id="search-form" class="search-form">
+            <div class="form-group">
+                <label for="ingredients">Enter ingredients (comma separated):</label>
+                <input type="text" id="ingredients" name="ingredients" class="app-input"
+                    placeholder="e.g., chicken, tomato, basil" value="{{ ingredients }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="number">Number of recipes:</label>
+                <select id="number" name="number" class="app-input">
+                    <option value="1" {% if number == 1 or number == '1' %}selected{% endif %}>1 recipe</option>
+                    <option value="2" {% if number == 2 or number == '2' %}selected{% endif %}>2 recipes</option>
+                    <option value="3" {% if number == 3 or number == '3' %}selected{% endif %}>3 recipes</option>
+                    <option value="4" {% if number == 4 or number == '4' %}selected{% endif %}>4 recipes</option>
+                    <option value="5" {% if number == 5 or number == '5' or not number %}selected{% endif %}>5 recipes</option>
+                </select>
+            </div>
+
+            <div class="filter-groups" style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
+                <h3>Filters (Optional)</h3>
+                <div class="filter-group">
+                    <label for="filter-dish-type">Dish Type:</label>
+                    <select id="filter-dish-type" name="dish_type" class="filter-input app-input">
+                        <option value="">All Types</option>
+                        <option value="main course" {% if dish_type == 'main course' %}selected{% endif %}>Main Course</option>
+                        <option value="side dish" {% if dish_type == 'side dish' %}selected{% endif %}>Side Dish</option>
+                        <option value="soup" {% if dish_type == 'soup' %}selected{% endif %}>Soup</option>
+                        <option value="salad" {% if dish_type == 'salad' %}selected{% endif %}>Salad</option>
+                        <option value="breakfast" {% if dish_type == 'breakfast' %}selected{% endif %}>Breakfast</option>
+                        <option value="dessert" {% if dish_type == 'dessert' %}selected{% endif %}>Dessert</option>
+                    </select>
+                </div>
+                <div class="filter-group" style="margin-top: 10px;">
+                    <label for="filter-prep-time">Max Cooking Time:</label>
+                    <select id="filter-prep-time" name="prep_time" class="filter-input app-input">
+                        <option value="9999" {% if prep_time == 9999 or not prep_time %}selected{% endif %}>Any Time</option>
+                        <option value="15" {% if prep_time == 15 %}selected{% endif %}>Up to 15 mins</option>
+                        <option value="30" {% if prep_time == 30 %}selected{% endif %}>Up to 30 mins</option>
+                        <option value="45" {% if prep_time == 45 %}selected{% endif %}>Up to 45 mins</option>
+                        <option value="60" {% if prep_time == 60 %}selected{% endif %}>Up to 60 mins</option>
+                    </select>
+                </div>
+                <div class="filter-group checkboxes" style="margin-top: 10px; display: flex; gap: 15px;">
+                    <label>
+                        <input type="checkbox" id="filter-vegetarian" name="vegetarian" class="filter-checkbox" {% if vegetarian %}checked{% endif %}> Vegetarian
+                    </label>
+                    <label>
+                        <input type="checkbox" id="filter-vegan" name="vegan" class="filter-checkbox" {% if vegan %}checked{% endif %}> Vegan
+                    </label>
+                    <label>
+                        <input type="checkbox" id="filter-gluten-free" name="gluten_free" class="filter-checkbox" {% if gluten_free %}checked{% endif %}> Gluten Free
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-search btn-app" style="margin-top: 15px;">Search Recipes</button>
+        </form>
+
+        <!-- Display flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Search Results -->
+    {% if recipes %}
+    <div class="search-results">
+        {{ render_recipes(title="Search Results", recipes=recipes) }}
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

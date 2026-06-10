@@ -75,5 +75,29 @@ class Recipe(BaseModel):
     missed_ingredients: List[Ingredient] = Field(alias="missedIngredients")
     used_ingredients: List[Ingredient] = Field(alias="usedIngredients")
     unused_ingredients: List[Ingredient] = Field(alias="unusedIngredients")
+    
+    # Optional fields for filtering
+    ready_in_minutes: Optional[int] = Field(None, alias="readyInMinutes")
+    dish_types: Optional[List[str]] = Field(None, alias="dishTypes")
+    vegetarian: Optional[bool] = None
+    vegan: Optional[bool] = None
+    gluten_free: Optional[bool] = Field(None, alias="glutenFree")
 
     model_config = ConfigDict(populate_by_name=True)
+
+
+# --- Custom Recipe Schemas ---
+
+class CustomIngredient(BaseModel):
+    name: str
+    originalAmount: str
+    qty: float
+    unitString: str
+    usedQty: float
+
+
+class CustomRecipeCreate(BaseModel):
+    title: str
+    ingredients: List[CustomIngredient]
+    instructions: str
+    image: Optional[str] = None

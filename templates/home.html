@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% from "components/recipe.html" import render_recipes %}
+{% from "components/add_recipe.html" import add_recipes %}
+
+{% block title %}Home{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/search.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="home-content">
+
+    <div class="tab-buttons">
+        <a href="{{ url_for('recipes.home', tab='recipes', dish_type=dish_type, prep_time=prep_time, vegetarian='on' if vegetarian else None, vegan='on' if vegan else None, gluten_free='on' if gluten_free else None) }}" id="btn-recipes" class="tab-btn {% if active_tab == 'recipes' %}active{% endif %}">My Recipes</a>
+        <a href="{{ url_for('recipes.home', tab='liked', dish_type=dish_type, prep_time=prep_time, vegetarian='on' if vegetarian else None, vegan='on' if vegan else None, gluten_free='on' if gluten_free else None) }}" id="btn-liked" class="tab-btn {% if active_tab == 'liked' %}active{% endif %}">Liked Recipes</a>
+        <a href="{{ url_for('recipes.home', tab='add', dish_type=dish_type, prep_time=prep_time, vegetarian='on' if vegetarian else None, vegan='on' if vegan else None, gluten_free='on' if gluten_free else None) }}" id="btn-add" class="tab-btn {% if active_tab == 'add' %}active{% endif %}">Add Recipe</a>
+    </div>
+
+    <!-- Filter Bar -->
+    {% if has_recipes_total and active_tab != 'add' %}
+    <form method="get" action="{{ url_for('recipes.home') }}" class="filter-bar">
+        <input type="hidden" name="tab" value="{{ active_tab }}">
+        <h3>Filter Recipes</h3>
+        <div class="filter-groups">
+            <div class="filter-group">
+                <label for="filter-dish-type">Dish Type:</label>
+                <select id="filter-dish-type" name="dish_type" class="filter-input">
+                    <option value="">All Types</option>
+                    <option value="main course" {% if dish_type == 'main course' %}selected{% endif %}>Main Course</option>
+                    <option value="side dish" {% if dish_type == 'side dish' %}selected{% endif %}>Side Dish</option>
+                    <option value="soup" {% if dish_type == 'soup' %}selected{% endif %}>Soup</option>
+                    <option value="salad" {% if dish_type == 'salad' %}selected{% endif %}>Salad</option>
+                    <option value="breakfast" {% if dish_type == 'breakfast' %}selected{% endif %}>Breakfast</option>
+                    <option value="dessert" {% if dish_type == 'dessert' %}selected{% endif %}>Dessert</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="filter-prep-time">Max Cooking Time:</label>
+                <select id="filter-prep-time" name="prep_time" class="filter-input">
+                    <option value="9999" {% if prep_time == 9999 or not prep_time %}selected{% endif %}>Any Time</option>
+                    <option value="15" {% if prep_time == 15 %}selected{% endif %}>Up to 15 mins</option>
+                    <option value="30" {% if prep_time == 30 %}selected{% endif %}>Up to 30 mins</option>
+                    <option value="45" {% if prep_time == 45 %}selected{% endif %}>Up to 45 mins</option>
+                    <option value="60" {% if prep_time == 60 %}selected{% endif %}>Up to 60 mins</option>
+                </select>
+            </div>
+            <div class="filter-group checkboxes">
+                <label>
+                    <input type="checkbox" id="filter-vegetarian" name="vegetarian" class="filter-checkbox" {% if vegetarian %}checked{% endif %}> Vegetarian
+                </label>
+                <label>
+                    <input type="checkbox" id="filter-vegan" name="vegan" class="filter-checkbox" {% if vegan %}checked{% endif %}> Vegan
+                </label>
+                <label>
+                    <input type="checkbox" id="filter-gluten-free" name="gluten_free" class="filter-checkbox" {% if gluten_free %}checked{% endif %}> Gluten Free
+                </label>
+            </div>
+            <div class="filter-actions" style="margin-top: 10px; display: flex; gap: 10px;">
+                <button type="submit" class="btn-app">Apply Filters</button>
+                <a href="{{ url_for('recipes.home', tab=active_tab) }}" class="btn-clear" style="padding: 10px 15px; text-decoration: none; border-radius: 4px; background: #eee; color: #333; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; transition: all 0.3s ease;">Clear Filters</a>
+            </div>
+        </div>
+    </form>
+    {% endif %}
+
+    <nav id="home-nav">
+        {% if active_tab == 'add' %}
+        <div id="view-add" class="sidebar">
+            {{ add_recipes() }}
+        </div>
+        {% elif active_tab == 'recipes' %}
+        <div id="view-recipes" class="recipes">
+            {% if user_recipes %}
+            {{ render_recipes(title="My Recipes", recipes=user_recipes) }}
+            {% else %}
+            <div class="no-recipes">
+                <p>No matching recipes found.</p>
+                <p>Try clearing your filters or go to <a href="{{ url_for('recipes.search') }}">Find Recipes</a> to get started!</p>
+            </div>
+            {% endif %}
+        </div>
+        {% elif active_tab == 'liked' %}
+        <div id="view-liked" class="recipes">
+            {% if liked_recipes %}
+            {{ render_recipes(title="Liked Recipes", recipes=liked_recipes) }}
+            {% else %}
+            <div class="no-recipes">
+                <p>No matching liked recipes found.</p>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </nav>
+
+</section>
+{% endblock %}

@@ -1,0 +1,245 @@
+/* ===================================================== 
+   AUTHENTICATION PAGE STYLES (Login & Register)
+   ===================================================== */
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: Arial, sans-serif;
+    color: white;
+    background-image: url('https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=1600');
+    background-size: cover;
+    background-position: center;
+}
+
+/* =====================================================
+   AUTH CONTAINER
+   ===================================================== */
+.auth-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.auth-card {
+    background-color: rgba(0, 0, 0, 0.75);
+    padding: 50px 40px;
+    border-radius: 15px;
+    text-align: center;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.auth-card h1 {
+    font-size: 32px;
+    margin-bottom: 10px;
+    color: #fff;
+}
+
+.auth-card h2 {
+    font-size: 24px;
+    margin-bottom: 30px;
+    color: #e74c3c;
+}
+
+/* =====================================================
+   FORM STYLES
+   ===================================================== */
+form {
+    text-align: left;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    text-align: left;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #fff;
+    font-size: 14px;
+}
+
+input[type="text"],
+input[type="password"] {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    outline: none;
+    box-sizing: border-box;
+    font-size: 14px;
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #333;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus {
+    background-color: #fff;
+    box-shadow: 0 0 15px white;
+    transform: scale(1.02);
+    transition: 0.3s;
+}
+
+/* =====================================================
+   PASSWORD FIELD WITH TOGGLE
+   ===================================================== */
+.password-field {
+    position: relative;
+    width: 100%;
+}
+
+.password-field input {
+    padding-right: 45px;
+}
+
+.toggle-password {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: transparent;
+    color: #333;
+    cursor: pointer;
+    font-size: 18px;
+    right: 12px;
+    padding: 0;
+    line-height: 1;
+    transition: transform 0.2s;
+}
+
+.toggle-password:hover {
+    transform: translateY(-50%) scale(1.15);
+}
+
+.toggle-password:focus {
+    outline: none;
+}
+
+/* =====================================================
+   SUBMIT BUTTON
+   ===================================================== */
+.btn-submit {
+    width: 100%;
+    padding: 12px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-top: 10px;
+}
+
+.btn-submit:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0, 114, 255, 0.4);
+    background-color: darkorange;
+    transition: 0.3s;
+}
+
+.btn-submit:active {
+    transform: scale(0.98);
+}
+
+/* =====================================================
+   AUTHENTICATION LINKS
+   ===================================================== */
+.auth-link {
+    margin-top: 20px;
+    font-size: 14px;
+    color: #ddd;
+}
+
+.auth-link a {
+    color: #87CEEB;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.3s;
+}
+
+.auth-link a:hover {
+    color: #ffffff;
+    text-decoration: underline;
+}
+
+/* =====================================================
+   ERROR & ALERT MESSAGES
+   ===================================================== */
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    text-align: center;
+    font-weight: bold;
+    width: 100%;
+    box-sizing: border-box;
+    background-color: rgba(0, 0, 0, 0.6);
+}
+
+.alert-success {
+    color: #4CAF50;
+    border: 1px solid #4CAF50;
+}
+
+.alert-error {
+    color: #ff6666;
+    border: 1px solid #ff6666;
+}
+
+.alert-warning {
+    color: #ffc107;
+    border: 1px solid #ffc107;
+}
+
+.error-message {
+    color: #ff6666;
+    font-size: 14px;
+    margin: -15px 0 15px 0;
+    padding: 10px;
+    background-color: rgba(0, 0, 0, 0.6);
+    border-radius: 5px;
+    border: 1px solid #ff6666;
+    text-align: center;
+    font-weight: bold;
+}
+
+/* =====================================================
+   RESPONSIVE DESIGN
+   ===================================================== */
+@media (max-width: 480px) {
+    .auth-card {
+        padding: 30px 20px;
+    }
+
+    .auth-card h1 {
+        font-size: 24px;
+    }
+
+    .auth-card h2 {
+        font-size: 20px;
+    }
+
+    label {
+        font-size: 13px;
+    }
+
+    input[type="text"],
+    input[type="password"],
+    .btn-submit {
+        font-size: 13px;
+    }
+}

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}{{ recipe.title }} - Cooking Steps{% endblock %}
+
+{% block content %}
+<section class="recipe-detail-container">
+    <div class="back-button-container">
+        <button onclick="history.back()" class="btn-back">← Back</button>
+    </div>
+    <div class="recipe-card">
+        <div class="recipe-header">
+            <h1 class="recipe-title">{{ recipe.title }}</h1>
+            <button id="like-btn" class="like-button btn-like-ajax {% if is_liked %}liked{% endif %}" data-recipe-id="{{ recipe.id }}">
+                <span class="heart-icon">❤️</span> Like
+            </button>
+        </div>
+
+        <!-- Recipe Image -->
+        {% if recipe.image %}
+        <img src="{{ recipe.image }}" alt="{{ recipe.title }}" class="recipe-image">
+        {% endif %}
+
+        <!-- Ingredients Section -->
+        <div class="info-section">
+            <h3>Ingredients</h3>
+            <p class="ingredient-hint">
+                💡 <span>Click any ingredient to find a substitute</span>
+            </p>
+            <ul id="ingredients-list" class="ingredients-list">
+                {% for ingredient in recipe.extendedIngredients %}
+                <li class="clickable-ingredient" data-name="{{ ingredient.name }}">
+                    {{ ingredient.original }}
+                </li>
+                {% endfor %}
+            </ul>
+
+            <!-- Substitutes Section (appears when ingredient clicked) -->
+            <div id="substitutes-section" class="substitutes-section" style="display: none;">
+                <h4>Substitutes for <span id="sub-title"></span>:</h4>
+                <ul id="substitutes-list"></ul>
+            </div>
+        </div>
+
+        <!-- Instructions Section -->
+        <div class="info-section">
+            <h3>Instructions</h3>
+            <div class="instructions">
+                {% if recipe.instructions %}
+                <p>{{ recipe.instructions|safe }}</p>
+                {% else %}
+                <p>No specific instructions available for this recipe.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Handle ingredient click to show substitutes
+    document.querySelectorAll('.clickable-ingredient').forEach(item => {
+        item.addEventListener('click', async () => {
+            const ingredientName = item.getAttribute('data-name');
+            const subSection = document.getElementById('substitutes-section');
+            const subList = document.getElementById('substitutes-list');
+
+            subList.innerHTML = '<li>Loading...</li>';
+            subSection.style.display = 'block';
+            document.getElementById('sub-title').textContent = ingredientName;
+
+            try {
+                const response = await fetch(`/substitutes?ingredient=${encodeURIComponent(ingredientName)}`);
+                const data = await response.json();
+
+                subList.innerHTML = '';
+                if (data.substitutes && data.substitutes.length > 0) {
+                    data.substitutes.forEach(sub => {
+                        subList.innerHTML += `<li>${sub}</li>`;
+                    });
+                } else {
+                    subList.innerHTML = '<li>No substitutes found.</li>';
+                }
+            } catch (e) {
+                subList.innerHTML = '<li>Error loading substitutes.</li>';
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,207 @@
+{% macro add_recipes() %}
+<h3>Recipe Builder</h3>
+<form id="add-recipe-form" action="{{ url_for('recipes.add_recipe') }}" method="POST">
+    <!-- Recipe Title Input -->
+    <input type="text" id="recipe-title" name="title" class="app-input" placeholder="Recipe name" required>
+
+    <!-- Recipe Image Input -->
+    <label for="recipe-image" class="app-file-input">Upload Image / Take Photo:</label><br>
+    <input type="file" id="recipe-image" class="app-file-input" accept="image/*" capture="environment"><br><br>
+
+    <input type="hidden" name="ingredients" id="hidden-ingredients">
+    <input type="hidden" name="instructions" id="hidden-instructions">
+
+    <!-- Add Ingredients Form Container -->
+    <div class="add-ingredients-container">
+        <h4>Add Ingredients</h4>
+        <input type="text" id="ing-name" class="app-input" placeholder="Name (e.g. Tomato)">
+        <input type="text" id="ing-amount" class="app-input" placeholder="Amount (e.g. 2 pcs)">
+        <button type="button" id="btn-add-ingredient" class="btn-app">Add to Inventory</button>
+    </div>
+
+    <!-- Inventory Zone -->
+    <div id="inventory-zone">
+        <h4>Inventory (Drag from here)</h4>
+    </div>
+
+    <!-- Instructions Zone -->
+    <h4>Instructions (Type text and drop ingredients here)</h4>
+    <div id="instructions-zone" contenteditable="true"></div>
+
+    <!-- Submit Button -->
+    <button type="submit" id="btn-submit-recipe" class="btn-app" disabled>Submit Recipe</button>
+</form>
+
+<script>
+    // State to manage ingredients and their usage
+    let ingredientsList = [];
+
+    // DOM Elements
+    const ingNameInput = document.getElementById('ing-name');
+    const ingAmountInput = document.getElementById('ing-amount');
+    const btnAddIngredient = document.getElementById('btn-add-ingredient');
+    const inventoryZone = document.getElementById('inventory-zone');
+    const instructionsZone = document.getElementById('instructions-zone');
+    const submitBtn = document.getElementById('btn-submit-recipe');
+
+    // Add new ingredient
+    btnAddIngredient.addEventListener('click', () => {
+        if (!ingNameInput.value || !ingAmountInput.value) return;
+
+        const rawAmount = ingAmountInput.value;
+        // Smart extract: gets the number from strings like "2 pcs" or "1.5 cups"
+        const parsedQty = parseFloat(rawAmount) || 1;
+        // Smart extract: gets the text part (e.g., "pcs" from "2 pcs")
+        const parsedUnit = rawAmount.replace(/[0-9.]/g, '').trim();
+
+        const newIng = {
+            id: 'ing-' + Date.now(),
+            name: ingNameInput.value,
+            originalAmount: rawAmount,
+            qty: parsedQty,
+            unitString: parsedUnit,
+            usedQty: 0 // Track usage in instructions
+        };
+
+        ingredientsList.push(newIng);
+
+        // Clear inputs
+        ingNameInput.value = '';
+        ingAmountInput.value = '';
+
+        renderInventory();
+    });
+
+    // Remove ingredient entirely
+    window.deleteIngredient = function (id) {
+        ingredientsList = ingredientsList.filter(ing => ing.id !== id);
+        // Remove associated inline elements from the text editor
+        document.querySelectorAll(`.inline-ing[data-id="${id}"]`).forEach(el => el.remove());
+        updateTotals();
+    };
+
+    // Calculate total usage by reading all numeric inputs inside the instructions text
+    window.updateTotals = function () {
+        // Reset all to 0
+        ingredientsList.forEach(ing => ing.usedQty = 0);
+
+        // Find all inline quantity inputs embedded in the text
+        const inputs = document.querySelectorAll('.ing-qty-input');
+        inputs.forEach(input => {
+            const id = input.getAttribute('data-id');
+            const val = parseFloat(input.value) || 0;
+            const ing = ingredientsList.find(i => i.id === id);
+            if (ing) {
+                ing.usedQty += val;
+            }
+        });
+
+        renderInventory();
+    };
+
+    // Recalculate totals if the user deletes a block using backspace in the editor
+    instructionsZone.addEventListener('input', updateTotals);
+
+    // Setup drag starting point
+    function setupDragAndDrop() {
+        const items = document.querySelectorAll('.draggable-ing');
+        items.forEach(item => {
+            item.addEventListener('dragstart', e => {
+                e.dataTransfer.setData('text/custom-id', item.id);
+            });
+        });
+    }
+
+    // Handle dropping an ingredient into the instructions text
+    instructionsZone.addEventListener('dragover', e => {
+        e.preventDefault();
+    });
+
+    instructionsZone.addEventListener('drop', e => {
+        e.preventDefault();
+        const id = e.dataTransfer.getData('text/custom-id');
+        if (!id) return;
+
+        const ing = ingredientsList.find(i => i.id === id);
+        if (!ing) return;
+
+        // Create an un-editable inline block with a number input inside it
+        const htmlToInsert = `
+            <span class="inline-ing" contenteditable="false" data-id="${ing.id}">
+                ${ing.name} 
+                <input type="number" class="ing-qty-input" data-id="${ing.id}" value="0" min="0" max="${ing.qty}" step="any" oninput="updateTotals()"> 
+                ${ing.unitString}
+            </span>&nbsp;`;
+
+        // Logic to place the block exactly where the cursor dropped it
+        let range;
+        if (document.caretRangeFromPoint) {
+            range = document.caretRangeFromPoint(e.clientX, e.clientY);
+        } else if (document.caretPositionFromPoint) {
+            const pos = document.caretPositionFromPoint(e.clientX, e.clientY);
+            range = document.createRange();
+            range.setStart(pos.offsetNode, pos.offset);
+            range.collapse(true);
+        }
+
+        if (range) {
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+
+        document.execCommand('insertHTML', false, htmlToInsert);
+
+        // Return focus to editor
+        instructionsZone.focus();
+    });
+
+    // Render the Inventory UI and handle Validation
+    function renderInventory() {
+        // Clear current inventory UI
+        document.querySelectorAll('.draggable-ing').forEach(el => el.remove());
+
+        let allGreen = true;
+        let hasItems = ingredientsList.length > 0;
+
+        ingredientsList.forEach(ing => {
+            const el = document.createElement('div');
+            el.id = ing.id;
+            el.className = 'draggable-ing';
+            el.draggable = true;
+
+            // Traffic light logic (Red/Orange/Green)
+            let borderColor = 'red';
+            if (ing.usedQty === ing.qty) {
+                borderColor = 'green';
+            } else if (ing.usedQty > 0 && ing.usedQty < ing.qty) {
+                borderColor = 'orange';
+                allGreen = false;
+            } else {
+                allGreen = false;
+            }
+
+            // Assign color class for border & background styling from CSS
+            el.className = `draggable-ing ${borderColor}`;
+
+            el.innerHTML = `
+                ${ing.name} - ${ing.originalAmount} 
+                <small>(Used: ${ing.usedQty})</small>
+                <button type="button" onclick="deleteIngredient('${ing.id}')" class="btn-delete-ing">X</button>
+            `;
+
+            inventoryZone.appendChild(el);
+        });
+
+        // Unlock submit only if there are items AND all amounts match exactly (Green)
+        submitBtn.disabled = !(hasItems && allGreen);
+
+        setupDragAndDrop();
+    }
+
+    document.getElementById('add-recipe-form').addEventListener('submit', () => {
+        document.getElementById('hidden-ingredients').value = JSON.stringify(ingredientsList);
+        document.getElementById('hidden-instructions').value = instructionsZone.innerHTML;
+    });
+</script>
+{% endmacro %}
