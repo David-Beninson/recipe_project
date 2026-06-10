@@ -4,7 +4,7 @@
 {% block title %}Find Recipes{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/recipe.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/search.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -16,13 +16,13 @@
         <form method="post" id="search-form" class="search-form">
             <div class="form-group">
                 <label for="ingredients">Enter ingredients (comma separated):</label>
-                <input type="text" id="ingredients" name="ingredients" placeholder="e.g., chicken, tomato, basil"
+                <input type="text" id="ingredients" name="ingredients" class="app-input" placeholder="e.g., chicken, tomato, basil"
                     required>
             </div>
 
             <div class="form-group">
                 <label for="number">Number of recipes:</label>
-                <select id="number" name="number">
+                <select id="number" name="number" class="app-input">
                     <option value="5">5 recipes</option>
                     <option value="10" selected>10 recipes</option>
                     <option value="15">15 recipes</option>
@@ -30,7 +30,7 @@
                 </select>
             </div>
 
-            <button type="submit" class="btn-search">Search Recipes</button>
+            <button type="submit" class="btn-search btn-app">Search Recipes</button>
         </form>
 
         <!-- Display flash messages -->

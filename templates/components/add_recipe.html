@@ -1,31 +1,35 @@
 {% macro add_recipes() %}
 <h3>Recipe Builder</h3>
 <form id="add-recipe-form" action="{{ url_for('add_recipe') }}" method="POST">
-    <input type="text" id="recipe-title" name="title" placeholder="Recipe name" required><br><br>
+    <!-- Recipe Title Input -->
+    <input type="text" id="recipe-title" name="title" class="app-input" placeholder="Recipe name" required>
 
-    <label for="recipe-image">Upload Image / Take Photo:</label><br>
-    <input type="file" id="recipe-image" accept="image/*" capture="environment"><br><br>
+    <!-- Recipe Image Input -->
+    <label for="recipe-image" class="app-file-input">Upload Image / Take Photo:</label><br>
+    <input type="file" id="recipe-image" class="app-file-input" accept="image/*" capture="environment"><br><br>
 
     <input type="hidden" name="ingredients" id="hidden-ingredients">
     <input type="hidden" name="instructions" id="hidden-instructions">
 
-    <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 15px;">
+    <!-- Add Ingredients Form Container -->
+    <div class="add-ingredients-container">
         <h4>Add Ingredients</h4>
-        <input type="text" id="ing-name" placeholder="Name (e.g. Tomato)">
-        <input type="text" id="ing-amount" placeholder="Amount (e.g. 2 pcs)">
-        <button type="button" id="btn-add-ingredient">Add to Inventory</button>
+        <input type="text" id="ing-name" class="app-input" placeholder="Name (e.g. Tomato)">
+        <input type="text" id="ing-amount" class="app-input" placeholder="Amount (e.g. 2 pcs)">
+        <button type="button" id="btn-add-ingredient" class="btn-app">Add to Inventory</button>
     </div>
 
-    <div id="inventory-zone" style="min-height: 60px; border: 2px dashed #ccc; padding: 10px; margin-bottom: 15px;">
+    <!-- Inventory Zone -->
+    <div id="inventory-zone">
         <h4>Inventory (Drag from here)</h4>
     </div>
 
+    <!-- Instructions Zone -->
     <h4>Instructions (Type text and drop ingredients here)</h4>
-    <div id="instructions-zone" contenteditable="true"
-        style="min-height: 150px; border: 2px solid #4CAF50; padding: 10px; margin-bottom: 15px; background: #fff;">
-    </div>
+    <div id="instructions-zone" contenteditable="true"></div>
 
-    <button type="submit" id="btn-submit-recipe" disabled>Submit Recipe</button>
+    <!-- Submit Button -->
+    <button type="submit" id="btn-submit-recipe" class="btn-app" disabled>Submit Recipe</button>
 </form>
 
 <script>
@@ -123,9 +127,9 @@
 
         // Create an un-editable inline block with a number input inside it
         const htmlToInsert = `
-            <span class="inline-ing" contenteditable="false" data-id="${ing.id}" style="background: #e0e0e0; padding: 2px 5px; border-radius: 3px; margin: 0 5px; display: inline-block;">
+            <span class="inline-ing" contenteditable="false" data-id="${ing.id}">
                 ${ing.name} 
-                <input type="number" class="ing-qty-input" data-id="${ing.id}" value="0" min="0" max="${ing.qty}" step="any" style="width: 50px;" oninput="updateTotals()"> 
+                <input type="number" class="ing-qty-input" data-id="${ing.id}" value="0" min="0" max="${ing.qty}" step="any" oninput="updateTotals()"> 
                 ${ing.unitString}
             </span>&nbsp;`;
 
@@ -177,17 +181,13 @@
                 allGreen = false;
             }
 
-            el.style.border = '2px solid ' + borderColor;
-            el.style.padding = '5px';
-            el.style.margin = '5px';
-            el.style.display = 'inline-block';
-            el.style.cursor = 'grab';
-            el.style.backgroundColor = 'white';
+            // Assign color class for border & background styling from CSS
+            el.className = `draggable-ing ${borderColor}`;
 
             el.innerHTML = `
                 ${ing.name} - ${ing.originalAmount} 
-                <small style="color:gray;">(Used: ${ing.usedQty})</small>
-                <button type="button" onclick="deleteIngredient('${ing.id}')" style="margin-left: 8px; color: red; cursor: pointer;">X</button>
+                <small>(Used: ${ing.usedQty})</small>
+                <button type="button" onclick="deleteIngredient('${ing.id}')" class="btn-delete-ing">X</button>
             `;
 
             inventoryZone.appendChild(el);
