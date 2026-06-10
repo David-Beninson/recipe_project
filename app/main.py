@@ -137,6 +137,29 @@ def home():
     """Home page after login."""
     return render_template('components/home.html', username=session.get('username'))
 
+@app.route('/recipe/<int:recipe_id>')
+@login_required
+def cooking_steps(recipe_id):
+    """Retrieve recipe details and display cooking steps."""
+    try:
+        with SessionLocal() as db:
+            from sqlalchemy import select
+            from app.models import Recipe
+            
+            stmt = select(Recipe).filter(Recipe.id == recipe_id)
+            recipe = db.execute(stmt).scalars().first()
+            
+            if not recipe:
+                flash('Recipe not found', 'error')
+                return redirect(url_for('home'))
+            
+            return render_template('components/cooking_steps.html', recipe=recipe)
+            
+    except Exception as e:
+        print(f"Error fetching recipe: {e}")
+        flash('Error loading recipe details', 'error')
+        return redirect(url_for('home'))
+    
 @app.route('/logout')
 def logout():
     """Logout user."""

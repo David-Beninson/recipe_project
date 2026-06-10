@@ -1,3 +1,5 @@
+{% from 'components/recipe.html' import render_recipes, mock_recipes %}
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -43,9 +45,8 @@
     </div>
 
     <div class="recipes">
-      <h2>My Recipes</h2>
       <div id="recipe-list">
-        <!-- Recipes will appear here -->
+        {{ render_recipes(recipes=user_recipes) }}
       </div>
     </div>
   </section>

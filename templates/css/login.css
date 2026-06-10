@@ -49,6 +49,33 @@ input {
   box-sizing: border-box;
 }
 
+.password-field__wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.password-field__wrapper input {
+  padding-right: 42px;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  color: white;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 0;
+  line-height: 1;
+}
+
+.toggle-password:focus {
+  outline: none;
+}
+
 input[type="submit"] {
   background-color: #4CAF50;
   color: white;
