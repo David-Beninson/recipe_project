@@ -184,7 +184,12 @@ async def get_substitutes(
     unit: str = None,    
     db: AsyncSession = Depends(get_db)
 ):
-    cache_key = f"{ingredient}_{amount}_{unit}"
+    parts = [ingredient.strip().lower()]
+    if amount is not None:
+        parts.append(str(amount))
+    if unit:
+        parts.append(unit.strip().lower())
+    cache_key = "_".join(parts)
     
     stmt = select(models.IngredientSubstitute).filter(
         models.IngredientSubstitute.ingredient_name == cache_key

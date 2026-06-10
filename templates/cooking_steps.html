@@ -18,6 +18,9 @@
         <!-- Ingredients Section -->
         <div class="info-section">
             <h3>Ingredients</h3>
+            <p class="ingredient-hint">
+                💡 <span>Click any ingredient to find a substitute</span>
+            </p>
             <ul id="ingredients-list" class="ingredients-list">
                 {% for ingredient in recipe.extendedIngredients %}
                 <li class="clickable-ingredient" data-name="{{ ingredient.name }}">
