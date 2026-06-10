@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Main stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Page-specific stylesheets -->
+    {% block extra_css %}{% endblock %}
+    <title>{% block title %}Recipe App{% endblock %}</title>
+</head>
+
+<body>
+    <!-- Main Navigation Bar -->
+    <nav id="main-nav">
+        <div class="nav-brand">
+            <h2>🍴 Recipe App</h2>
+        </div>
+        <div class="nav-links">
+            <a href="{{ url_for('home') }}">My Recipes</a>
+            <a href="{{ url_for('search') }}">Find Recipes</a>
+            <a href="{{ url_for('logout') }}">Log out</a>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <div id="content" class="main-content">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Scripts Section -->
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

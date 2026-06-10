@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+    <title>Sign Up - Recipe App</title>
+</head>
+
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <h1>🍴 Recipe App</h1>
+            <h2>Create Account</h2>
+
+            <!-- Display flash messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <!-- Registration Form -->
+            <form method="post" onsubmit="return validatePasswords()">
+                <div class="form-group">
+                    <label for="name">Username:</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <div class="password-field">
+                        <input type="password" id="password" name="password" required>
+                        <button type="button" class="toggle-password" aria-label="Show password"
+                            onclick="togglePasswordVisibility('password', this)">🔒</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm">Confirm Password:</label>
+                    <div class="password-field">
+                        <input type="password" id="confirm" name="confirm" required>
+                        <button type="button" class="toggle-password" aria-label="Show confirmation password"
+                            onclick="togglePasswordVisibility('confirm', this)">🔒</button>
+                    </div>
+                </div>
+
+                <p id="error-message" class="error-message" style="display:none;">
+                    ⚠️ Passwords do not match!
+                </p>
+
+                <button type="submit" class="btn-submit">Create Account</button>
+            </form>
+
+            <p class="auth-link">Already have an account? <a href="{{ url_for('login') }}">Log in</a></p>
+        </div>
+    </div>
+
+    <script>
+        // Toggle between showing and hiding password
+        function togglePasswordVisibility(inputId, button) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+
+            input.type = input.type === 'password' ? 'text' : 'password';
+            const isHidden = input.type === 'password';
+            button.textContent = isHidden ? '🔒' : '🔓';
+            button.setAttribute('aria-label', isHidden ? 'Show password' : 'Hide password');
+        }
+
+        // Validate that passwords match before submission
+        function validatePasswords() {
+            const password = document.getElementById('password').value;
+            const confirm = document.getElementById('confirm').value;
+            const errorMsg = document.getElementById('error-message');
+
+            if (password !== confirm) {
+                errorMsg.style.display = 'block';
+                return false;
+            }
+            errorMsg.style.display = 'none';
+            return true;
+        }
+    </script>
+</body>
+
+</html>

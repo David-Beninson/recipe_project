@@ -1,16 +1,19 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.database import SessionLocal, engine
-from app.models import Base, User
+from app.models import Base, User, UserSearch, Recipe
+from app.utils.oauth2 import create_access_token
 import os
+import httpx
 from functools import wraps
 from pathlib import Path
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 # Get absolute paths
 BASE_DIR = Path(__file__).parent.parent
 TEMPLATE_DIR = BASE_DIR / 'templates'
-STATIC_DIR = BASE_DIR / 'templates'
+STATIC_DIR = BASE_DIR / 'static'
 
 app = Flask(__name__, template_folder=str(TEMPLATE_DIR), static_folder=str(STATIC_DIR))
 app.secret_key = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
@@ -79,7 +82,7 @@ def login():
         
         return redirect(url_for('login'))
     
-    return render_template('components/loggingin.html')
+    return render_template('login.html')
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -129,37 +132,105 @@ def register():
         
         return redirect(url_for('register'))
     
-    return render_template('components/register.html')
+    return render_template('register.html')
 
 @app.route('/home')
 @login_required
 def home():
-    """Home page after login."""
-    return render_template('components/home.html', username=session.get('username'))
+    """Home page after login showing previously searched recipes."""
+    user_recipes = []
+    try:
+        with SessionLocal() as db:
+            # Load user searches with their cached recipes
+            stmt = select(UserSearch).filter(UserSearch.user_id == session['user_id']).options(selectinload(UserSearch.recipes))
+            searches = db.execute(stmt).scalars().all()
+            
+            seen_recipe_ids = set()
+            for search_obj in searches:
+                for r in search_obj.recipes:
+                    if r.spoonacular_id not in seen_recipe_ids:
+                        seen_recipe_ids.add(r.spoonacular_id)
+                        recipe_data = r.raw_data if r.raw_data else {}
+                        # Make sure necessary keys are set
+                        recipe_data['id'] = r.spoonacular_id
+                        recipe_data['title'] = r.title
+                        user_recipes.append(recipe_data)
+    except Exception as e:
+        print(f"Error fetching user recipes: {e}")
+        user_recipes = []
+        
+    return render_template('home.html', username=session.get('username'), user_recipes=user_recipes)
+
+@app.route('/search', methods=['GET', 'POST'])
+@login_required
+def search():
+    """Search for recipes page and handler - calls FastAPI backend."""
+    recipes = []
+    if request.method == 'POST':
+        ingredients = request.form.get('ingredients')
+        number = request.form.get('number', 10)
+        
+        if not ingredients:
+            flash('Please enter ingredients', 'warning')
+            return redirect(url_for('search'))
+        
+        # Generate JWT token for authenticate with FastAPI
+        token = create_access_token(data={"user_id": session['user_id']})
+        headers = {"Authorization": f"Bearer {token}"}
+        params = {"ingredients": ingredients, "number": number}
+        
+        try:
+            # Call the FastAPI backend service
+            with httpx.Client() as client:
+                response = client.get("http://127.0.0.1:8000/recipes/find-by-ingredients", headers=headers, params=params, timeout=10.0)
+                if response.status_code == 200:
+                    recipes = response.json()
+                    flash(f'Found {len(recipes)} recipes for: {ingredients}', 'success')
+                else:
+                    flash(f"Backend API error: {response.text}", "error")
+        except Exception as e:
+            print(f"Connection error to backend: {e}")
+            flash("Failed to connect to backend service.", "error")
+    
+    return render_template('search.html', recipes=recipes)
 
 @app.route('/recipe/<int:recipe_id>')
 @login_required
 def cooking_steps(recipe_id):
-    """Retrieve recipe details and display cooking steps."""
+    """Retrieve recipe details from FastAPI and display cooking steps."""
     try:
-        with SessionLocal() as db:
-            from sqlalchemy import select
-            from app.models import Recipe
-            
-            stmt = select(Recipe).filter(Recipe.id == recipe_id)
-            recipe = db.execute(stmt).scalars().first()
-            
-            if not recipe:
-                flash('Recipe not found', 'error')
+        # Fetch detailed recipe information (including instructions and ingredients)
+        with httpx.Client() as client:
+            response = client.get(f"http://127.0.0.1:8000/recipes/{recipe_id}/information", timeout=10.0)
+            if response.status_code == 200:
+                recipe = response.json()
+                # Ensure the ID matches what templates expect
+                recipe['id'] = recipe_id
+                return render_template('cooking_steps.html', recipe=recipe)
+            else:
+                flash('Recipe detail not found on server', 'error')
                 return redirect(url_for('home'))
-            
-            return render_template('components/cooking_steps.html', recipe=recipe)
-            
     except Exception as e:
         print(f"Error fetching recipe: {e}")
-        flash('Error loading recipe details', 'error')
+        flash('Error loading recipe details from backend', 'error')
         return redirect(url_for('home'))
-    
+
+@app.route('/substitutes')
+@login_required
+def substitutes():
+    """Proxy route to call FastAPI substitutes endpoint."""
+    ingredient = request.args.get('ingredient')
+    if not ingredient:
+        return jsonify({"detail": "Missing ingredient parameter"}), 400
+        
+    try:
+        with httpx.Client() as client:
+            response = client.get("http://127.0.0.1:8000/recipes/substitutes", params={"ingredient": ingredient}, timeout=10.0)
+            return jsonify(response.json()), response.status_code
+    except Exception as e:
+        print(f"Substitutes backend error: {e}")
+        return jsonify({"detail": "Failed to retrieve substitutes from backend"}), 500
+
 @app.route('/logout')
 def logout():
     """Logout user."""

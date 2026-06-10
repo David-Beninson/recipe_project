@@ -48,18 +48,21 @@ recipe_project/
 │       ├── __init__.py
 │       ├── oauth2.py      # JWT token validation and auth dependency
 │       └── password_hashing.py  # Password hashing and verification
-├── templates/             # Flask templates and public CSS
-│   ├── components/
-│   │   ├── home.html
-│   │   ├── loggingin.html
-│   │   ├── recipe.html
-│   │   └── register.html
-│   ├── css/
-│   │   ├── home.css
-│   │   ├── login.css
-│   │   └── recipe.css
-│   ├── index.html
-│   └── styel.css
+├── templates/
+│   ├── base.html        
+│   ├── login.html 
+│   ├── register.html
+│   ├── home.html
+│   ├── cooking_steps.html
+│   ├── search.html
+│   └── components/
+│       └── recipe.html    
+├── static/
+│   └── css/
+│       ├── style.css      
+│       ├── auth.css  
+│       ├── recipe.css    
+│       └── search.css
 ├── tests/
 │   ├── __init__.py
 │   ├── conftest.py
@@ -75,9 +78,10 @@ recipe_project/
 ## 📦 Installation
 
 ### Prerequisites
-- Python 3.8 or newer
-- PostgreSQL database
-- Optional: Spoonacular API key for recipe and substitute lookup
+
+* Python 3.8 or newer
+* PostgreSQL database
+* Optional: Spoonacular API key for recipe and substitute lookup
 
 ### Install dependencies
 
@@ -118,8 +122,9 @@ uvicorn app.fast_api:app --host 127.0.0.1 --port 8000 --reload
 This starts the API server on `http://127.0.0.1:8000`.
 
 Documentation:
-- Swagger UI: `http://127.0.0.1:8000/docs`
-- ReDoc: `http://127.0.0.1:8000/redoc`
+
+* Swagger UI: `http://127.0.0.1:8000/docs`
+* ReDoc: `http://127.0.0.1:8000/redoc`
 
 ### Flask frontend page
 
@@ -198,8 +203,9 @@ The backend validates the token using the `get_current_user` dependency in `app.
 Requires authentication.
 
 Query parameters:
-- `ingredients` (required): comma-separated ingredient list, e.g. `chicken,rice,garlic`
-- `number` (optional): maximum number of recipes to return, default is `5`
+
+* `ingredients` (required): comma-separated ingredient list, e.g. `chicken,rice,garlic`
+* `number` (optional): maximum number of recipes to return, default is `5`
 
 Example:
 
@@ -208,12 +214,13 @@ GET /recipes/find-by-ingredients?ingredients=chicken,rice&number=5
 ```
 
 What this endpoint does:
-- Creates a new `UserSearch` record for the authenticated user
-- Calls Spoonacular using the configured `spoonacular_url`
-- Validates each recipe response item against a Pydantic schema
-- Caches any new recipe in the local database
-- Links the found recipes to the user search record
-- Returns the Spoonacular JSON payload
+
+* Creates a new `UserSearch` record for the authenticated user
+* Calls Spoonacular using the configured `spoonacular_url`
+* Validates each recipe response item against a Pydantic schema
+* Caches any new recipe in the local database
+* Links the found recipes to the user search record
+* Returns the Spoonacular JSON payload
 
 Example response:
 
@@ -243,7 +250,8 @@ Example response:
 Does not require authentication.
 
 Query parameters:
-- `ingredient` (required): ingredient name to look up substitutions for, e.g. `milk`
+
+* `ingredient` (required): ingredient name to look up substitutions for, e.g. `milk`
 
 Example:
 
@@ -252,12 +260,12 @@ GET /recipes/substitutes?ingredient=milk
 ```
 
 What this endpoint does:
-- Checks whether substitute data is already cached in the database
-- If cached, returns the cached substitute list immediately
-- Otherwise calls Spoonacular substitute API
-- Stores the response in `ingredient_substitutes`
-- Returns the substitute data
 
+* Checks whether substitute data is already cached in the database
+* If cached, returns the cached substitute list immediately
+* Otherwise calls Spoonacular substitute API
+* Stores the response in `ingredient_substitutes`
+* Returns the substitute data
 Example response:
 
 ```json
@@ -278,30 +286,34 @@ Example response:
 The app uses SQLAlchemy ORM models defined in `app.models`.
 
 ### Users
-- `users` table stores:
-  - `id`
-  - `user_name` (unique)
-  - `password` (bcrypt hashed)
+
+* `users` table stores:
+  * `id`
+  * `user_name` (unique)
+  * `password` (bcrypt hashed)
 
 ### User searches
-- `user_searches` table stores:
-  - `id`
-  - `user_id` (foreign key to users)
-  - `query_ingredients`
-  - relationships to saved recipes
+
+* `user_searches` table stores:
+  * `id`
+  * `user_id` (foreign key to users)
+  * `query_ingredients`
+  * relationships to saved recipes
 
 ### Recipes
-- `recipes` table stores:
-  - `id`
-  - `spoonacular_id` (unique external recipe ID)
-  - `title`
-  - `raw_data` (JSON payload from Spoonacular)
+
+* recipes` table stores:
+  * `id`
+  * `spoonacular_id` (unique external recipe ID)
+  * `title`
+  * `raw_data` (JSON payload from Spoonacular)
 
 ### Ingredient substitutes
-- `ingredient_substitutes` table stores:
-  - `id`
-  - `ingredient_name` (unique)
-  - `substitutes` (JSON list)
+
+* `ingredient_substitutes` table stores:
+  * `id`
+  * `ingredient_name` (unique)
+  * `substitutes` (JSON list)
 
 ---
 
@@ -313,11 +325,47 @@ Run tests with:
 pytest
 ```
 
-The test suite includes coverage for:
-- user signup and login
-- protected route access
-- recipe search logic
-- substitute endpoint behavior
+The test suite covers user signup/login, protected route access, search logic, and substitute endpoint behavior.
+
+---
+
+## 🎨 Template Structure (Jinja2)
+
+The application uses Jinja2 template inheritance.
+
+### Base Template
+
+* **base.html**: Contains navigation bar, metadata, CSS links, and block placeholders. All pages extend this.
+
+### Page Templates
+
+* **home.html**: User's recipe collection.
+* **search.html**: Search interface.
+* **cooking_steps.html**: Detailed view.
+* **login.html** / **register.html**: Auth pages (no navbar).
+
+### Components
+
+* **components/recipe.html**: Contains `render_recipes()` macro.
+
+### Usage Example
+
+```html
+{% extends "base.html" %}
+{% block title %}Page Title{% endblock %}
+{% block content %}
+{% endblock %}
+
+```
+
+---
+
+## ⚠️ Best Practices
+
+* Keep the `.env` file secret and do not commit it.
+* Use caching to reduce duplicate Spoonacular API calls.
+* CORS is enabled for all origins in `app.fast_api.py`.
+
 
 ---
 
@@ -326,13 +374,9 @@ The test suite includes coverage for:
 - Use `pip3 install -r requirements.txt` for dependency installation.
 - Start the FastAPI backend with `uvicorn app.fast_api:app --host 127.0.0.1 --port 8000 --reload`.
 - Start the Flask frontend with `python3 -m app.main`.
-- Keep the `.env` file secret and do not commit it.
-- If the Spoonacular API limits requests, caching reduces duplicate calls.
-- CORS is enabled for all origins in `app.fast_api.py`.
-
 ---
 
 ## 👥 Authors
 
-- David Beninson 
-- Oliver Radivan
+* David Beninson
+* Oliver Radivan

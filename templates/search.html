@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% from "components/recipe.html" import render_recipes %}
+
+{% block title %}Find Recipes{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/recipe.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="search-container">
+    <div class="search-card">
+        <h1>🔍 Find Recipes</h1>
+
+        <!-- Search Form -->
+        <form method="post" id="search-form" class="search-form">
+            <div class="form-group">
+                <label for="ingredients">Enter ingredients (comma separated):</label>
+                <input type="text" id="ingredients" name="ingredients" placeholder="e.g., chicken, tomato, basil"
+                    required>
+            </div>
+
+            <div class="form-group">
+                <label for="number">Number of recipes:</label>
+                <select id="number" name="number">
+                    <option value="5">5 recipes</option>
+                    <option value="10" selected>10 recipes</option>
+                    <option value="15">15 recipes</option>
+                    <option value="20">20 recipes</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn-search">Search Recipes</button>
+        </form>
+
+        <!-- Display flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Search Results -->
+    {% if recipes %}
+    <div class="search-results">
+        {{ render_recipes(title="Search Results", recipes=recipes) }}
+    </div>
+    {% endif %}
+</section>
+{% endblock %}
