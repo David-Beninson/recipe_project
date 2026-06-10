@@ -5,6 +5,7 @@ from app.models import Base, User
 import os
 from functools import wraps
 from pathlib import Path
+from sqlalchemy import select
 
 # Get absolute paths
 BASE_DIR = Path(__file__).parent.parent
@@ -62,7 +63,6 @@ def login():
         # Check user in database
         try:
             with SessionLocal() as db:
-                from sqlalchemy import select
                 stmt = select(User).filter(User.user_name == username)
                 user = db.execute(stmt).scalars().first()
                         
@@ -107,7 +107,6 @@ def register():
         # Save user to database
         try:
             with SessionLocal() as db:
-                from sqlalchemy import select
                 
                 stmt = select(User).filter(User.user_name == username)
                 result = db.execute(stmt)
@@ -126,7 +125,6 @@ def register():
                 return redirect(url_for('login'))
         
         except Exception as e:
-            print(f"Signup error: {e}")
             flash(f'Signup error: {str(e)}', 'error')
         
         return redirect(url_for('register'))
