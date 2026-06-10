@@ -1,32 +1,68 @@
 {% extends "base.html" %}
 {% from "components/recipe.html" import render_recipes %}
+{% from "components/add_recipe.html" import add_recipes %}
 
 {% block title %}Home{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/recipe.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
 {% endblock %}
 
 {% block content %}
-<section class="main-content">
-    <!-- Sidebar for adding recipes -->
-    <div class="sidebar">
-        <h3>🍳 Add Recipe</h3>
-        <p style="font-size: 12px; color: #666; margin-top: 10px;">
-            Feature coming soon - you'll be able to add your own recipes here!
-        </p>
+<section class="home-content">
+
+    <div class="tab-buttons">
+        <button id="btn-recipes" class="tab-btn active" onclick="toggleView('recipes')">My Recipes</button>
+        <button id="btn-add" class="tab-btn" onclick="toggleView('add')">Add Recipe</button>
     </div>
 
-    <!-- Recipes Display Area -->
-    <div class="recipes">
-        {% if user_recipes %}
-        {{ render_recipes(recipes=user_recipes) }}
-        {% else %}
-        <div class="no-recipes">
-            <p>You haven't added any recipes yet.</p>
-            <p>Go to <a href="{{ url_for('search') }}">Find Recipes</a> to get started!</p>
+    <nav id="home-nav">
+        <div id="view-add" class="sidebar hidden">
+            {{ add_recipes() }}
         </div>
-        {% endif %}
-    </div>
+
+        <div id="view-recipes" class="recipes">
+            {% if user_recipes %}
+            {{ render_recipes(recipes=user_recipes) }}
+            {% else %}
+            <div class="no-recipes">
+                <p>You haven't added any recipes yet.</p>
+                <p>Go to <a href="{{ url_for('search') }}">Find Recipes</a> to get started!</p>
+            </div>
+            {% endif %}
+        </div>
+    </nav>
+
 </section>
+
+<script>
+    function toggleView(viewName) {
+        // Get content elements
+        const viewRecipes = document.getElementById('view-recipes');
+        const viewAdd = document.getElementById('view-add');
+
+        // Get button elements (to toggle active styling)
+        const btnRecipes = document.getElementById('btn-recipes');
+        const btnAdd = document.getElementById('btn-add');
+
+        if (viewName === 'recipes') {
+            // Show recipes and hide add
+            viewRecipes.classList.remove('hidden');
+            viewAdd.classList.add('hidden');
+
+            // Update active button status
+            btnRecipes.classList.add('active');
+            btnAdd.classList.remove('active');
+
+        } else if (viewName === 'add') {
+            // Show add and hide recipes
+            viewAdd.classList.remove('hidden');
+            viewRecipes.classList.add('hidden');
+
+            // Update active button status
+            btnAdd.classList.add('active');
+            btnRecipes.classList.remove('active');
+        }
+    }
+</script>
 {% endblock %}

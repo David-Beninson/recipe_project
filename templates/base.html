@@ -14,9 +14,11 @@
 <body>
     <!-- Main Navigation Bar -->
     <nav id="main-nav">
-        <div class="nav-brand">
+        <div class="welcome-nav">
             <h2>🍴 Recipe App</h2>
+            <span>Welcome, {{ username }}!</span>
         </div>
+
         <div class="nav-links">
             <a href="{{ url_for('home') }}">My Recipes</a>
             <a href="{{ url_for('search') }}">Find Recipes</a>
