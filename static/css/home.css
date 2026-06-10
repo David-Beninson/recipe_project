@@ -31,6 +31,8 @@
     font-weight: 600;
     color: #666;
     transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
 }
 
 .tab-btn.active {

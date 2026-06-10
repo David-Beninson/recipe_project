@@ -26,7 +26,7 @@
             {% endwith %}
 
             <!-- Registration Form -->
-            <form method="post" onsubmit="return validatePasswords()">
+            <form method="post">
                 <div class="form-group">
                     <label for="name">Username:</label>
                     <input type="text" id="name" name="name" required>
@@ -50,14 +50,10 @@
                     </div>
                 </div>
 
-                <p id="error-message" class="error-message" style="display:none;">
-                    ⚠️ Passwords do not match!
-                </p>
-
                 <button type="submit" class="btn-submit">Create Account</button>
             </form>
 
-            <p class="auth-link">Already have an account? <a href="{{ url_for('login') }}">Log in</a></p>
+            <p class="auth-link">Already have an account? <a href="{{ url_for('auth.login') }}">Log in</a></p>
         </div>
     </div>
 
@@ -71,20 +67,6 @@
             const isHidden = input.type === 'password';
             button.textContent = isHidden ? '🔒' : '🔓';
             button.setAttribute('aria-label', isHidden ? 'Show password' : 'Hide password');
-        }
-
-        // Validate that passwords match before submission
-        function validatePasswords() {
-            const password = document.getElementById('password').value;
-            const confirm = document.getElementById('confirm').value;
-            const errorMsg = document.getElementById('error-message');
-
-            if (password !== confirm) {
-                errorMsg.style.display = 'block';
-                return false;
-            }
-            errorMsg.style.display = 'none';
-            return true;
         }
     </script>
 </body>

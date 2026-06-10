@@ -1,6 +1,6 @@
 {% macro add_recipes() %}
 <h3>Recipe Builder</h3>
-<form id="add-recipe-form" action="{{ url_for('add_recipe') }}" method="POST">
+<form id="add-recipe-form" action="{{ url_for('recipes.add_recipe') }}" method="POST">
     <!-- Recipe Title Input -->
     <input type="text" id="recipe-title" name="title" class="app-input" placeholder="Recipe name" required>
 

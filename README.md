@@ -38,9 +38,13 @@ recipe_project/
 │   ├── config.py          # Load .env settings
 │   ├── database.py        # Async/Sync SQLAlchemy database initialization
 │   ├── fast_api.py        # FastAPI app and route registration
-│   ├── main.py            # Flask main page and routes
+│   ├── main.py            # Flask entry point and blueprint registration
 │   ├── models.py          # SQLAlchemy ORM models (User, Recipe, UserSearch, IngredientSubstitute)
-│   ├── routers/
+│   ├── blueprints/        # Flask Blueprints
+│   │   ├── __init__.py    # Export blueprints
+│   │   ├── auth.py        # Auth routes (login, register, logout)
+│   │   └── recipes.py     # Recipe routes (home, search, add, details, like, substitutes)
+│   ├── routers/           # FastAPI Routers
 │   │   ├── __init__.py
 │   │   ├── auth.py        # Login endpoint
 │   │   ├── recipes.py     # Recipe searches, custom recipes, and substitutes
@@ -48,6 +52,7 @@ recipe_project/
 │   ├── schemas.py         # Pydantic request/response schemas
 │   └── utils/
 │       ├── __init__.py
+│       ├── flask_helpers.py # Flask authentication and filtering helper functions
 │       ├── oauth2.py      # JWT token validation and auth dependency
 │       └── password_hashing.py  # Password hashing and verification
 ├── templates/
