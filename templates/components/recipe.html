@@ -34,13 +34,15 @@ Usage:
                 <!-- Like Count -->
                 <p>
                     <strong>Likes:</strong>
-                    {% if recipe.likes is not none and recipe.likes is defined %}
-                    {{ recipe.likes }}
-                    {% elif recipe.aggregateLikes is not none and recipe.aggregateLikes is defined %}
-                    {{ recipe.aggregateLikes }}
-                    {% else %}
-                    0
-                    {% endif %}
+                    <span class="recipe-likes-count" data-recipe-id="{{ recipe.id }}">
+                        {% if recipe.likes is not none and recipe.likes is defined %}
+                        {{ recipe.likes }}
+                        {% elif recipe.aggregateLikes is not none and recipe.aggregateLikes is defined %}
+                        {{ recipe.aggregateLikes }}
+                        {% else %}
+                        0
+                        {% endif %}
+                    </span>
                 </p>
 
                 <!-- Ingredients rendering based on available structure -->

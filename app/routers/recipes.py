@@ -2,6 +2,7 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession  
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 import httpx
 from app.schemas import RecipeSearchParams, Recipe as RecipeSchema, CustomRecipeCreate 
 from ..config import settings
@@ -222,3 +223,62 @@ async def get_substitutes(
         await db.commit() 
         
         return data
+
+
+@router.post("/{recipe_id}/like", response_model=dict)
+async def like_recipe(
+    recipe_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: models.User = Depends(oauth2.get_current_user)
+):
+    """Toggle liking a recipe for the authenticated user."""
+    # Find recipe by id or spoonacular_id
+    stmt = select(models.Recipe).filter((models.Recipe.id == recipe_id) | (models.Recipe.spoonacular_id == recipe_id))
+    result = await db.execute(stmt)
+    recipe = result.scalars().first()
+    
+    if not recipe:
+        raise HTTPException(status_code=404, detail="Recipe not found")
+        
+    # Load user with liked_recipes relationship
+    user_stmt = select(models.User).filter(models.User.id == current_user.id).options(selectinload(models.User.liked_recipes))
+    user_result = await db.execute(user_stmt)
+    user = user_result.scalars().first()
+    
+    # Check if already liked
+    liked_recipe_to_remove = None
+    for r in user.liked_recipes:
+        if r.id == recipe.id:
+            liked_recipe_to_remove = r
+            break
+            
+    if liked_recipe_to_remove:
+        user.liked_recipes.remove(liked_recipe_to_remove)
+        status_str = "unliked"
+        if recipe.raw_data:
+            raw_data = dict(recipe.raw_data)
+            if "likes" in raw_data:
+                raw_data["likes"] = max(0, (raw_data["likes"] or 0) - 1)
+            elif "aggregateLikes" in raw_data:
+                raw_data["aggregateLikes"] = max(0, (raw_data["aggregateLikes"] or 0) - 1)
+            recipe.raw_data = raw_data
+    else:
+        user.liked_recipes.append(recipe)
+        status_str = "liked"
+        if recipe.raw_data:
+            raw_data = dict(recipe.raw_data)
+            if "likes" in raw_data:
+                raw_data["likes"] = (raw_data.get("likes") or 0) + 1
+            elif "aggregateLikes" in raw_data:
+                raw_data["aggregateLikes"] = (raw_data.get("aggregateLikes") or 0) + 1
+            else:
+                raw_data["likes"] = 1
+            recipe.raw_data = raw_data
+            
+    await db.commit()
+    
+    likes_count = 0
+    if recipe.raw_data:
+        likes_count = recipe.raw_data.get("likes") or recipe.raw_data.get("aggregateLikes") or 0
+        
+    return {"status": status_str, "likes": likes_count}

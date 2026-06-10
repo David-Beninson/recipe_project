@@ -8,7 +8,12 @@
         <button onclick="history.back()" class="btn-back">← Back</button>
     </div>
     <div class="recipe-card">
-        <h1>{{ recipe.title }}</h1>
+        <div class="recipe-header">
+            <h1 class="recipe-title">{{ recipe.title }}</h1>
+            <button id="like-btn" class="like-button btn-like-ajax {% if is_liked %}liked{% endif %}" data-recipe-id="{{ recipe.id }}">
+                <span class="heart-icon">❤️</span> Like
+            </button>
+        </div>
 
         <!-- Recipe Image -->
         {% if recipe.image %}

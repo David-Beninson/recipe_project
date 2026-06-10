@@ -13,6 +13,7 @@
 
     <div class="tab-buttons">
         <button id="btn-recipes" class="tab-btn active" onclick="toggleView('recipes')">My Recipes</button>
+        <button id="btn-liked" class="tab-btn" onclick="toggleView('liked')">Liked Recipes</button>
         <button id="btn-add" class="tab-btn" onclick="toggleView('add')">Add Recipe</button>
     </div>
 
@@ -23,11 +24,21 @@
 
         <div id="view-recipes" class="recipes">
             {% if user_recipes %}
-            {{ render_recipes(recipes=user_recipes) }}
+            {{ render_recipes(title="My Recipes", recipes=user_recipes) }}
             {% else %}
             <div class="no-recipes">
                 <p>You haven't added any recipes yet.</p>
                 <p>Go to <a href="{{ url_for('search') }}">Find Recipes</a> to get started!</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <div id="view-liked" class="recipes hidden">
+            {% if liked_recipes %}
+            {{ render_recipes(title="Liked Recipes", recipes=liked_recipes) }}
+            {% else %}
+            <div class="no-recipes">
+                <p>You haven't liked any recipes yet.</p>
             </div>
             {% endif %}
         </div>
@@ -39,29 +50,33 @@
     function toggleView(viewName) {
         // Get content elements
         const viewRecipes = document.getElementById('view-recipes');
+        const viewLiked = document.getElementById('view-liked');
         const viewAdd = document.getElementById('view-add');
 
         // Get button elements (to toggle active styling)
         const btnRecipes = document.getElementById('btn-recipes');
+        const btnLiked = document.getElementById('btn-liked');
         const btnAdd = document.getElementById('btn-add');
 
+        // Hide all views
+        viewRecipes.classList.add('hidden');
+        viewLiked.classList.add('hidden');
+        viewAdd.classList.add('hidden');
+
+        // Deactivate all buttons
+        btnRecipes.classList.remove('active');
+        btnLiked.classList.remove('active');
+        btnAdd.classList.remove('active');
+
         if (viewName === 'recipes') {
-            // Show recipes and hide add
             viewRecipes.classList.remove('hidden');
-            viewAdd.classList.add('hidden');
-
-            // Update active button status
             btnRecipes.classList.add('active');
-            btnAdd.classList.remove('active');
-
+        } else if (viewName === 'liked') {
+            viewLiked.classList.remove('hidden');
+            btnLiked.classList.add('active');
         } else if (viewName === 'add') {
-            // Show add and hide recipes
             viewAdd.classList.remove('hidden');
-            viewRecipes.classList.add('hidden');
-
-            // Update active button status
             btnAdd.classList.add('active');
-            btnRecipes.classList.remove('active');
         }
     }
 </script>

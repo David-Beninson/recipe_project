@@ -10,6 +10,13 @@ search_recipes_association = Table(
     Column('recipe_id', Integer, ForeignKey('recipes.id'))
 )
 
+# Many-to-many association table linking users to liked recipes
+user_liked_recipes_association = Table(
+    'user_liked_recipes', Base.metadata,
+    Column('user_id', Integer, ForeignKey('users.id', ondelete='CASCADE')),
+    Column('recipe_id', Integer, ForeignKey('recipes.id', ondelete='CASCADE'))
+)
+
 
 class User(Base):
     """User account model - stores username and password."""
@@ -20,6 +27,7 @@ class User(Base):
     # Relationship to all searches performed by this user
     searches = relationship("UserSearch", back_populates="user")
     custom_recipes = relationship("Recipe", back_populates="user")
+    liked_recipes = relationship("Recipe", secondary=user_liked_recipes_association, back_populates="liked_by_users")
 
 
 class UserSearch(Base):
@@ -47,6 +55,7 @@ class Recipe(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     
     user = relationship("User", back_populates="custom_recipes")
+    liked_by_users = relationship("User", secondary=user_liked_recipes_association, back_populates="liked_recipes")
 
 
 class IngredientSubstitute(Base):

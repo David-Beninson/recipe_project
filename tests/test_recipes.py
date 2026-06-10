@@ -62,3 +62,41 @@ async def test_find_recipes_invalid_number_type(authenticated_client):
     assert response.status_code == 422
     data = response.json()
     assert data["detail"][0]["type"] == "int_parsing"
+
+
+@pytest.mark.anyio
+async def test_like_recipe(client, session):
+    # Insert user
+    db_user = models.User(id=1, user_name="Oliver", password="hashed_password")
+    session.add(db_user)
+    # Insert recipe with raw_data containing likes
+    db_recipe = models.Recipe(id=101, spoonacular_id=101, title="Test Pizza", raw_data={"likes": 5})
+    session.add(db_recipe)
+    await session.commit()
+    
+    # Override current user dependency to return this specific user
+    app.dependency_overrides[get_current_user] = lambda: db_user
+    
+    # Verify liking the recipe
+    response = await client.post("/recipes/101/like")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "liked"
+    
+    # Fetch recipe from database to check incremented likes
+    from sqlalchemy import select
+    stmt = select(models.Recipe).filter(models.Recipe.id == 101)
+    res = await session.execute(stmt)
+    recipe = res.scalars().first()
+    assert recipe.raw_data.get("likes") == 6
+    
+    # Verify unliking the recipe
+    response = await client.post("/recipes/101/like")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "unliked"
+    
+    # Refresh session and verify decremented likes
+    res = await session.execute(stmt)
+    recipe = res.scalars().first()
+    assert recipe.raw_data.get("likes") == 5

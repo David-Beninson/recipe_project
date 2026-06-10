@@ -45,8 +45,18 @@ def login_required(f):
 
 @app.context_processor
 def inject_user():
-    """Inject username into all templates."""
-    return dict(username=session.get('username'))
+    """Inject username and liked recipe IDs into all templates."""
+    liked_ids = []
+    if 'user_id' in session:
+        try:
+            with SessionLocal() as db:
+                user_stmt = select(User).filter(User.id == session['user_id']).options(selectinload(User.liked_recipes))
+                user_obj = db.execute(user_stmt).scalars().first()
+                if user_obj:
+                    liked_ids = [r.spoonacular_id if r.spoonacular_id else r.id for r in user_obj.liked_recipes]
+        except Exception as e:
+            print(f"Error injecting liked ids: {e}")
+    return dict(username=session.get('username'), liked_recipe_ids=liked_ids)
 
 @app.route('/')
 def index():
@@ -144,6 +154,7 @@ def register():
 def home():
     """Home page after login showing previously searched recipes."""
     user_recipes = []
+    liked_recipes = []
     try:
         with SessionLocal() as db:
             # Load user searches with their cached recipes
@@ -170,11 +181,22 @@ def home():
                 recipe_data['title'] = r.title
                 user_recipes.append(recipe_data)
                 
+            # Load user liked recipes
+            user_stmt = select(User).filter(User.id == session['user_id']).options(selectinload(User.liked_recipes))
+            user_obj = db.execute(user_stmt).scalars().first()
+            if user_obj:
+                for r in user_obj.liked_recipes:
+                    recipe_data = r.raw_data if r.raw_data else {}
+                    recipe_data['id'] = r.spoonacular_id if r.spoonacular_id else r.id
+                    recipe_data['title'] = r.title
+                    liked_recipes.append(recipe_data)
+                
     except Exception as e:
         print(f"Error fetching user recipes: {e}")
         user_recipes = []
+        liked_recipes = []
         
-    return render_template('home.html', username=session.get('username'), user_recipes=user_recipes)
+    return render_template('home.html', username=session.get('username'), user_recipes=user_recipes, liked_recipes=liked_recipes)
 
 @app.route('/add_recipe', methods=['POST'])
 @login_required
@@ -261,7 +283,16 @@ def cooking_steps(recipe_id):
                 recipe = response.json()
                 # Ensure the ID matches what templates expect
                 recipe['id'] = recipe_id
-                return render_template('cooking_steps.html', recipe=recipe)
+                
+                # Check if this recipe is liked by the current user
+                is_liked = False
+                with SessionLocal() as db:
+                    user_stmt = select(User).filter(User.id == session['user_id']).options(selectinload(User.liked_recipes))
+                    user_obj = db.execute(user_stmt).scalars().first()
+                    if user_obj:
+                        is_liked = any(r.spoonacular_id == recipe_id or r.id == recipe_id for r in user_obj.liked_recipes)
+                        
+                return render_template('cooking_steps.html', recipe=recipe, is_liked=is_liked)
             else:
                 flash('Recipe detail not found on server', 'error')
                 return redirect(url_for('home'))
@@ -269,6 +300,24 @@ def cooking_steps(recipe_id):
         print(f"Error fetching recipe: {e}")
         flash('Error loading recipe details from backend', 'error')
         return redirect(url_for('home'))
+
+
+@app.route('/recipe/<int:recipe_id>/like', methods=['POST'])
+@login_required
+def like_recipe_route(recipe_id):
+    """Toggle like for a recipe by calling the backend."""
+    token = create_access_token(data={"user_id": session['user_id']})
+    headers = {"Authorization": f"Bearer {token}"}
+    try:
+        with httpx.Client() as client:
+            response = client.post(f"http://127.0.0.1:8000/recipes/{recipe_id}/like", headers=headers, timeout=10.0)
+            if response.status_code == 200:
+                return jsonify(response.json())
+            else:
+                return jsonify({"error": "Failed to toggle like on backend"}), response.status_code
+    except Exception as e:
+        print(f"Error calling like backend: {e}")
+        return jsonify({"error": "Connection error to backend"}), 500
 
 @app.route('/substitutes')
 @login_required

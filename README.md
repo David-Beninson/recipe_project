@@ -319,6 +319,23 @@ Response:
 }
 ```
 
+### 4. Like / Favorite a recipe
+
+`POST /recipes/{recipe_id}/like`
+
+Requires authentication.
+
+Toggles the liked status of a recipe for the authenticated user.
+
+Response:
+
+```json
+{
+  "status": "liked",
+  "likes": 6
+}
+```
+
 ---
 
 ## 🧠 Database models
@@ -332,6 +349,7 @@ The app uses SQLAlchemy ORM models defined in `app.models`.
   * `user_name` (unique)
   * `password` (bcrypt hashed)
   * `custom_recipes` (relationship linking to custom recipes created by this user)
+  * `liked_recipes` (relationship linking to recipes liked by this user)
 
 ### User searches
 
@@ -349,6 +367,12 @@ The app uses SQLAlchemy ORM models defined in `app.models`.
   * `title`
   * `raw_data` (JSON payload from Spoonacular or custom user input)
   * `user_id` (foreign key to users, nullable, linking custom recipes to their creator)
+  * `liked_by_users` (relationship linking to users who liked this recipe)
+
+### User Liked Recipes
+
+* `user_liked_recipes` table:
+  * many-to-many association table containing `user_id` and `recipe_id`
 
 ### Ingredient substitutes
 
