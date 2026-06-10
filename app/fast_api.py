@@ -1,7 +1,7 @@
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.database import engine
+from app.database import async_engine
 from app.models import Base
 from app.routers import user_router, auth_router, recipe_router
 from contextlib import asynccontextmanager
@@ -9,15 +9,12 @@ from contextlib import asynccontextmanager
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize database tables when the app starts."""
-    async with engine.begin() as conn:
+    async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield
 
 
 app = FastAPI(lifespan=lifespan)
-
-
-app = FastAPI()
 origins = ["*"]
 app.add_middleware(
     CORSMiddleware,

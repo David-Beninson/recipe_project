@@ -1,5 +1,5 @@
 import pytest
-from app.main import app
+from app.fast_api import app
 from app.database import get_db
 from app.utils.oauth2 import get_current_user
 from app import models

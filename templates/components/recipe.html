@@ -1,9 +1,9 @@
 {# =====================================================
-     RECIPE MACRO - Reusable recipe rendering component
-     
-     Usage:
-     {{ render_recipes(title="My Recipes", recipes=recipe_list) }}
-     ===================================================== #}
+RECIPE MACRO - Reusable recipe rendering component
+
+Usage:
+{{ render_recipes(title="My Recipes", recipes=recipe_list) }}
+===================================================== #}
 
 {% macro render_recipes(title="My Recipes", recipes=[]) %}
 <div class="recipes-container">
@@ -23,16 +23,10 @@
 
         <!-- Recipe Details (shown when expanded) -->
         <div class="recipe-details">
-            <!-- Action Buttons -->
-            <div class="recipe-actions">
-                <a href="{{ url_for('cooking_steps', recipe_id=recipe.id) }}">
-                    View Full Steps
-                </a>
-            </div>
 
             <!-- Recipe Image -->
             {% if recipe.image %}
-            <img src="{{ recipe.image }}" alt="{{ recipe.title }}">
+            <img src="{{ recipe.image }}" alt="{{ recipe.title }}" class="recipe-image">
             {% endif %}
 
             <!-- Recipe Information -->
@@ -55,6 +49,12 @@
                     <li>{{ ingredient.original }}</li>
                     {% endfor %}
                 </ul>
+            </div>
+            <!-- Action Buttons -->
+            <div class="recipe-actions">
+                <a href="{{ url_for('cooking_steps', recipe_id=recipe.id) }}">
+                    View Full Steps
+                </a>
             </div>
         </div>
     </details>

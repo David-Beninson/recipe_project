@@ -43,6 +43,11 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+@app.context_processor
+def inject_user():
+    """Inject username into all templates."""
+    return dict(username=session.get('username'))
+
 @app.route('/')
 def index():
     """Redirect to login by default."""

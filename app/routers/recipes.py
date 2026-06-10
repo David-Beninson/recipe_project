@@ -35,7 +35,7 @@ async def find_recipes(
         - Caches recipes in database to avoid duplicates
     """
     # Create search record for user
-    new_search = models.UserSearch(user_id=current_user.id, query_ingredients=params.ingredients)
+    new_search = models.UserSearch(user_id=current_user.id, query_ingredients=params.ingredients, recipes=[])
     db.add(new_search)
     
     # Call Spoonacular API to search for recipes
