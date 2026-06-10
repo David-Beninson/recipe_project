@@ -55,6 +55,28 @@ async def find_recipes(
         
         data = response.json()
         
+        # Fetch detailed info in bulk to support filtering and populate instructions cache
+        if data:
+            ids = ",".join([str(item["id"]) for item in data])
+            bulk_url = "https://api.spoonacular.com/recipes/informationBulk"
+            bulk_response = await client.get(bulk_url, params={
+                "apiKey": settings.spoonacular_api_key,
+                "ids": ids,
+                "includeNutrition": False
+            })
+            if bulk_response.status_code == 200:
+                details = {r_info["id"]: r_info for r_info in bulk_response.json()}
+                for item in data:
+                    recipe_id = item["id"]
+                    if recipe_id in details:
+                        item["readyInMinutes"] = details[recipe_id].get("readyInMinutes")
+                        item["dishTypes"] = details[recipe_id].get("dishTypes")
+                        item["vegetarian"] = details[recipe_id].get("vegetarian")
+                        item["vegan"] = details[recipe_id].get("vegan")
+                        item["glutenFree"] = details[recipe_id].get("glutenFree")
+                        item["instructions"] = details[recipe_id].get("instructions")
+                        item["extendedIngredients"] = details[recipe_id].get("extendedIngredients")
+        
         # Pydantic Models
         recipes = [RecipeSchema.model_validate(item) for item in data]
         
@@ -70,7 +92,7 @@ async def find_recipes(
                 recipe = models.Recipe(
                     spoonacular_id=recipe_obj.id, 
                     title=recipe_obj.title, 
-                    raw_data=recipe_obj.model_dump()
+                    raw_data=recipe_obj.model_dump(by_alias=True)
                 )
                 db.add(recipe)
                 await db.flush()

@@ -44,6 +44,48 @@
         {% endwith %}
     </div>
 
+    <!-- Filter Bar -->
+    {% if recipes %}
+    <div class="filter-bar">
+        <h3>Filter Results</h3>
+        <div class="filter-groups">
+            <div class="filter-group">
+                <label for="filter-dish-type">Dish Type:</label>
+                <select id="filter-dish-type" class="filter-input">
+                    <option value="">All Types</option>
+                    <option value="main course">Main Course</option>
+                    <option value="side dish">Side Dish</option>
+                    <option value="soup">Soup</option>
+                    <option value="salad">Salad</option>
+                    <option value="breakfast">Breakfast</option>
+                    <option value="dessert">Dessert</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="filter-prep-time">Max Cooking Time:</label>
+                <select id="filter-prep-time" class="filter-input">
+                    <option value="9999">Any Time</option>
+                    <option value="15">Up to 15 mins</option>
+                    <option value="30">Up to 30 mins</option>
+                    <option value="45">Up to 45 mins</option>
+                    <option value="60">Up to 60 mins</option>
+                </select>
+            </div>
+            <div class="filter-group checkboxes">
+                <label>
+                    <input type="checkbox" id="filter-vegetarian" class="filter-checkbox"> Vegetarian
+                </label>
+                <label>
+                    <input type="checkbox" id="filter-vegan" class="filter-checkbox"> Vegan
+                </label>
+                <label>
+                    <input type="checkbox" id="filter-gluten-free" class="filter-checkbox"> Gluten Free
+                </label>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Search Results -->
     {% if recipes %}
     <div class="search-results">
@@ -51,4 +93,55 @@
     </div>
     {% endif %}
 </section>
+
+{% block extra_js %}
+<script>
+    document.querySelectorAll('.filter-input, .filter-checkbox').forEach(input => {
+        input.addEventListener('change', filterRecipes);
+    });
+
+    function filterRecipes() {
+        const dishType = document.getElementById('filter-dish-type').value;
+        const maxTime = parseInt(document.getElementById('filter-prep-time').value) || 9999;
+        const vegetarian = document.getElementById('filter-vegetarian').checked;
+        const vegan = document.getElementById('filter-vegan').checked;
+        const glutenFree = document.getElementById('filter-gluten-free').checked;
+
+        document.querySelectorAll('.recipe-item').forEach(item => {
+            const itemTime = parseInt(item.getAttribute('data-prep-time')) || 9999;
+            const itemTypes = item.getAttribute('data-dish-types') || '';
+            const isVeg = item.getAttribute('data-vegetarian') === 'true';
+            const isVegan = item.getAttribute('data-vegan') === 'true';
+            const isGlutenFree = item.getAttribute('data-gluten-free') === 'true';
+
+            let match = true;
+
+            // Filter by dish type
+            if (dishType && !itemTypes.includes(dishType)) {
+                match = false;
+            }
+            // Filter by prep time
+            if (itemTime > maxTime) {
+                match = false;
+            }
+            // Filter by dietary
+            if (vegetarian && !isVeg) {
+                match = false;
+            }
+            if (vegan && !isVegan) {
+                match = false;
+            }
+            if (glutenFree && !isGlutenFree) {
+                match = false;
+            }
+
+            if (match) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+</script>
+{% endblock %}
 {% endblock %}

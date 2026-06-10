@@ -6,6 +6,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/search.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -16,6 +17,48 @@
         <button id="btn-liked" class="tab-btn" onclick="toggleView('liked')">Liked Recipes</button>
         <button id="btn-add" class="tab-btn" onclick="toggleView('add')">Add Recipe</button>
     </div>
+
+    <!-- Filter Bar -->
+    {% if user_recipes or liked_recipes %}
+    <div class="filter-bar">
+        <h3>Filter Recipes</h3>
+        <div class="filter-groups">
+            <div class="filter-group">
+                <label for="filter-dish-type">Dish Type:</label>
+                <select id="filter-dish-type" class="filter-input">
+                    <option value="">All Types</option>
+                    <option value="main course">Main Course</option>
+                    <option value="side dish">Side Dish</option>
+                    <option value="soup">Soup</option>
+                    <option value="salad">Salad</option>
+                    <option value="breakfast">Breakfast</option>
+                    <option value="dessert">Dessert</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="filter-prep-time">Max Cooking Time:</label>
+                <select id="filter-prep-time" class="filter-input">
+                    <option value="9999">Any Time</option>
+                    <option value="15">Up to 15 mins</option>
+                    <option value="30">Up to 30 mins</option>
+                    <option value="45">Up to 45 mins</option>
+                    <option value="60">Up to 60 mins</option>
+                </select>
+            </div>
+            <div class="filter-group checkboxes">
+                <label>
+                    <input type="checkbox" id="filter-vegetarian" class="filter-checkbox"> Vegetarian
+                </label>
+                <label>
+                    <input type="checkbox" id="filter-vegan" class="filter-checkbox"> Vegan
+                </label>
+                <label>
+                    <input type="checkbox" id="filter-gluten-free" class="filter-checkbox"> Gluten Free
+                </label>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
     <nav id="home-nav">
         <div id="view-add" class="sidebar hidden">
@@ -47,23 +90,20 @@
 </section>
 
 <script>
+    // Handle tab view toggling
     function toggleView(viewName) {
-        // Get content elements
         const viewRecipes = document.getElementById('view-recipes');
         const viewLiked = document.getElementById('view-liked');
         const viewAdd = document.getElementById('view-add');
 
-        // Get button elements (to toggle active styling)
         const btnRecipes = document.getElementById('btn-recipes');
         const btnLiked = document.getElementById('btn-liked');
         const btnAdd = document.getElementById('btn-add');
 
-        // Hide all views
         viewRecipes.classList.add('hidden');
         viewLiked.classList.add('hidden');
         viewAdd.classList.add('hidden');
 
-        // Deactivate all buttons
         btnRecipes.classList.remove('active');
         btnLiked.classList.remove('active');
         btnAdd.classList.remove('active');
@@ -78,6 +118,75 @@
             viewAdd.classList.remove('hidden');
             btnAdd.classList.add('active');
         }
+
+        // Dynamically show/hide filter bar based on current tab's recipe count
+        const filterBar = document.querySelector('.filter-bar');
+        if (filterBar) {
+            if (viewName === 'recipes') {
+                const hasRecipes = viewRecipes.querySelectorAll('.recipe-item').length > 0;
+                filterBar.style.display = hasRecipes ? 'block' : 'none';
+            } else if (viewName === 'liked') {
+                const hasLiked = viewLiked.querySelectorAll('.recipe-item').length > 0;
+                filterBar.style.display = hasLiked ? 'block' : 'none';
+            } else {
+                filterBar.style.display = 'none';
+            }
+        }
+    }
+
+    // Set initial visibility of the filter bar on load
+    document.addEventListener('DOMContentLoaded', () => {
+        const filterBar = document.querySelector('.filter-bar');
+        const viewRecipes = document.getElementById('view-recipes');
+        if (filterBar && viewRecipes) {
+            const hasRecipes = viewRecipes.querySelectorAll('.recipe-item').length > 0;
+            filterBar.style.display = hasRecipes ? 'block' : 'none';
+        }
+    });
+
+    // Filter recipes in list dynamically
+    document.querySelectorAll('.filter-input, .filter-checkbox').forEach(input => {
+        input.addEventListener('change', filterRecipes);
+    });
+
+    function filterRecipes() {
+        const dishType = document.getElementById('filter-dish-type').value;
+        const maxTime = parseInt(document.getElementById('filter-prep-time').value) || 9999;
+        const vegetarian = document.getElementById('filter-vegetarian').checked;
+        const vegan = document.getElementById('filter-vegan').checked;
+        const glutenFree = document.getElementById('filter-gluten-free').checked;
+
+        document.querySelectorAll('.recipe-item').forEach(item => {
+            const itemTime = parseInt(item.getAttribute('data-prep-time')) || 9999;
+            const itemTypes = item.getAttribute('data-dish-types') || '';
+            const isVeg = item.getAttribute('data-vegetarian') === 'true';
+            const isVegan = item.getAttribute('data-vegan') === 'true';
+            const isGlutenFree = item.getAttribute('data-gluten-free') === 'true';
+
+            let match = true;
+
+            if (dishType && !itemTypes.includes(dishType)) {
+                match = false;
+            }
+            if (itemTime > maxTime) {
+                match = false;
+            }
+            if (vegetarian && !isVeg) {
+                match = false;
+            }
+            if (vegan && !isVegan) {
+                match = false;
+            }
+            if (glutenFree && !isGlutenFree) {
+                match = false;
+            }
+
+            if (match) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
     }
 </script>
 {% endblock %}

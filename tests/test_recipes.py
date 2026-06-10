@@ -15,19 +15,46 @@ async def authenticated_client(client):
 
 @pytest.mark.anyio
 async def test_find_recipes_success(authenticated_client, mocker):
-    mock_spoonacular_response = [
+    mock_search_response = [
         {
             "id": 716429,
             "title": "Pasta with Garlic and Tomato",
             "image": "https://spoonacular.com/recipeImages/716429-312x231.jpg",
-            "raw_data": {}
+            "imageType": "jpg",
+            "usedIngredientCount": 2,
+            "missedIngredientCount": 1,
+            "likes": 10,
+            "usedIngredients": [],
+            "missedIngredients": [],
+            "unusedIngredients": []
         }
     ]
     
-    mock_response = mocker.MagicMock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = mock_spoonacular_response
-    mocker.patch("httpx.AsyncClient.get", return_value=mock_response)
+    mock_bulk_response = [
+        {
+            "id": 716429,
+            "title": "Pasta with Garlic and Tomato",
+            "image": "https://spoonacular.com/recipeImages/716429-312x231.jpg",
+            "readyInMinutes": 25,
+            "dishTypes": ["lunch", "main course", "dinner"],
+            "vegetarian": True,
+            "vegan": False,
+            "glutenFree": True,
+            "instructions": "Boil pasta.",
+            "extendedIngredients": []
+        }
+    ]
+    
+    async def mock_get(url, params=None, **kwargs):
+        mock_resp = mocker.MagicMock()
+        mock_resp.status_code = 200
+        if "informationBulk" in url:
+            mock_resp.json.return_value = mock_bulk_response
+        else:
+            mock_resp.json.return_value = mock_search_response
+        return mock_resp
+
+    mocker.patch("httpx.AsyncClient.get", side_effect=mock_get)
 
     response = await authenticated_client.get("/recipes/find-by-ingredients", params={
         "ingredients": "tomato,pasta",

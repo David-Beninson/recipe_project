@@ -219,10 +219,11 @@ What this endpoint does:
 
 * Creates a new `UserSearch` record for the authenticated user
 * Calls Spoonacular using the configured `spoonacular_url`
+* Calls Spoonacular `informationBulk` endpoint to retrieve details (cook time, dish types, and dietary preferences)
 * Validates each recipe response item against a Pydantic schema
-* Caches any new recipe in the local database
+* Caches any new recipe in the local database with full details (including instructions)
 * Links the found recipes to the user search record
-* Returns the Spoonacular JSON payload
+* Returns the enhanced Spoonacular JSON payload containing prep time, dish types, and dietary flags for filtering
 
 Example response:
 

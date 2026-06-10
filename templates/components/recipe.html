@@ -16,7 +16,12 @@ Usage:
 
     <!-- Recipe List -->
     {% for recipe in recipes %}
-    <details class="recipe-item">
+    <details class="recipe-item"
+        data-prep-time="{% if recipe.readyInMinutes is defined and recipe.readyInMinutes is not none %}{{ recipe.readyInMinutes }}{% elif recipe.ready_in_minutes is defined and recipe.ready_in_minutes is not none %}{{ recipe.ready_in_minutes }}{% else %}9999{% endif %}"
+        data-dish-types="{% if recipe.dishTypes is defined and recipe.dishTypes is not none %}{{ recipe.dishTypes|join(',')|lower }}{% elif recipe.dish_types is defined and recipe.dish_types is not none %}{{ recipe.dish_types|join(',')|lower }}{% endif %}"
+        data-vegetarian="{% if recipe.vegetarian is defined and recipe.vegetarian %}true{% else %}false{% endif %}"
+        data-vegan="{% if recipe.vegan is defined and recipe.vegan %}true{% else %}false{% endif %}"
+        data-gluten-free="{% if recipe.glutenFree is defined and recipe.glutenFree %}true{% elif recipe.gluten_free is defined and recipe.gluten_free %}true{% else %}false{% endif %}">
         <summary>
             <h3>{{ recipe.title }}</h3>
         </summary>
