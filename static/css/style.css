@@ -142,6 +142,25 @@ body {
     margin-bottom: 15px;
 }
 
+.recipe-badges {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin: 8px 0;
+}
+
+.badge {
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+.badge-vegetarian { background-color: #d4edda; color: #155724; }
+.badge-vegan { background-color: #c3e6cb; color: #155724; }
+.badge-gluten-free { background-color: #fff3cd; color: #856404; }
+.badge-kosher { background-color: #cce5ff; color: #004085; }
+
 /* =====================================================
    RECIPE SECTIONS
    ===================================================== */
