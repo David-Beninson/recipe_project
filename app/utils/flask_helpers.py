@@ -1,6 +1,52 @@
 from functools import wraps
 from flask import session, flash, redirect, url_for
 
+nonKosherItems=[
+    # --- Seafood (No fins and scales) ---
+    "shrimp",
+    "lobster",
+    "crab",
+    "clams",
+    "oysters",
+    "mussels",
+    "squid",
+    "octopus",
+    "shark",
+    "catfish",
+    "eel",
+
+    # --- Land Animals (Do not both chew cud and have cloven hooves) ---
+    "pork",
+    "bacon",
+    "ham",
+    "rabbit",
+    "camel",
+    "horse",
+    "wild boar",
+
+    # --- Birds of Prey & Scavengers ---
+    "eagle",
+    "vulture",
+    "owl",
+    "raven",
+    "ostrich",
+
+    # --- Insects & Creeping Things ---
+    "ants",
+    "flies",
+    "snails",
+    "slugs",
+
+    # --- Disallowed Mixtures & Byproducts ---
+    "cheeseburger",             # Mixing meat and dairy
+    "chicken parmesan",          # Mixing poultry and dairy
+    "gelatin",                  # If derived from non-kosher animals (like pork)
+    "lard",                     # Pig fat
+    "tallow",                   # Unrefined beef/mutton fat (unless certified kosher)
+    "rennet",                   # Animal enzyme used in cheese (unless certified microbial/kosher)
+]
+
+
 def login_required(f):
     """Decorator to require login for Flask routes."""
     @wraps(f)
@@ -11,7 +57,45 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-def filter_recipes_list(recipes, dish_type=None, prep_time=None, vegetarian=False, vegan=False, gluten_free=False):
+def check_kosher(ingredients: list):
+    """
+    Checks if the list of ingredients contains any non-kosher items 
+    or mixtures of meat and dairy products.
+    """
+    global nonKosherItems
+    isMeat = False
+    isDairy = False
+
+    # If there are no ingredients, it is considered kosher by default.
+    if not ingredients:
+        return True
+
+    # Iterate through each ingredient to inspect its category (aisle) and name.
+    for ing in ingredients:
+        # Extract the aisle/category and clean name of the ingredient, handling both dicts and objects.
+        aisle = ing.get('aisle', '').lower() if isinstance(ing, dict) else getattr(ing, 'aisle', '').lower()
+        name_clean = ing.get('nameClean', '').lower() if isinstance(ing, dict) else getattr(ing, 'nameClean', '').lower()
+
+        # Check if the ingredient belongs to the meat or poultry aisle.
+        if "meat" in aisle or "poultry" in aisle:
+            isMeat = True
+        # Check if the ingredient belongs to the dairy or cheese aisle.
+        elif "dairy" in aisle or "cheese" in aisle:
+            isDairy = True
+
+        # If the clean name of the ingredient is in the list of known non-kosher items, reject it.
+        if name_clean in nonKosherItems:
+            return False
+
+    # In kosher dietary laws, mixing meat and dairy products in the same recipe is forbidden.
+    if isMeat and isDairy:
+        return False
+
+    # If no non-kosher ingredients or dairy-meat combinations were found, the recipe is kosher.
+    return True
+        
+
+def filter_recipes_list(recipes, dish_type=None, prep_time=None, vegetarian=False, vegan=False, gluten_free=False, kosher=False):
     """Filter recipe list based on dish type, cooking time, and dietary requirements."""
     filtered = []
     for r in recipes:
@@ -50,7 +134,12 @@ def filter_recipes_list(recipes, dish_type=None, prep_time=None, vegetarian=Fals
             match = False
         if gluten_free and not r_gf:
             match = False
-            
+
+        if kosher:
+            r_ingredients = r.get('extendedIngredients') or r.get('ingredients') or []
+            if not check_kosher(r_ingredients):
+                match = False
+
         if match:
             filtered.append(r)
     return filtered

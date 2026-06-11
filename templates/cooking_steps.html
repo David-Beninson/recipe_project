@@ -5,12 +5,13 @@
 {% block content %}
 <section class="recipe-detail-container">
     <div class="back-button-container">
-        <button onclick="history.back()" class="btn-back">← Back</button>
+        <a href="{{ request.referrer or url_for('recipes.home') }}" class="btn-back" style="display: inline-block; text-decoration: none;">← Back</a>
     </div>
     <div class="recipe-card">
         <div class="recipe-header">
             <h1 class="recipe-title">{{ recipe.title }}</h1>
-            <button id="like-btn" class="like-button btn-like-ajax {% if is_liked %}liked{% endif %}" data-recipe-id="{{ recipe.id }}">
+            <button id="like-btn" class="like-button btn-like-ajax {% if is_liked %}liked{% endif %}"
+                data-recipe-id="{{ recipe.id }}">
                 <span class="heart-icon">❤️</span> Like
             </button>
         </div>

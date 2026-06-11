@@ -6,7 +6,7 @@ from sqlalchemy.orm import selectinload
 from app.database import SessionLocal
 from app.models import User, UserSearch, Recipe
 from app.utils.oauth2 import create_access_token
-from app.utils.flask_helpers import login_required, filter_recipes_list
+from app.utils.flask_helpers import login_required, filter_recipes_list, check_kosher
 
 recipes_bp = Blueprint('recipes', __name__)
 
@@ -25,6 +25,7 @@ def home():
     vegetarian = request.args.get('vegetarian') == 'on' or request.args.get('vegetarian') == 'true'
     vegan = request.args.get('vegan') == 'on' or request.args.get('vegan') == 'true'
     gluten_free = request.args.get('gluten_free') == 'on' or request.args.get('gluten_free') == 'true'
+    isKosher = request.args.get('kosher') == 'on' or request.args.get('kosher') == 'true' 
 
     try:
         with SessionLocal() as db:
@@ -74,7 +75,8 @@ def home():
         prep_time=prep_time if prep_time != 9999 else None,
         vegetarian=vegetarian,
         vegan=vegan,
-        gluten_free=gluten_free
+        gluten_free=gluten_free,
+        kosher=isKosher
     )
     
     filtered_liked_recipes = filter_recipes_list(
@@ -83,7 +85,8 @@ def home():
         prep_time=prep_time if prep_time != 9999 else None,
         vegetarian=vegetarian,
         vegan=vegan,
-        gluten_free=gluten_free
+        gluten_free=gluten_free,
+        kosher=isKosher
     )
 
     return render_template(
@@ -97,7 +100,8 @@ def home():
         prep_time=prep_time,
         vegetarian=vegetarian,
         vegan=vegan,
-        gluten_free=gluten_free
+        gluten_free=gluten_free,
+        kosher=isKosher
     )
 
 @recipes_bp.route('/add_recipe', methods=['POST'])
@@ -150,6 +154,7 @@ def search():
     vegetarian = False
     vegan = False
     gluten_free = False
+    kosher = False
     
     if request.method == 'POST':
         ingredients = request.form.get('ingredients', '')
@@ -160,6 +165,7 @@ def search():
         vegetarian = request.form.get('vegetarian') == 'on'
         vegan = request.form.get('vegan') == 'on'
         gluten_free = request.form.get('gluten_free') == 'on'
+        kosher = request.form.get('kosher') == 'on'
         
         if not ingredients:
             flash('Please enter ingredients', 'warning')
@@ -183,7 +189,8 @@ def search():
                         prep_time=prep_time if prep_time != 9999 else None,
                         vegetarian=vegetarian,
                         vegan=vegan,
-                        gluten_free=gluten_free
+                        gluten_free=gluten_free,
+                        kosher=kosher
                     )
                     flash(f'Found {len(recipes)} recipes matching filters.', 'success')
                 else:
@@ -201,7 +208,8 @@ def search():
         prep_time=prep_time,
         vegetarian=vegetarian,
         vegan=vegan,
-        gluten_free=gluten_free
+        gluten_free=gluten_free,
+        kosher=kosher
     )
 
 @recipes_bp.route('/recipe/<int:recipe_id>')
