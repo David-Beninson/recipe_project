@@ -1,0 +1,38 @@
+{% macro render_filters(dish_type='', prep_time=9999, vegetarian=False, vegan=False, gluten_free=False, kosher=False) %}
+<div class="filter-group">
+    <label for="filter-dish-type">Dish Type:</label>
+    <select id="filter-dish-type" name="dish_type" class="filter-input">
+        <option value="">All Types</option>
+        <option value="main course" {% if dish_type == 'main course' or dish_type == 'main course' %}selected{% endif %}>Main Course</option>
+        <option value="side dish" {% if dish_type == 'side dish' or dish_type == 'side dish' %}selected{% endif %}>Side Dish</option>
+        <option value="soup" {% if dish_type == 'soup' or dish_type == 'soup' %}selected{% endif %}>Soup</option>
+        <option value="salad" {% if dish_type == 'salad' or dish_type == 'salad' %}selected{% endif %}>Salad</option>
+        <option value="breakfast" {% if dish_type == 'breakfast' or dish_type == 'breakfast' %}selected{% endif %}>Breakfast</option>
+        <option value="dessert" {% if dish_type == 'dessert' or dish_type == 'dessert' %}selected{% endif %}>Dessert</option>
+    </select>
+</div>
+<div class="filter-group">
+    <label for="filter-prep-time">Max Cooking Time:</label>
+    <select id="filter-prep-time" name="prep_time" class="filter-input">
+        <option value="9999" {% if prep_time == 9999 or prep_time == '9999' or not prep_time %}selected{% endif %}>Any Time</option>
+        <option value="15" {% if prep_time == 15 or prep_time == '15' %}selected{% endif %}>Up to 15 mins</option>
+        <option value="30" {% if prep_time == 30 or prep_time == '30' %}selected{% endif %}>Up to 30 mins</option>
+        <option value="45" {% if prep_time == 45 or prep_time == '45' %}selected{% endif %}>Up to 45 mins</option>
+        <option value="60" {% if prep_time == 60 or prep_time == '60' %}selected{% endif %}>Up to 60 mins</option>
+    </select>
+</div>
+<div class="filter-group checkboxes">
+    <label>
+        <input type="checkbox" id="filter-vegetarian" name="vegetarian" class="filter-checkbox" {% if vegetarian %}checked{% endif %}> Vegetarian
+    </label>
+    <label>
+        <input type="checkbox" id="filter-vegan" name="vegan" class="filter-checkbox" {% if vegan %}checked{% endif %}> Vegan
+    </label>
+    <label>
+        <input type="checkbox" id="filter-gluten-free" name="gluten_free" class="filter-checkbox" {% if gluten_free %}checked{% endif %}> Gluten Free
+    </label>
+    <label>
+        <input type="checkbox" id="filter-kosher" name="kosher" class="filter-checkbox" {% if kosher %}checked{% endif %}> Kosher
+    </label>
+</div>
+{% endmacro %}

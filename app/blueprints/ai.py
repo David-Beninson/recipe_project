@@ -12,9 +12,10 @@ ai_bp = Blueprint('ai', __name__, url_prefix="/ai")
 def generate_ai():
     """Route to generate a new recipe using AI from available ingredients."""
     ingredients = request.form.get('ingredients')
+    redirect_to = request.form.get('redirect_to') or url_for('recipes.search')
     if not ingredients:
         flash("Please enter ingredients for the AI to use.", "warning")
-        return redirect(url_for('recipes.search'))
+        return redirect(redirect_to)
         
     token = create_access_token(data={"user_id": session['user_id']})
     headers = {"Authorization": f"Bearer {token}"}
@@ -38,7 +39,7 @@ def generate_ai():
         print(f"AI Generation connection error: {e}")
         flash("Failed to connect to AI backend service.", "error")
         
-    return redirect(url_for('recipes.search'))
+    return redirect(redirect_to)
 
 
 @ai_bp.route('/recipe/<int:recipe_id>/substitute-ai', methods=['POST'])
