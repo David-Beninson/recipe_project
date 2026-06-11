@@ -17,12 +17,13 @@
     <nav id="main-nav">
         <div class="welcome-nav">
             <h2>🍴 Recipe App</h2>
-            <span>Welcome, {{ username }}!</span>
+            <span>Welcome, {{ username | capitalize }}!</span>
         </div>
 
         <div class="nav-links">
             <a href="{{ url_for('recipes.home') }}">Home</a>
             <a href="{{ url_for('recipes.search') }}">Find Recipes</a>
+            <a href="{{ url_for('recipes.all_recipes') }}">All Recipes</a>
             <a href="{{ url_for('auth.logout') }}">Log out</a>
         </div>
     </nav>

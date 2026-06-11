@@ -21,7 +21,8 @@ This app lets users:
 - Search for recipes by ingredients with a configurable quantity limit (1-5 recipes)
 - Receive ingredient substitute suggestions dynamically in the UI by clicking ingredients
 - Save custom user recipes (with custom ingredient quantities and instructions) to their profile
-- **Chef-AI Custom Recipe Generation**: Ask AI to generate a completely new recipe from scratch based on the searched ingredients
+- **Show All Recipes**: Browse a dedicated dashboard showing all saved/cached recipes in the database with full search and filtering capabilities
+- **Chef-AI Custom Recipe Generation (with active filters)**: Ask AI to generate a completely new recipe from scratch based on entered ingredients while respecting active filters (kosher, prep time, vegan, vegetarian, gluten-free)
 - **AI Ingredient Substitution**: Interactively swap specific ingredients in any recipe with smart alternatives recommended by AI
 - **Quick AI Suggestions**: Get a rapid, context-aware 1-2 sentence substitute recommendation for any recipe ingredient
 - Save search history and cache recipe details/ingredient substitutes in the database
@@ -64,6 +65,7 @@ recipe_project/
 │       └── password_hashing.py  # Password hashing and verification
 ├── templates/
 │   ├── base.html          # Base layout template with navigation
+│   ├── all_recipes.html   # Displays all recipes in the database with filtering and AI generation
 │   ├── login.html         # Login page
 │   ├── register.html      # Registration page
 │   ├── home.html          # User dashboard showing searched and custom recipes
@@ -72,11 +74,13 @@ recipe_project/
 │   └── components/
 │       ├── add_recipe.html # Custom recipe form component
 │       ├── ai.html         # Reusable components for AI recipe generation and substitution
+│       ├── filters.html    # Recipe search filters component
 │       └── recipe.html     # Recipe card renderer macro
 ├── static/
 │   ├── favicon.ico        # Site icon / favicon
 │   └── css/
 │       ├── ai.css         # Styles for AI components and selection mode
+│       ├── filters.css     # Styles for recipe search filters
 │       ├── style.css      # Core variables, layout, and global styles
 │       ├── auth.css       # Styling and glow effects for auth forms
 │       ├── home.css       # Dashboards and card grids layout
@@ -426,12 +430,13 @@ Response:
 
 ---
 
-## 🤖 Chef-AI Frontend Interactions
+## 🤖 Chef-AI Frontend Interactions & Database Browse
 
-The frontend integrates these AI capabilities smoothly in the UI:
-1. **Chef-AI Recipe Generator Card**: Accessible on the search results page when a user queries ingredients. Users can request the AI to formulate a recipe dynamically.
-2. **Ingredient Selection Mode**: Inside the Cooking Steps page, users can click "Select Multiple Ingredients to Replace with AI" to toggle checkbox selection mode, highlight ingredients, and request an adapted recipe version.
-3. **Quick Substitutes Box**: Clicking an ingredient displays standard substitutes, alongside an "Ask AI for Substitute" button that queries the AI and displays a 1-2 sentence contextual suggestion in real-time.
+The frontend integrates these AI and database capabilities smoothly in the UI:
+1. **Show All Database Recipes**: A dedicated page `/all` accessible from the navigation bar. It retrieves all cached and custom recipes from the database, allowing users to browse them in one place.
+2. **Global Filtering & AI Recipe Generation**: The search page, the new "All Recipes" page, and the personalized home dashboard share powerful filters (dietary flags like Kosher, Veg, Gluten-free, prep time, and dish types). The "All Recipes" page features a **"Chef-AI Custom Recipe" generator card** that generates new recipes based on entered ingredients while strictly respecting whatever filters are currently active.
+3. **Ingredient Selection Mode**: Inside the Cooking Steps page, users can click "Select Multiple Ingredients to Replace with AI" to toggle checkbox selection mode, highlight ingredients, and request an adapted recipe version.
+4. **Quick Substitutes Box**: Clicking an ingredient displays standard substitutes, alongside an "Ask AI for Substitute" button that queries the AI and displays a 1-2 sentence contextual suggestion in real-time.
 
 ---
 
@@ -505,11 +510,14 @@ The application uses Jinja2 template inheritance.
 * **home.html**: User's recipe collection.
 * **search.html**: Search interface.
 * **cooking_steps.html**: Detailed view.
+* **all_recipes.html**: Displays all database recipes with interactive search, filters, and AI recipe generation.
 * **login.html** / **register.html**: Auth pages (no navbar).
 
 ### Components
 
 * **components/recipe.html**: Contains `render_recipes()` macro.
+* **components/filters.html**: Contains `render_filters()` macro for dietary, prep time, and dish type filters.
+* **components/ai.html**: Contains macros for AI recipe generation and quick/multi ingredient substitution.
 
 ### Usage Example
 
