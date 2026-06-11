@@ -146,7 +146,7 @@ By default, the Flask page runs on `http://127.0.0.1:5000`.
 
 ---
 
-## 🔒 Authentication
+## ‿ Authentication
 
 ### Signup endpoint
 

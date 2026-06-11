@@ -37,7 +37,7 @@
                     <div class="password-field">
                         <input type="password" id="password" name="password" required>
                         <button type="button" class="toggle-password" aria-label="Show password"
-                            onclick="togglePasswordVisibility('password', this)">🔒</button>
+                            onclick="togglePasswordVisibility('password', this)">𓁹</button>
                     </div>
                 </div>
 
@@ -46,7 +46,7 @@
                     <div class="password-field">
                         <input type="password" id="confirm" name="confirm" required>
                         <button type="button" class="toggle-password" aria-label="Show confirmation password"
-                            onclick="togglePasswordVisibility('confirm', this)">🔒</button>
+                            onclick="togglePasswordVisibility('confirm', this)">𓁹</button>
                     </div>
                 </div>
 
@@ -65,7 +65,7 @@
 
             input.type = input.type === 'password' ? 'text' : 'password';
             const isHidden = input.type === 'password';
-            button.textContent = isHidden ? '🔒' : '🔓';
+            button.textContent = isHidden ? '𓁹' : '‿';
             button.setAttribute('aria-label', isHidden ? 'Show password' : 'Hide password');
         }
     </script>
