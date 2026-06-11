@@ -1,6 +1,52 @@
 from functools import wraps
 from flask import session, flash, redirect, url_for
 
+nonKosherItems=[
+    # --- Seafood (No fins and scales) ---
+    "shrimp",
+    "lobster",
+    "crab",
+    "clams",
+    "oysters",
+    "mussels",
+    "squid",
+    "octopus",
+    "shark",
+    "catfish",
+    "eel",
+
+    # --- Land Animals (Do not both chew cud and have cloven hooves) ---
+    "pork",
+    "bacon",
+    "ham",
+    "rabbit",
+    "camel",
+    "horse",
+    "wild boar",
+
+    # --- Birds of Prey & Scavengers ---
+    "eagle",
+    "vulture",
+    "owl",
+    "raven",
+    "ostrich",
+
+    # --- Insects & Creeping Things ---
+    "ants",
+    "flies",
+    "snails",
+    "slugs",
+
+    # --- Disallowed Mixtures & Byproducts ---
+    "cheeseburger",             # Mixing meat and dairy
+    "chicken parmesan",          # Mixing poultry and dairy
+    "gelatin",                  # If derived from non-kosher animals (like pork)
+    "lard",                     # Pig fat
+    "tallow",                   # Unrefined beef/mutton fat (unless certified kosher)
+    "rennet",                   # Animal enzyme used in cheese (unless certified microbial/kosher)
+]
+
+
 def login_required(f):
     """Decorator to require login for Flask routes."""
     @wraps(f)
@@ -11,7 +57,25 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-def filter_recipes_list(recipes, dish_type=None, prep_time=None, vegetarian=False, vegan=False, gluten_free=False):
+def check_kosher(ingredients: list):
+    global nonKosherItems
+    isMeat= False
+    isDairy= False
+    hasNonKosher= False
+
+    for ingredient in ingredients:
+        if ingredient.aisle == "meat":
+            isMeat = True
+        elif ingredient.aisle == "dairy":
+            isDairy = True
+        if ingredient.nameClean in nonKosherItems:
+            return False 
+            break
+
+    return True
+        
+
+def filter_recipes_list(recipes, dish_type=None, prep_time=None, vegetarian=False, vegan=False, gluten_free=False, kosher=True):
     """Filter recipe list based on dish type, cooking time, and dietary requirements."""
     filtered = []
     for r in recipes:
