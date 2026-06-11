@@ -48,6 +48,7 @@ recipe_project/
 │   │   ├── __init__.py
 │   │   ├── auth.py        # Login endpoint
 │   │   ├── recipes.py     # Recipe searches, custom recipes, and substitutes
+│   │   ├── services.py    # Backend services, API requests, caching, and database logic
 │   │   └── user.py        # Signup endpoint
 │   ├── schemas.py         # Pydantic request/response schemas
 │   └── utils/
@@ -66,6 +67,7 @@ recipe_project/
 │       ├── add_recipe.html # Custom recipe form component
 │       └── recipe.html     # Recipe card renderer macro
 ├── static/
+│   ├── favicon.ico        # Site icon / favicon
 │   └── css/
 │       ├── style.css      # Core variables, layout, and global styles
 │       ├── auth.css       # Styling and glow effects for auth forms
