@@ -1,11 +1,16 @@
 {% extends "base.html" %}
+{% from "components/ai.html" import render_ai_multi_substituter, render_ai_quick_substituter %}
 
 {% block title %}{{ recipe.title }} - Cooking Steps{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/ai.css') }}">
+{% endblock %}
 
 {% block content %}
 <section class="recipe-detail-container">
     <div class="back-button-container">
-        <a href="{{ request.referrer or url_for('recipes.home') }}" class="btn-back" style="display: inline-block; text-decoration: none;">← Back</a>
+        <a href="{{ request.referrer or url_for('recipes.home') }}" class="btn-back">← Back</a>
     </div>
     <div class="recipe-card">
         <div class="recipe-header">
@@ -29,16 +34,21 @@
             </p>
             <ul id="ingredients-list" class="ingredients-list">
                 {% for ingredient in recipe.extendedIngredients %}
-                <li class="clickable-ingredient" data-name="{{ ingredient.name }}">
-                    {{ ingredient.original }}
+                <li class="clickable-ingredient cooking-steps-ingredient" data-name="{{ ingredient.name }}">
+                    <input type="checkbox" class="ai-select-ingredient-checkbox" value="{{ ingredient.name }}"
+                        onclick="event.stopPropagation();">
+                    <span>{{ ingredient.original }}</span>
                 </li>
                 {% endfor %}
             </ul>
 
+            {{ render_ai_multi_substituter(recipe.id) }}
+
             <!-- Substitutes Section (appears when ingredient clicked) -->
-            <div id="substitutes-section" class="substitutes-section" style="display: none;">
+            <div id="substitutes-section" class="substitutes-section">
                 <h4>Substitutes for <span id="sub-title"></span>:</h4>
                 <ul id="substitutes-list"></ul>
+                {{ render_ai_quick_substituter(recipe.id) }}
             </div>
         </div>
 
@@ -59,16 +69,42 @@
 
 {% block extra_js %}
 <script>
-    // Handle ingredient click to show substitutes
+    // Handle ingredient click (for substitutes or select-mode highlighting)
     document.querySelectorAll('.clickable-ingredient').forEach(item => {
         item.addEventListener('click', async () => {
+            // Check if selection mode is active
+            if (document.body.classList.contains('ai-selection-mode')) {
+                const checkbox = item.querySelector('.ai-select-ingredient-checkbox');
+                if (checkbox) {
+                    checkbox.checked = !checkbox.checked;
+                    if (checkbox.checked) {
+                        item.style.backgroundColor = '#f3e5f5';
+                        item.style.border = '1px solid #7c4dff';
+                    } else {
+                        item.style.backgroundColor = '';
+                        item.style.border = '';
+                    }
+                }
+                return; // Stop execution: do not open substitutes list
+            }
+
             const ingredientName = item.getAttribute('data-name');
             const subSection = document.getElementById('substitutes-section');
             const subList = document.getElementById('substitutes-list');
 
+            // Hide previous AI recommendations when clicking a new ingredient
+            const recBox = document.getElementById('ai-quick-recommendation');
+            if (recBox) recBox.style.display = 'none';
+
             subList.innerHTML = '<li>Loading...</li>';
             subSection.style.display = 'block';
             document.getElementById('sub-title').textContent = ingredientName;
+
+            // Track currently selected ingredient on the quick substitute button
+            const btnQuickSub = document.getElementById('btn-ai-quick-sub');
+            if (btnQuickSub) {
+                btnQuickSub.setAttribute('data-ingredient', ingredientName);
+            }
 
             try {
                 const response = await fetch(`/substitutes?ingredient=${encodeURIComponent(ingredientName)}`);
@@ -87,5 +123,76 @@
             }
         });
     });
+
+    // Handle Selection Mode Toggle Button
+    const btnToggleSelect = document.getElementById('btn-toggle-select-mode');
+    if (btnToggleSelect) {
+        btnToggleSelect.addEventListener('click', () => {
+            const isSelectionMode = document.body.classList.toggle('ai-selection-mode');
+            const checkboxes = document.querySelectorAll('.ai-select-ingredient-checkbox');
+            const actionCard = document.getElementById('ai-multi-replace-card');
+
+            if (isSelectionMode) {
+                btnToggleSelect.textContent = 'Cancel Selection';
+                btnToggleSelect.style.backgroundColor = '#f44336'; // Red for cancel
+                checkboxes.forEach(cb => cb.style.display = 'inline-block');
+                if (actionCard) actionCard.style.display = 'block';
+            } else {
+                btnToggleSelect.textContent = 'Select Multiple Ingredients to Replace with AI';
+                btnToggleSelect.style.backgroundColor = '#6200ea'; // Original purple
+                checkboxes.forEach(cb => {
+                    cb.style.display = 'none';
+                    cb.checked = false;
+                });
+                document.querySelectorAll('.clickable-ingredient').forEach(item => {
+                    item.style.backgroundColor = '';
+                    item.style.border = '';
+                });
+                if (actionCard) actionCard.style.display = 'none';
+            }
+        });
+    }
+
+    // Handle quick AI substitute suggestion
+    const btnQuickSub = document.getElementById('btn-ai-quick-sub');
+    if (btnQuickSub) {
+        btnQuickSub.addEventListener('click', async () => {
+            const ingredientName = btnQuickSub.getAttribute('data-ingredient');
+            const recBox = document.getElementById('ai-quick-recommendation');
+            const recText = document.getElementById('ai-quick-recommendation-text');
+
+            if (!ingredientName) return;
+
+            recText.textContent = 'Thinking...';
+            recBox.style.display = 'block';
+
+            try {
+                const response = await fetch(`/ai/quick-substitute?recipe_id={{ recipe.id }}&ingredient=${encodeURIComponent(ingredientName)}`);
+                const data = await response.json();
+                if (data.recommendation) {
+                    recText.textContent = data.recommendation;
+                } else {
+                    recText.textContent = 'Could not retrieve recommendation.';
+                }
+            } catch (e) {
+                recText.textContent = 'Error loading AI recommendation.';
+            }
+        });
+    }
+
+    // Handle multi-ingredient recipe adaptation form submission
+    const multiForm = document.getElementById('ai-multi-substitute-form');
+    if (multiForm) {
+        multiForm.addEventListener('submit', (e) => {
+            const checkedCheckboxes = document.querySelectorAll('.ai-select-ingredient-checkbox:checked');
+            if (checkedCheckboxes.length === 0) {
+                e.preventDefault();
+                alert('Please select at least one ingredient to replace.');
+                return;
+            }
+            const selectedIngredients = Array.from(checkedCheckboxes).map(cb => cb.value).join(', ');
+            document.getElementById('ai-multi-replace-val').value = selectedIngredients;
+        });
+    }
 </script>
 {% endblock %}

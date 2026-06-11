@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from app.database import SessionLocal, engine
 from app.models import Base, User
-from app.blueprints import auth_bp, recipes_bp
+from app.blueprints import auth_bp, recipes_bp, ai_bp
 
 # Get absolute paths
 BASE_DIR = Path(__file__).parent.parent
@@ -18,6 +18,7 @@ app.secret_key = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
 # Register blueprints
 app.register_blueprint(auth_bp)
 app.register_blueprint(recipes_bp)
+app.register_blueprint(ai_bp)
 
 def init_db_sync():
     """Initialize database tables synchronously on startup."""

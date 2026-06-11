@@ -60,7 +60,7 @@
                         <input type="checkbox" id="filter-kosher" name="kosher" class="filter-checkbox" {% if kosher %}checked{% endif %}> Kosher
                     </label>
             </div>
-            <div class="filter-actions" style="margin-top: 10px; display: flex; gap: 10px;">
+            <div class="filter-actions">
                 <button type="submit" class="btn-app">Apply Filters</button>
                 <a href="{{ url_for('recipes.home', tab=active_tab) }}" class="btn-clear">Clear Filters</a>
             </div>

@@ -243,6 +243,7 @@ body {
 }
 
 .substitutes-section {
+    display: none;
     margin: 20px 0;
     padding: 20px;
     background: linear-gradient(135deg, #f0f0f0 0%, #fafafa 100%);
@@ -503,6 +504,8 @@ select.filter-input {
 }
 
 .btn-back {
+    display: inline-block;
+    text-decoration: none;
     padding: 10px 20px;
     background-color: #e74c3c;
     color: white;

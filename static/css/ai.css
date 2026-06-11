@@ -1,0 +1,161 @@
+/* =====================================================
+   AI RECIPE BUILDER & SUBSTITUTER STYLES (ai.css)
+   ===================================================== */
+
+.ai-generation-card {
+    margin-top: 20px;
+    padding: 20px;
+    border: 1px solid #7c4dff;
+    border-radius: 8px;
+    background-color: #f9f6ff;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.ai-generation-card h2 {
+    color: #6200ea;
+    margin-bottom: 10px;
+}
+
+.ai-generation-card p {
+    margin-bottom: 15px;
+    color: #555;
+}
+
+#btn-ai-generate {
+    background-color: #6200ea;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+#btn-ai-generate:hover {
+    background-color: #5000ca;
+}
+
+#ai-substitute-form {
+    margin-top: 15px;
+    border-top: 1px dashed #7c4dff;
+    padding-top: 15px;
+}
+
+#ai-substitute-form p {
+    font-size: 0.9em;
+    color: #555;
+    margin-bottom: 8px;
+}
+
+#btn-ai-substitute {
+    background-color: #6200ea;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+#btn-ai-substitute:hover {
+    background-color: #5000ca;
+}
+
+/* Multi-Ingredient Replacement Styles */
+.ai-multi-replace-container {
+    margin-top: 15px;
+    text-align: left;
+}
+
+#btn-toggle-select-mode {
+    background-color: #6200ea;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.9em;
+}
+
+.ai-multi-replace-card {
+    display: none;
+    margin-top: 15px;
+    padding: 15px;
+    border: 1px solid #7c4dff;
+    border-radius: 8px;
+    background-color: #f9f6ff;
+}
+
+.ai-multi-replace-card p {
+    font-size: 0.85em;
+    color: #555;
+    margin-bottom: 12px;
+    line-height: 1.4;
+}
+
+#btn-ai-multi-replace {
+    background-color: #6200ea;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.9em;
+}
+
+/* Quick Substitute Section Styles */
+.ai-quick-substitute-section {
+    margin-top: 15px;
+    border-top: 1px dashed #ccc;
+    padding-top: 15px;
+    text-align: left;
+}
+
+#btn-ai-quick-sub {
+    background-color: #3f51b5;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.9em;
+}
+
+#ai-quick-recommendation {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #e8eaf6;
+    border-left: 4px solid #3f51b5;
+    border-radius: 4px;
+    display: none;
+}
+
+#ai-quick-recommendation-text {
+    margin: 5px 0 0 0;
+    font-size: 0.95em;
+    color: #333;
+    line-height: 1.4;
+}
+
+/* Cooking Steps Ingredient Adjustments */
+.cooking-steps-ingredient {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: flex-start !important;
+}
+
+.cooking-steps-ingredient::after {
+    margin-left: auto !important;
+}
+
+.ai-select-ingredient-checkbox {
+    cursor: pointer;
+    display: none;
+}
+

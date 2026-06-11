@@ -7,6 +7,7 @@ from app.database import SessionLocal
 from app.models import User, UserSearch, Recipe
 from app.utils.oauth2 import create_access_token
 from app.utils.flask_helpers import login_required, filter_recipes_list, check_kosher
+from app.config import settings
 
 recipes_bp = Blueprint('recipes', __name__)
 
@@ -131,7 +132,7 @@ def add_recipe():
     
     try:
         with httpx.Client() as client:
-            response = client.post("http://127.0.0.1:8000/recipes/custom", headers=headers, json=payload, timeout=10.0)
+            response = client.post(f"{settings.backend_url}/recipes/custom", headers=headers, json=payload, timeout=10.0)
             if response.status_code == 200:
                 flash("Recipe added successfully!", "success")
             else:
@@ -179,7 +180,7 @@ def search():
         try:
             # Call the FastAPI backend service
             with httpx.Client() as client:
-                response = client.get("http://127.0.0.1:8000/recipes/find-by-ingredients", headers=headers, params=params, timeout=10.0)
+                response = client.get(f"{settings.backend_url}/recipes/find-by-ingredients", headers=headers, params=params, timeout=10.0)
                 if response.status_code == 200:
                     raw_recipes = response.json()
                     # Filter in Python
@@ -219,7 +220,7 @@ def cooking_steps(recipe_id):
     try:
         # Fetch detailed recipe information (including instructions and ingredients)
         with httpx.Client() as client:
-            response = client.get(f"http://127.0.0.1:8000/recipes/{recipe_id}/information", timeout=10.0)
+            response = client.get(f"{settings.backend_url}/recipes/{recipe_id}/information", timeout=10.0)
             if response.status_code == 200:
                 recipe = response.json()
                 # Ensure the ID matches what templates expect
@@ -250,7 +251,7 @@ def like_recipe_route(recipe_id):
     headers = {"Authorization": f"Bearer {token}"}
     try:
         with httpx.Client() as client:
-            response = client.post(f"http://127.0.0.1:8000/recipes/{recipe_id}/like", headers=headers, timeout=10.0)
+            response = client.post(f"{settings.backend_url}/recipes/{recipe_id}/like", headers=headers, timeout=10.0)
             if response.status_code == 200:
                 return jsonify(response.json())
             else:
@@ -269,7 +270,7 @@ def substitutes():
         
     try:
         with httpx.Client() as client:
-            response = client.get("http://127.0.0.1:8000/recipes/substitutes", params={"ingredient": ingredient}, timeout=10.0)
+            response = client.get(f"{settings.backend_url}/recipes/substitutes", params={"ingredient": ingredient}, timeout=10.0)
             return jsonify(response.json()), response.status_code
     except Exception as e:
         print(f"Substitutes backend error: {e}")

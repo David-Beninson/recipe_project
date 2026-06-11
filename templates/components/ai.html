@@ -1,0 +1,52 @@
+{# Reusable components for AI recipe generation and adaptation #}
+
+{% macro render_ai_generator(ingredients) %}
+{% if ingredients %}
+<div class="ai-generation-card">
+    <h2>🤖 Chef-AI Custom Recipe</h2>
+    <p>Can't find what you need? Let our AI generate a unique recipe based on your ingredients: <strong>{{ ingredients }}</strong></p>
+    <form action="{{ url_for('ai.generate_ai') }}" method="post" id="ai-generate-form">
+        <input type="hidden" name="ingredients" value="{{ ingredients }}">
+        <button type="submit" id="btn-ai-generate" class="btn-app">
+            Ask AI for Recipe
+        </button>
+    </form>
+</div>
+{% endif %}
+{% endmacro %}
+
+
+{% macro render_ai_multi_substituter(recipe_id) %}
+<div class="ai-multi-replace-container">
+    <!-- Toggle Selection Mode Button -->
+    <button type="button" id="btn-toggle-select-mode" class="btn-app">
+        Select Multiple Ingredients to Replace with AI
+    </button>
+    
+    <!-- Action Card (hidden initially) -->
+    <div id="ai-multi-replace-card" class="ai-multi-replace-card">
+        <p>
+            Click on any ingredient row above to select it, then click below to generate your adapted recipe:
+        </p>
+        <form action="{{ url_for('ai.substitute_ai', recipe_id=recipe_id) }}" method="post" id="ai-multi-substitute-form">
+            <input type="hidden" name="ingredient_to_replace" id="ai-multi-replace-val" value="">
+            <button type="submit" id="btn-ai-multi-replace" class="btn-app">
+                Generate Adapted Recipe with AI
+            </button>
+        </form>
+    </div>
+</div>
+{% endmacro %}
+
+
+{% macro render_ai_quick_substituter(recipe_id) %}
+<div class="ai-quick-substitute-section">
+    <button type="button" id="btn-ai-quick-sub" class="btn-app">
+        Ask AI for Substitute
+    </button>
+    <div id="ai-quick-recommendation">
+        <strong>🤖 Chef-AI Recommendation:</strong>
+        <p id="ai-quick-recommendation-text"></p>
+    </div>
+</div>
+{% endmacro %}

@@ -247,3 +247,37 @@
     color: #212529;
     border-color: #ced4da;
 }
+
+/* =====================================================
+   ADDITIONAL SEARCH FORM & FILTER STYLES
+   ===================================================== */
+.search-form .filter-groups {
+    margin-top: 15px;
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+}
+
+.search-form .filter-group {
+    margin-top: 10px;
+}
+
+.search-form .filter-group:first-of-type {
+    margin-top: 0;
+}
+
+.search-form .filter-group.checkboxes {
+    margin-top: 10px;
+    display: flex;
+    gap: 15px;
+}
+
+.search-form .btn-search {
+    margin-top: 15px;
+}
+
+.filter-actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+}
+

@@ -101,3 +101,14 @@ class CustomRecipeCreate(BaseModel):
     ingredients: List[CustomIngredient]
     instructions: str
     image: Optional[str] = None
+
+# --- AI Recipe Schemas ---
+
+class AIRecipeGenerateRequest(BaseModel):
+    """Schema for requesting a new recipe generation using AI."""
+    ingredients: str
+
+
+class AIRecipeSubstituteRequest(BaseModel):
+    """Schema for requesting adaptation of an existing recipe by substituting a specific ingredient."""
+    ingredient_to_replace: str
