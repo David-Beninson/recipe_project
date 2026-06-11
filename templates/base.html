@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <!-- Main stylesheet -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <!-- Page-specific stylesheets -->
@@ -38,7 +39,7 @@
         document.addEventListener('click', async (event) => {
             const likeBtn = event.target.closest('.btn-like-ajax');
             if (!likeBtn) return;
-            
+
             event.preventDefault();
             const recipeId = likeBtn.getAttribute('data-recipe-id');
             try {
@@ -50,7 +51,7 @@
                 });
                 if (response.ok) {
                     const data = await response.json();
-                    
+
                     // Update all buttons with this recipe ID
                     document.querySelectorAll(`.btn-like-ajax[data-recipe-id="${recipeId}"]`).forEach(btn => {
                         if (data.status === 'liked') {
@@ -59,7 +60,7 @@
                             btn.classList.remove('liked');
                         }
                     });
-                    
+
                     // Update all likes count displays with this recipe ID
                     document.querySelectorAll(`.recipe-likes-count[data-recipe-id="${recipeId}"]`).forEach(span => {
                         if (data.likes !== undefined) {
@@ -73,4 +74,5 @@
         });
     </script>
 </body>
+
 </html>
