@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     # Spoonacular API settings for recipe/ingredient searching
     spoonacular_api_key: str
     spoonacular_url: str
+    ai_url:str
     
     model_config = SettingsConfigDict(env_file=".env")
 
