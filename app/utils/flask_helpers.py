@@ -58,24 +58,44 @@ def login_required(f):
     return decorated_function
 
 def check_kosher(ingredients: list):
+    """
+    Checks if the list of ingredients contains any non-kosher items 
+    or mixtures of meat and dairy products.
+    """
     global nonKosherItems
-    isMeat= False
-    isDairy= False
-    hasNonKosher= False
+    isMeat = False
+    isDairy = False
 
-    for ingredient in ingredients:
-        if ingredient.aisle == "meat":
+    # If there are no ingredients, it is considered kosher by default.
+    if not ingredients:
+        return True
+
+    # Iterate through each ingredient to inspect its category (aisle) and name.
+    for ing in ingredients:
+        # Extract the aisle/category and clean name of the ingredient, handling both dicts and objects.
+        aisle = ing.get('aisle', '').lower() if isinstance(ing, dict) else getattr(ing, 'aisle', '').lower()
+        name_clean = ing.get('nameClean', '').lower() if isinstance(ing, dict) else getattr(ing, 'nameClean', '').lower()
+
+        # Check if the ingredient belongs to the meat or poultry aisle.
+        if "meat" in aisle or "poultry" in aisle:
             isMeat = True
-        elif ingredient.aisle == "dairy":
+        # Check if the ingredient belongs to the dairy or cheese aisle.
+        elif "dairy" in aisle or "cheese" in aisle:
             isDairy = True
-        if ingredient.nameClean in nonKosherItems:
-            return False 
-            break
 
+        # If the clean name of the ingredient is in the list of known non-kosher items, reject it.
+        if name_clean in nonKosherItems:
+            return False
+
+    # In kosher dietary laws, mixing meat and dairy products in the same recipe is forbidden.
+    if isMeat and isDairy:
+        return False
+
+    # If no non-kosher ingredients or dairy-meat combinations were found, the recipe is kosher.
     return True
         
 
-def filter_recipes_list(recipes, dish_type=None, prep_time=None, vegetarian=False, vegan=False, gluten_free=False, kosher=True):
+def filter_recipes_list(recipes, dish_type=None, prep_time=None, vegetarian=False, vegan=False, gluten_free=False, kosher=False):
     """Filter recipe list based on dish type, cooking time, and dietary requirements."""
     filtered = []
     for r in recipes:
@@ -114,7 +134,12 @@ def filter_recipes_list(recipes, dish_type=None, prep_time=None, vegetarian=Fals
             match = False
         if gluten_free and not r_gf:
             match = False
-            
+
+        if kosher:
+            r_ingredients = r.get('extendedIngredients') or r.get('ingredients') or []
+            if not check_kosher(r_ingredients):
+                match = False
+
         if match:
             filtered.append(r)
     return filtered

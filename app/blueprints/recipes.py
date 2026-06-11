@@ -25,7 +25,7 @@ def home():
     vegetarian = request.args.get('vegetarian') == 'on' or request.args.get('vegetarian') == 'true'
     vegan = request.args.get('vegan') == 'on' or request.args.get('vegan') == 'true'
     gluten_free = request.args.get('gluten_free') == 'on' or request.args.get('gluten_free') == 'true'
-    isKosher = vegetarian or vegan or request.args.get('extendedIngredients') 
+    isKosher = request.args.get('kosher') == 'on' or request.args.get('kosher') == 'true' 
 
     try:
         with SessionLocal() as db:
@@ -154,6 +154,7 @@ def search():
     vegetarian = False
     vegan = False
     gluten_free = False
+    kosher = False
     
     if request.method == 'POST':
         ingredients = request.form.get('ingredients', '')
@@ -164,6 +165,7 @@ def search():
         vegetarian = request.form.get('vegetarian') == 'on'
         vegan = request.form.get('vegan') == 'on'
         gluten_free = request.form.get('gluten_free') == 'on'
+        kosher = request.form.get('kosher') == 'on'
         
         if not ingredients:
             flash('Please enter ingredients', 'warning')
@@ -187,7 +189,8 @@ def search():
                         prep_time=prep_time if prep_time != 9999 else None,
                         vegetarian=vegetarian,
                         vegan=vegan,
-                        gluten_free=gluten_free
+                        gluten_free=gluten_free,
+                        kosher=kosher
                     )
                     flash(f'Found {len(recipes)} recipes matching filters.', 'success')
                 else:
@@ -205,7 +208,8 @@ def search():
         prep_time=prep_time,
         vegetarian=vegetarian,
         vegan=vegan,
-        gluten_free=gluten_free
+        gluten_free=gluten_free,
+        kosher=kosher
     )
 
 @recipes_bp.route('/recipe/<int:recipe_id>')
