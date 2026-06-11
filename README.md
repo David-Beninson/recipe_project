@@ -450,5 +450,5 @@ The application uses Jinja2 template inheritance.
 
 ## 👥 Authors
 
-* David Beninson
-* Oliver Radivan
+* [David Beninson](https://github.com/David-Beninson)
+* [Oliver Radivan](https://github.com/oliverradivan)
