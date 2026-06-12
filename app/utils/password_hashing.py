@@ -12,8 +12,13 @@ def hash_password(password: str) -> str:
     """
     pwd_bytes = password.encode('utf-8')
     salt = bcrypt.gensalt()
-    hashed = bcrypt.hashpw(pwd_bytes, salt)
-    return hashed.decode('utf-8')
+    try:
+        hashed = bcrypt.hashpw(pwd_bytes, salt)
+        return hashed.decode('utf-8')
+    except TypeError:
+        # Fallback if bcrypt expects string arguments
+        hashed_str = bcrypt.hashpw(password, salt.decode('utf-8') if isinstance(salt, bytes) else salt)
+        return hashed_str
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -28,4 +33,14 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
     password_bytes = plain_password.encode('utf-8')
     hashed_bytes = hashed_password.encode('utf-8')
-    return bcrypt.checkpw(password_bytes, hashed_bytes)
+    try:
+        return bcrypt.checkpw(password_bytes, hashed_bytes)
+    except AttributeError:
+        # Fallback if checkpw is not present
+        return bcrypt.hashpw(plain_password, hashed_password) == hashed_password
+    except TypeError:
+        # Fallback if bcrypt expects string arguments
+        try:
+            return bcrypt.checkpw(plain_password, hashed_password)
+        except AttributeError:
+            return bcrypt.hashpw(plain_password, hashed_password) == hashed_password

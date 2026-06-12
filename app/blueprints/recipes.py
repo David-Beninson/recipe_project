@@ -6,7 +6,8 @@ from sqlalchemy.orm import selectinload
 from app.database import SessionLocal
 from app.models import User, UserSearch, Recipe
 from app.utils.oauth2 import create_access_token
-from app.utils.flask_helpers import login_required, filter_recipes_list, check_kosher
+from app.utils.flask_helpers import login_required, filter_recipes_list, check_kosher, extract_filter_params
+from app.config import settings
 
 recipes_bp = Blueprint('recipes', __name__)
 
@@ -17,15 +18,8 @@ def home():
     user_recipes = []
     liked_recipes = []
     
-    # Get tab and filter parameters
     active_tab = request.args.get('tab', 'recipes')
-    dish_type = request.args.get('dish_type', '')
-    prep_time_str = request.args.get('prep_time', '')
-    prep_time = int(prep_time_str) if prep_time_str and prep_time_str.isdigit() else 9999
-    vegetarian = request.args.get('vegetarian') == 'on' or request.args.get('vegetarian') == 'true'
-    vegan = request.args.get('vegan') == 'on' or request.args.get('vegan') == 'true'
-    gluten_free = request.args.get('gluten_free') == 'on' or request.args.get('gluten_free') == 'true'
-    isKosher = request.args.get('kosher') == 'on' or request.args.get('kosher') == 'true' 
+    filters = extract_filter_params() 
 
     try:
         with SessionLocal() as db:
@@ -71,22 +65,22 @@ def home():
     # Apply filtering in Python
     filtered_user_recipes = filter_recipes_list(
         user_recipes,
-        dish_type=dish_type,
-        prep_time=prep_time if prep_time != 9999 else None,
-        vegetarian=vegetarian,
-        vegan=vegan,
-        gluten_free=gluten_free,
-        kosher=isKosher
+        dish_type=filters['dish_type'],
+        prep_time=filters['prep_time'] if filters['prep_time'] != 9999 else None,
+        vegetarian=filters['vegetarian'],
+        vegan=filters['vegan'],
+        gluten_free=filters['gluten_free'],
+        kosher=filters['kosher']
     )
     
     filtered_liked_recipes = filter_recipes_list(
         liked_recipes,
-        dish_type=dish_type,
-        prep_time=prep_time if prep_time != 9999 else None,
-        vegetarian=vegetarian,
-        vegan=vegan,
-        gluten_free=gluten_free,
-        kosher=isKosher
+        dish_type=filters['dish_type'],
+        prep_time=filters['prep_time'] if filters['prep_time'] != 9999 else None,
+        vegetarian=filters['vegetarian'],
+        vegan=filters['vegan'],
+        gluten_free=filters['gluten_free'],
+        kosher=filters['kosher']
     )
 
     return render_template(
@@ -96,12 +90,7 @@ def home():
         liked_recipes=filtered_liked_recipes,
         has_recipes_total=len(user_recipes) > 0 or len(liked_recipes) > 0,
         active_tab=active_tab,
-        dish_type=dish_type,
-        prep_time=prep_time,
-        vegetarian=vegetarian,
-        vegan=vegan,
-        gluten_free=gluten_free,
-        kosher=isKosher
+        **filters
     )
 
 @recipes_bp.route('/add_recipe', methods=['POST'])
@@ -131,7 +120,7 @@ def add_recipe():
     
     try:
         with httpx.Client() as client:
-            response = client.post("http://127.0.0.1:8000/recipes/custom", headers=headers, json=payload, timeout=10.0)
+            response = client.post(f"{settings.backend_url}/recipes/custom", headers=headers, json=payload, timeout=10.0)
             if response.status_code == 200:
                 flash("Recipe added successfully!", "success")
             else:
@@ -149,23 +138,12 @@ def search():
     recipes = []
     ingredients = ""
     number = 5
-    dish_type = ""
-    prep_time = 9999
-    vegetarian = False
-    vegan = False
-    gluten_free = False
-    kosher = False
+    
+    filters = extract_filter_params()
     
     if request.method == 'POST':
         ingredients = request.form.get('ingredients', '')
         number = request.form.get('number', 5)
-        dish_type = request.form.get('dish_type', '')
-        prep_time_str = request.form.get('prep_time', '9999')
-        prep_time = int(prep_time_str) if prep_time_str.isdigit() else 9999
-        vegetarian = request.form.get('vegetarian') == 'on'
-        vegan = request.form.get('vegan') == 'on'
-        gluten_free = request.form.get('gluten_free') == 'on'
-        kosher = request.form.get('kosher') == 'on'
         
         if not ingredients:
             flash('Please enter ingredients', 'warning')
@@ -179,18 +157,18 @@ def search():
         try:
             # Call the FastAPI backend service
             with httpx.Client() as client:
-                response = client.get("http://127.0.0.1:8000/recipes/find-by-ingredients", headers=headers, params=params, timeout=10.0)
+                response = client.get(f"{settings.backend_url}/recipes/find-by-ingredients", headers=headers, params=params, timeout=10.0)
                 if response.status_code == 200:
                     raw_recipes = response.json()
                     # Filter in Python
                     recipes = filter_recipes_list(
                         raw_recipes,
-                        dish_type=dish_type,
-                        prep_time=prep_time if prep_time != 9999 else None,
-                        vegetarian=vegetarian,
-                        vegan=vegan,
-                        gluten_free=gluten_free,
-                        kosher=kosher
+                        dish_type=filters['dish_type'],
+                        prep_time=filters['prep_time'] if filters['prep_time'] != 9999 else None,
+                        vegetarian=filters['vegetarian'],
+                        vegan=filters['vegan'],
+                        gluten_free=filters['gluten_free'],
+                        kosher=filters['kosher']
                     )
                     flash(f'Found {len(recipes)} recipes matching filters.', 'success')
                 else:
@@ -204,12 +182,7 @@ def search():
         recipes=recipes,
         ingredients=ingredients,
         number=number,
-        dish_type=dish_type,
-        prep_time=prep_time,
-        vegetarian=vegetarian,
-        vegan=vegan,
-        gluten_free=gluten_free,
-        kosher=kosher
+        **filters
     )
 
 @recipes_bp.route('/recipe/<int:recipe_id>')
@@ -219,7 +192,7 @@ def cooking_steps(recipe_id):
     try:
         # Fetch detailed recipe information (including instructions and ingredients)
         with httpx.Client() as client:
-            response = client.get(f"http://127.0.0.1:8000/recipes/{recipe_id}/information", timeout=10.0)
+            response = client.get(f"{settings.backend_url}/recipes/{recipe_id}/information", timeout=10.0)
             if response.status_code == 200:
                 recipe = response.json()
                 # Ensure the ID matches what templates expect
@@ -250,7 +223,7 @@ def like_recipe_route(recipe_id):
     headers = {"Authorization": f"Bearer {token}"}
     try:
         with httpx.Client() as client:
-            response = client.post(f"http://127.0.0.1:8000/recipes/{recipe_id}/like", headers=headers, timeout=10.0)
+            response = client.post(f"{settings.backend_url}/recipes/{recipe_id}/like", headers=headers, timeout=10.0)
             if response.status_code == 200:
                 return jsonify(response.json())
             else:
@@ -269,8 +242,53 @@ def substitutes():
         
     try:
         with httpx.Client() as client:
-            response = client.get("http://127.0.0.1:8000/recipes/substitutes", params={"ingredient": ingredient}, timeout=10.0)
+            response = client.get(f"{settings.backend_url}/recipes/substitutes", params={"ingredient": ingredient}, timeout=10.0)
             return jsonify(response.json()), response.status_code
     except Exception as e:
         print(f"Substitutes backend error: {e}")
         return jsonify({"detail": "Failed to retrieve substitutes from backend"}), 500
+
+@recipes_bp.route('/all')
+@login_required
+def all_recipes():
+    """Display all recipes currently in the database."""
+    recipes = []
+    
+    filters = extract_filter_params()
+
+    try:
+        with SessionLocal() as db:
+            stmt = select(Recipe)
+            db_recipes = db.execute(stmt).scalars().all()
+            
+            seen_ids = set()
+            for r in db_recipes:
+                # Deduplicate and normalize id
+                recipe_id = r.spoonacular_id if r.spoonacular_id else r.id
+                if recipe_id not in seen_ids:
+                    seen_ids.add(recipe_id)
+                    recipe_data = r.raw_data if r.raw_data else {}
+                    recipe_data['id'] = recipe_id
+                    recipe_data['title'] = r.title
+                    recipes.append(recipe_data)
+    except Exception as e:
+        print(f"Error fetching all database recipes: {e}")
+        recipes = []
+        
+    # Apply filtering in Python
+    filtered_recipes = filter_recipes_list(
+        recipes,
+        dish_type=filters['dish_type'],
+        prep_time=filters['prep_time'] if filters['prep_time'] != 9999 else None,
+        vegetarian=filters['vegetarian'],
+        vegan=filters['vegan'],
+        gluten_free=filters['gluten_free'],
+        kosher=filters['kosher']
+    )
+        
+    return render_template(
+        'all_recipes.html',
+        recipes=filtered_recipes,
+        username=session.get('username'),
+        **filters
+    )

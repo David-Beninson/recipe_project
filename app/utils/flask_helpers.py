@@ -143,3 +143,27 @@ def filter_recipes_list(recipes, dish_type=None, prep_time=None, vegetarian=Fals
         if match:
             filtered.append(r)
     return filtered
+
+def extract_filter_params():
+    """Extract standard recipe filter parameters from flask request.args/form."""
+    from flask import request
+    
+    source = request.form if request.method == 'POST' else request.args
+    
+    dish_type = source.get('dish_type', '')
+    prep_time_str = source.get('prep_time', '')
+    prep_time = int(prep_time_str) if prep_time_str and prep_time_str.isdigit() else 9999
+    
+    vegetarian = source.get('vegetarian') in ('on', 'true')
+    vegan = source.get('vegan') in ('on', 'true')
+    gluten_free = source.get('gluten_free') in ('on', 'true')
+    kosher = source.get('kosher') in ('on', 'true')
+    
+    return {
+        'dish_type': dish_type,
+        'prep_time': prep_time,
+        'vegetarian': vegetarian,
+        'vegan': vegan,
+        'gluten_free': gluten_free,
+        'kosher': kosher
+    }

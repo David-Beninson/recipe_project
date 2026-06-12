@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% from "components/recipe.html" import render_recipes %}
+{% from "components/filters.html" import render_filters %}
+{% from "components/ai.html" import render_ai_filter_generator %}
+
+{% block title %}All Recipes{% endblock %}
+
+{% block extra_css %}
+{% endblock %}
+
+{% block content %}
+<section class="search-container">
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+        <form method="get" action="{{ url_for('recipes.all_recipes') }}">
+            <h3>Filter Recipes</h3>
+            <div class="filter-groups">
+                {{ render_filters(dish_type=dish_type, prep_time=prep_time, vegetarian=vegetarian, vegan=vegan, gluten_free=gluten_free, kosher=kosher) }}
+                <div class="filter-actions">
+                    <button type="submit" class="btn btn-primary">Apply Filters</button>
+                    <a href="{{ url_for('recipes.all_recipes') }}" class="btn btn-muted">Clear Filters</a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- AI Generator with Filters -->
+    {{ render_ai_filter_generator(url_for('recipes.all_recipes')) }}
+
+    <div class="search-results">
+        {{ render_recipes(title="All Database Recipes", recipes=recipes) }}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('btn-ai-filter-submit').addEventListener('click', () => {
+        const ingredientsInput = document.getElementById('ai-ingredients-input').value.trim();
+        if (!ingredientsInput) {
+            alert('Please enter some ingredients first.');
+            return;
+        }
+
+        // Retrieve current filter values
+        const dishType = document.getElementById('filter-dish-type').value;
+        const prepTime = document.getElementById('filter-prep-time').value;
+        const vegetarian = document.getElementById('filter-vegetarian').checked;
+        const vegan = document.getElementById('filter-vegan').checked;
+        const glutenFree = document.getElementById('filter-gluten-free').checked;
+        const kosher = document.getElementById('filter-kosher').checked;
+
+        // Construct a prompt query describing both the ingredients and active filters
+        let prompt = `Ingredients: ${ingredientsInput}.`;
+        let filterRequirements = [];
+
+        if (dishType) filterRequirements.push(`Dish Type: ${dishType}`);
+        if (prepTime && prepTime !== '9999') filterRequirements.push(`Max Cooking Time: ${prepTime} minutes`);
+        if (vegetarian) filterRequirements.push('Vegetarian');
+        if (vegan) filterRequirements.push('Vegan');
+        if (glutenFree) filterRequirements.push('Gluten Free');
+        if (kosher) filterRequirements.push('Kosher');
+
+        if (filterRequirements.length > 0) {
+            prompt += ` Dietary/Filter requirements: ${filterRequirements.join(', ')}.`;
+        }
+
+        // Set the prompt in the hidden form field and submit
+        document.getElementById('ai-form-ingredients-field').value = prompt;
+        document.getElementById('ai-filter-form').submit();
+    });
+</script>
+{% endblock %}

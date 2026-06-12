@@ -1,12 +1,13 @@
-# Recipe Search API
+# Recipe Search API with AI Chef
 
-A recipe search application built with FastAPI for the backend and Flask for the main frontend page.
+A recipe search and AI-assisted kitchen helper application built with FastAPI for the backend and Flask for the main frontend page.
 
 This repository includes:
-- FastAPI API endpoints for recipe search, ingredient substitutes, and custom recipes
+- FastAPI API endpoints for recipe search, ingredient substitutes, custom recipes, and AI integrations
 - Async database operations using SQLAlchemy ORM and PostgreSQL
 - JWT user authentication and signup
 - HTTPX integration to call Spoonacular for recipes and substitutes
+- LLM Integration (OpenAI-compatible completions API like Qwen 2.5) for smart recipe generation and adaptive ingredient substitutions
 - Flask-based web frontend with modern pages and modular styling
 - Jinja2 layout inheritance and template components
 - Unit tests for authentication and recipe endpoints
@@ -20,6 +21,10 @@ This app lets users:
 - Search for recipes by ingredients with a configurable quantity limit (1-5 recipes)
 - Receive ingredient substitute suggestions dynamically in the UI by clicking ingredients
 - Save custom user recipes (with custom ingredient quantities and instructions) to their profile
+- **Show All Recipes**: Browse a dedicated dashboard showing all saved/cached recipes in the database with full search and filtering capabilities
+- **Chef-AI Custom Recipe Generation (with active filters)**: Ask AI to generate a completely new recipe from scratch based on entered ingredients while respecting active filters (kosher, prep time, vegan, vegetarian, gluten-free)
+- **AI Ingredient Substitution**: Interactively swap specific ingredients in any recipe with smart alternatives recommended by AI
+- **Quick AI Suggestions**: Get a rapid, context-aware 1-2 sentence substitute recommendation for any recipe ingredient
 - Save search history and cache recipe details/ingredient substitutes in the database
 - View saved searches and custom recipes on their personalized home dashboard
 
@@ -42,10 +47,12 @@ recipe_project/
 │   ├── models.py          # SQLAlchemy ORM models (User, Recipe, UserSearch, IngredientSubstitute)
 │   ├── blueprints/        # Flask Blueprints
 │   │   ├── __init__.py    # Export blueprints
+│   │   ├── ai.py          # AI integration routes (generate recipe, substitute ingredients)
 │   │   ├── auth.py        # Auth routes (login, register, logout)
 │   │   └── recipes.py     # Recipe routes (home, search, add, details, like, substitutes)
 │   ├── routers/           # FastAPI Routers
 │   │   ├── __init__.py
+│   │   ├── ai.py          # FastAPI AI router for generating and substituting recipes
 │   │   ├── auth.py        # Login endpoint
 │   │   ├── recipes.py     # Recipe searches, custom recipes, and substitutes
 │   │   ├── services.py    # Backend services, API requests, caching, and database logic
@@ -58,6 +65,7 @@ recipe_project/
 │       └── password_hashing.py  # Password hashing and verification
 ├── templates/
 │   ├── base.html          # Base layout template with navigation
+│   ├── all_recipes.html   # Displays all recipes in the database with filtering and AI generation
 │   ├── login.html         # Login page
 │   ├── register.html      # Registration page
 │   ├── home.html          # User dashboard showing searched and custom recipes
@@ -65,10 +73,14 @@ recipe_project/
 │   ├── search.html        # Recipe search page
 │   └── components/
 │       ├── add_recipe.html # Custom recipe form component
+│       ├── ai.html         # Reusable components for AI recipe generation and substitution
+│       ├── filters.html    # Recipe search filters component
 │       └── recipe.html     # Recipe card renderer macro
 ├── static/
 │   ├── favicon.ico        # Site icon / favicon
 │   └── css/
+│       ├── ai.css         # Styles for AI components and selection mode
+│       ├── filters.css     # Styles for recipe search filters
 │       ├── style.css      # Core variables, layout, and global styles
 │       ├── auth.css       # Styling and glow effects for auth forms
 │       ├── home.css       # Dashboards and card grids layout
@@ -113,6 +125,8 @@ secret_key=your_secret_key_for_jwt
 algorithm=HS256
 spoonacular_api_key=your_spoonacular_api_key
 spoonacular_url=https://api.spoonacular.com/recipes/findByIngredients
+AI_URL=http://localhost:11434/chat/completions
+BACKEND_URL=http://127.0.0.1:8000
 ```
 
 > The application loads settings from `.env` using Pydantic settings.
@@ -129,9 +143,9 @@ Start the backend with:
 uvicorn app.fast_api:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-This starts the API server on `http://127.0.0.1:8000`.
+This starts the API server on the host/port you configure (defaults to `http://127.0.0.1:8000` via `BACKEND_URL`).
 
-Documentation:
+Documentation (when running on localhost:8000):
 
 * Swagger UI: `http://127.0.0.1:8000/docs`
 * ReDoc: `http://127.0.0.1:8000/redoc`
@@ -344,6 +358,86 @@ Response:
 }
 ```
 
+### 5. Generate custom recipe with AI
+
+`POST /ai/generate`
+
+Requires authentication.
+
+Request body (JSON):
+
+```json
+{
+  "ingredients": "chicken, broccoli, cheese"
+}
+```
+
+Response:
+
+```json
+{
+  "id": 42,
+  "title": "Creamy AI Garlic Chicken & Broccoli"
+}
+```
+
+### 6. Substitute recipe ingredient with AI
+
+`POST /ai/substitute/{recipe_id}`
+
+Requires authentication.
+
+Request body (JSON):
+
+```json
+{
+  "ingredient_to_replace": "heavy cream"
+}
+```
+
+Response:
+
+```json
+{
+  "id": 43,
+  "title": "Adapted Creamy AI Garlic Chicken & Broccoli"
+}
+```
+
+### 7. Get quick ingredient substitute recommendation
+
+`GET /ai/quick-substitute`
+
+Requires authentication.
+
+Query parameters:
+
+* `recipe_id` (required): the database/spoonacular ID of the recipe
+* `ingredient` (required): the ingredient to replace
+
+Example:
+```
+GET /ai/quick-substitute?recipe_id=42&ingredient=milk
+```
+
+Response:
+
+```json
+{
+  "recommendation": "Use 1 cup of almond milk mixed with a tablespoon of lemon juice as a dairy-free substitute for regular milk."
+}
+```
+
+---
+
+## 🤖 Chef-AI Frontend Interactions & Database Browse
+
+The frontend integrates these AI and database capabilities smoothly in the UI:
+1. **Show All Database Recipes**: A dedicated page `/all` accessible from the navigation bar. It retrieves all cached and custom recipes from the database, allowing users to browse them in one place.
+2. **Global Filtering & AI Recipe Generation**: The search page, the new "All Recipes" page, and the personalized home dashboard share powerful filters (dietary flags like Kosher, Veg, Gluten-free, prep time, and dish types). The "All Recipes" page features a **"Chef-AI Custom Recipe" generator card** that generates new recipes based on entered ingredients while strictly respecting whatever filters are currently active.
+3. **Ingredient Selection Mode**: Inside the Cooking Steps page, users can click "Select Multiple Ingredients to Replace with AI" to toggle checkbox selection mode, highlight ingredients, and request an adapted recipe version.
+4. **Quick Substitutes Box**: Clicking an ingredient displays standard substitutes, alongside an "Ask AI for Substitute" button that queries the AI and displays a 1-2 sentence contextual suggestion in real-time.
+
 ---
 
 ## 🧠 Database models
@@ -416,11 +510,14 @@ The application uses Jinja2 template inheritance.
 * **home.html**: User's recipe collection.
 * **search.html**: Search interface.
 * **cooking_steps.html**: Detailed view.
+* **all_recipes.html**: Displays all database recipes with interactive search, filters, and AI recipe generation.
 * **login.html** / **register.html**: Auth pages (no navbar).
 
 ### Components
 
 * **components/recipe.html**: Contains `render_recipes()` macro.
+* **components/filters.html**: Contains `render_filters()` macro for dietary, prep time, and dish type filters.
+* **components/ai.html**: Contains macros for AI recipe generation and quick/multi ingredient substitution.
 
 ### Usage Example
 
