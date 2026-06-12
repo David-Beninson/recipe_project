@@ -22,21 +22,22 @@
 
 
 
-<!-- Dietary Badges -->
-<div class="recipe-badges">
-    {% if recipe.vegetarian is defined and recipe.vegetarian %}
-        <span class="badge badge-vegetarian">🌱 Vegetarian</span>
-    {% endif %}
-    {% if recipe.vegan is defined and recipe.vegan %}
-        <span class="badge badge-vegan">🌿 Vegan</span>
-    {% endif %}
-    {% if (recipe.glutenFree is defined and recipe.glutenFree) or (recipe.gluten_free is defined and recipe.gluten_free) %}
-        <span class="badge badge-gluten-free">🌾 Gluten Free</span>
-    {% endif %}
-    {% if recipe.isKosher is defined and recipe.isKosher %}
-        <span class="badge badge-kosher">✡️ Kosher</span>
-    {% endif %}
-</div>
+        <!-- Dietary Badges -->
+        <div class="recipe-badges">
+            {% if recipe.vegetarian is defined and recipe.vegetarian %}
+            <span class="badge badge-vegetarian">🌱 Vegetarian</span>
+            {% endif %}
+            {% if recipe.vegan is defined and recipe.vegan %}
+            <span class="badge badge-vegan">🌿 Vegan</span>
+            {% endif %}
+            {% if (recipe.glutenFree is defined and recipe.glutenFree) or (recipe.gluten_free is defined and
+            recipe.gluten_free) %}
+            <span class="badge badge-gluten-free">🌾 Gluten Free</span>
+            {% endif %}
+            {% if recipe.isKosher is defined and recipe.isKosher %}
+            <span class="badge badge-kosher">✡️ Kosher</span>
+            {% endif %}
+        </div>
 
 
 
@@ -97,8 +98,8 @@
                 {% endif %}
             </div>
             <!-- Action Buttons -->
-            <div class="recipe-actions">
-                <a href="{{ url_for('recipes.cooking_steps', recipe_id=recipe.id) }}">
+            <div>
+                <a class="btn btn-primary" href="{{ url_for('recipes.cooking_steps', recipe_id=recipe.id) }}">
                     View Full Steps
                 </a>
             </div>
