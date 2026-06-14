@@ -3,19 +3,18 @@
 {% block title %}Default Preferences{% endblock %}
 
 {% block content %}
-<section class="search-container" style="max-width: 600px; margin: 0 auto;">
-    <div class="search-card" style="display: block;">
+<section class="search-container settings-container">
+    <div class="search-card">
         <h1>Default Filter</h1>
-        <p style="margin-bottom: 20px; color: var(--text-muted, #666);">
+        <p class="settings-description">
             Set your default dish type, and cooking time.<br> To filter automatically when
             searching or browsing for recipes.
         </p>
 
-        <form method="post" action="{{ url_for('recipes.update_settings') }}" class="search-form"
-            style="display: block;">
-            <div class="form-group" style="margin-bottom: 15px;">
+        <form method="post" action="{{ url_for('recipes.update_settings') }}" class="search-form">
+            <div class="form-group">
                 <label for="default-dish-type">Dish Type:</label>
-                <select id="default-dish-type" name="default_dish_type" class="app-input" style="width: 100%;">
+                <select id="default-dish-type" name="default_dish_type" class="app-input">
                     <option value="">All Types</option>
                     <option value="main course" {% if user_settings.default_dish_type=='main course' %}selected{% endif
                         %}>Main Course</option>
@@ -32,9 +31,9 @@
                 </select>
             </div>
 
-            <div class="form-group" style="margin-bottom: 15px;">
+            <div class="form-group">
                 <label for="default-prep-time">Max Cooking Time:</label>
-                <select id="default-prep-time" name="default_prep_time" class="app-input" style="width: 100%;">
+                <select id="default-prep-time" name="default_prep_time" class="app-input">
                     <option value="9999" {% if user_settings.default_prep_time==9999 or not
                         user_settings.default_prep_time %}selected{% endif %}>Any Time</option>
                     <option value="15" {% if user_settings.default_prep_time==15 %}selected{% endif %}>Up to 15 mins
