@@ -20,6 +20,18 @@ class UserOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class UserSettings(BaseModel):
+    """User settings / defaults for recipe search & filters."""
+    default_vegetarian: bool = False
+    default_vegan: bool = False
+    default_gluten_free: bool = False
+    default_kosher: bool = False
+    default_dish_type: str = ""
+    default_prep_time: int = 9999
+    
+    model_config = ConfigDict(from_attributes=True)
+
+
 class Token(BaseModel):
     """JWT token response schema returned after successful login/signup."""
     access_token: str

@@ -49,6 +49,7 @@ To keep the user interface responsive and reduce server load, several performanc
 
 To ensure production stability and complete user flows, the following features and resilience updates have been added:
 
+* **Standalone Settings & Recipe Preferences**: Introduced a dedicated "Settings" page accessible from the top navigation bar. Users can configure their default culinary preferences (Vegetarian, Vegan, Gluten Free, Kosher, default dish type, and max prep time). These options serve as default states when searching or filtering recipes, but can be manually overridden in any search or filter session without altering the saved user profile defaults.
 * **Pessimistic DB Connection Pooling (Neon.tech support)**: Enabled `pool_pre_ping=True` and `pool_recycle=300` on both sync and async SQLAlchemy engines in `app/database.py`. This detects and cleans up stale/closed connections caused by serverless database idle timeouts before queries run, avoiding `InterfaceError: connection is closed` exceptions.
 * **Separated Searched & My Recipes Tabs**: Separated the query search history dashboard list from the user's custom-created recipes. Added a dedicated "My Recipes" tab showing only user-uploaded custom recipes next to the "Searched Recipes" tab.
 * **Full Custom Recipe Editing (DRY Layout Reuse)**: Implemented authorized PUT endpoints and Flask controllers to allow users to update their own custom recipes. Reused the exact same `add_recipe.html` template builder component (via macro variables) and JavaScript builder state to enable pre-populating, modifying, and saving existing custom recipes.
@@ -67,6 +68,7 @@ recipe_project/
 │   ├── database.py        # Async/Sync SQLAlchemy database initialization
 │   ├── fast_api.py        # FastAPI app and route registration
 │   ├── main.py            # Flask entry point and blueprint registration
+│   ├── schemas.py         # Pydantic request/response schemas
 │   ├── models.py          # SQLAlchemy ORM models (User, Recipe, UserSearch, IngredientSubstitute)
 │   ├── blueprints/        # Flask Blueprints
 │   │   ├── __init__.py    # Export blueprints
@@ -80,17 +82,17 @@ recipe_project/
 │   │   ├── recipes.py     # Recipe searches, custom recipes, and substitutes
 │   │   ├── services.py    # Backend services, API requests, caching, and database logic
 │   │   └── user.py        # Signup endpoint
-│   ├── schemas.py         # Pydantic request/response schemas
 │   └── utils/
 │       ├── __init__.py
-│       ├── flask_helpers.py # Flask authentication and filtering helper functions
-│       ├── oauth2.py      # JWT token validation and auth dependency
-│       └── password_hashing.py  # Password hashing and verification
+│       ├── flask_helpers.py
+│       ├── oauth2.py      
+│       └── password_hashing.py  
 ├── templates/
 │   ├── base.html          # Base layout template with navigation
 │   ├── login.html         # Login page
 │   ├── register.html      # Registration page
 │   ├── home.html          # User dashboard showing searched and custom recipes
+│   ├── settings.html      # Standalone settings page for default preferences
 │   ├── cooking_steps.html # Recipe details and interactive ingredients
 │   ├── search.html        # Recipe search page
 │   └── components/
@@ -99,14 +101,10 @@ recipe_project/
 │       ├── filters.html    # Recipe search filters component
 │       └── recipe.html     # Recipe card renderer macro
 ├── static/
-│   ├── favicon.ico        # Site icon / favicon
+│   ├── favicon.ico       
 │   ├── css/
-│   │   ├── ai.css         # Styles for AI components and selection mode
-│   │   ├── filters.css    # Styles for recipe search filters
-│   │   ├── style.css      # Core variables, layout, and global styles
-│   │   ├── auth.css       # Styling and glow effects for auth forms
-│   │   ├── home.css       # Dashboards and card grids layout
-│   │   └── search.css     # Search and filter specific styling
+│   │   ├── style.css      
+│   │   └── auth.css     
 │   └── js/
 │       ├── main.js        # Global/main script (optimistic likes, AJAX requests)
 │       ├── auth.js        # Password visibility toggle helper logic
@@ -115,10 +113,13 @@ recipe_project/
 ├── tests/
 │   ├── __init__.py
 │   ├── conftest.py
-│   ├── test_auth.py
+|   ├── test_ai.py
+|   ├── test_auth.py
+|   ├── test_db_ssl.py
+|   ├── test_latency.py
+|   ├── test_pooler_latency.py
 │   ├── test_recipes.py
-│   ├── test_latency.py        # DB and Spoonacular API latency test utility
-│   └── test_pooler_latency.py # DB pooler connection latency test utility
+│   └── test_user_settings.py 
 ├── example.env
 ├── requirements.txt
 └── README.md
@@ -457,6 +458,50 @@ Response:
 }
 ```
 
+### 8. Get user default settings
+
+`GET /users/settings`
+
+Requires authentication.
+
+Retrieves default recipe preferences (vegetarian, vegan, gluten-free, kosher, dish type, and max prep time) for the authenticated user.
+
+Response:
+
+```json
+{
+  "default_vegetarian": true,
+  "default_vegan": false,
+  "default_gluten_free": false,
+  "default_kosher": true,
+  "default_dish_type": "soup",
+  "default_prep_time": 15
+}
+```
+
+### 9. Update user default settings
+
+`PUT /users/settings`
+
+Requires authentication.
+
+Updates default recipe preferences for the authenticated user.
+
+Request body (JSON):
+
+```json
+{
+  "default_vegetarian": true,
+  "default_vegan": false,
+  "default_gluten_free": false,
+  "default_kosher": true,
+  "default_dish_type": "soup",
+  "default_prep_time": 15
+}
+```
+
+Response: returns the updated user settings object.
+
 ---
 
 ## 🤖 Chef-AI Frontend Interactions & Database Browse
@@ -537,6 +582,7 @@ The application uses Jinja2 template inheritance.
 ### Page Templates
 
 * **home.html**: User's recipe collection (featuring My Recipes, Liked Recipes, and All Recipes tabs).
+* **settings.html**: Standalone preferences page to edit user default recipe filters.
 * **login.html** / **register.html**: Auth pages (no navbar).
 
 ### Components

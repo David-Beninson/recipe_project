@@ -365,4 +365,76 @@ def edit_recipe(recipe_id):
         return redirect(url_for('recipes.home'))
 
 
+@recipes_bp.route('/update_settings', methods=['POST'])
+@login_required
+def update_settings():
+    """Route to update user default preferences via FastAPI backend."""
+    default_vegetarian = request.form.get('default_vegetarian') == 'on'
+    default_vegan = request.form.get('default_vegan') == 'on'
+    default_gluten_free = request.form.get('default_gluten_free') == 'on'
+    default_kosher = request.form.get('default_kosher') == 'on'
+    default_dish_type = request.form.get('default_dish_type', '')
+    
+    default_prep_time_str = request.form.get('default_prep_time', '9999')
+    default_prep_time = int(default_prep_time_str) if default_prep_time_str.isdigit() else 9999
+    
+    payload = {
+        "default_vegetarian": default_vegetarian,
+        "default_vegan": default_vegan,
+        "default_gluten_free": default_gluten_free,
+        "default_kosher": default_kosher,
+        "default_dish_type": default_dish_type,
+        "default_prep_time": default_prep_time
+    }
+    
+    try:
+        with httpx.Client() as client:
+            response = client.put(
+                f"{settings.backend_url}/users/settings",
+                headers=_get_auth_headers(),
+                json=payload,
+                timeout=10.0
+            )
+            if response.status_code == 200:
+                flash("Default settings updated successfully!", "success")
+            else:
+                flash(f"Backend API error: {response.text}", "error")
+    except Exception as e:
+        print(f"Error updating settings: {e}")
+        flash("Failed to connect to backend service.", "error")
+        
+    return redirect(url_for('recipes.settings_page'))
+
+
+@recipes_bp.route('/settings', methods=['GET'])
+@login_required
+def settings_page():
+    """Render the standalone settings page with user default preferences."""
+    user_settings = {
+        "default_vegetarian": False,
+        "default_vegan": False,
+        "default_gluten_free": False,
+        "default_kosher": False,
+        "default_dish_type": "",
+        "default_prep_time": 9999
+    }
+    try:
+        with httpx.Client() as client:
+            response = client.get(
+                f"{settings.backend_url}/users/settings",
+                headers=_get_auth_headers(),
+                timeout=10.0
+            )
+            if response.status_code == 200:
+                user_settings = response.json()
+    except Exception as e:
+        print(f"Error loading settings: {e}")
+        
+    return render_template(
+        'settings.html',
+        username=session.get('username'),
+        user_settings=user_settings
+    )
+
+
 

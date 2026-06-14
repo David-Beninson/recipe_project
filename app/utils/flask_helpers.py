@@ -144,12 +144,42 @@ def filter_recipes_list(recipes, dish_type=None, prep_time=None, vegetarian=Fals
             filtered.append(r)
     return filtered
 
+def get_user_settings(user_id):
+    """Fetch user settings directly from database for Flask helpers."""
+    from app.database import SessionLocal
+    from app.models import User
+    from sqlalchemy import select
+    try:
+        with SessionLocal() as db:
+            user = db.execute(select(User).filter(User.id == user_id)).scalars().first()
+            if user:
+                return {
+                    'dish_type': user.default_dish_type,
+                    'prep_time': user.default_prep_time,
+                    'vegetarian': user.default_vegetarian,
+                    'vegan': user.default_vegan,
+                    'gluten_free': user.default_gluten_free,
+                    'kosher': user.default_kosher
+                }
+    except Exception as e:
+        print(f"Error fetching user settings: {e}")
+    return None
+
+
 def extract_filter_params():
     """Extract standard recipe filter parameters from flask request.args/form."""
     from flask import request
     
     source = request.form if request.method == 'POST' else request.args
     
+    # Check if a filter/search was explicitly submitted
+    is_submitted = 'filter_submitted' in source or 'ingredients' in source
+    
+    if not is_submitted and 'user_id' in session:
+        defaults = get_user_settings(session['user_id'])
+        if defaults:
+            return defaults
+
     dish_type = source.get('dish_type', '')
     prep_time_str = source.get('prep_time', '')
     prep_time = int(prep_time_str) if prep_time_str and prep_time_str.isdigit() else 9999
