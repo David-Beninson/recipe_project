@@ -10,6 +10,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!btnAddIngredient || !inventoryZone || !instructionsZone || !submitBtn) return;
 
+    // Handle file input name display change and image preview
+    const recipeImageInput = document.getElementById('recipe-image');
+    const fileNameDisplay = document.getElementById('file-name-display');
+    const previewContainer = document.getElementById('image-preview-container');
+    const previewImage = document.getElementById('recipe-image-preview');
+    const recipeImageLabel = document.getElementById('recipe-image-label');
+
+    if (recipeImageInput && fileNameDisplay) {
+        recipeImageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                fileNameDisplay.textContent = file.name;
+                
+                // Hide input button and name text, show preview
+                if (recipeImageLabel) recipeImageLabel.style.display = 'none';
+                fileNameDisplay.style.display = 'none';
+                
+                const reader = new FileReader();
+                reader.onload = function (event) {
+                    if (previewImage) previewImage.src = event.target.result;
+                    if (previewContainer) previewContainer.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                fileNameDisplay.textContent = 'No file chosen';
+                if (recipeImageLabel) recipeImageLabel.style.display = 'inline-flex';
+                fileNameDisplay.style.display = 'block';
+                if (previewContainer) previewContainer.style.display = 'none';
+                if (previewImage) previewImage.src = '';
+            }
+        });
+    }
+
     // Add new ingredient
     btnAddIngredient.addEventListener('click', () => {
         if (!ingNameInput.value || !ingAmountInput.value) return;

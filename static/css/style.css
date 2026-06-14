@@ -991,3 +991,58 @@ select.filter-input,
         flex-direction: column;
     }
 }
+
+/* Custom File Upload Input */
+.custom-file-upload {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 20px;
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-md);
+    background-color: #fdfdfd;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--text-muted);
+    transition: var(--transition);
+    width: 100%;
+    margin-bottom: 12px;
+    gap: 8px;
+    box-sizing: border-box;
+}
+
+.custom-file-upload:hover {
+    border-color: var(--primary);
+    background-color: var(--primary-light);
+    color: var(--primary);
+    box-shadow: 0 4px 10px var(--primary-shadow);
+}
+
+/* Image Preview Hover Overlay */
+.image-preview-wrapper {
+    position: relative;
+    display: inline-block;
+    max-width: 100%;
+}
+
+.image-preview-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: var(--transition);
+    border-radius: var(--radius-md);
+}
+
+.image-preview-wrapper:hover .image-preview-overlay {
+    opacity: 1;
+}
+
+

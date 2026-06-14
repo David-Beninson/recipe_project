@@ -4,9 +4,24 @@
     <!-- Recipe Title Input -->
     <input type="text" id="recipe-title" name="title" class="app-input" placeholder="Recipe name" required>
 
-    <!-- Recipe Image Input -->
-    <label for="recipe-image" class="app-file-input">Upload Image / Take Photo:</label><br>
-    <input type="file" id="recipe-image" class="app-file-input" accept="image/*" capture="environment"><br><br>
+    <!-- Hidden File Input -->
+    <input type="file" id="recipe-image" accept="image/*" capture="environment" style="display: none;">
+
+    <!-- Recipe Image Input Label (Visible when no image) -->
+    <label for="recipe-image" id="recipe-image-label" class="custom-file-upload">
+        Upload Image / Take Photo
+    </label>
+    <div id="file-name-display" style="text-align: center; font-size: 13px; color: var(--text-muted); margin-top: -6px; margin-bottom: 10px;">No file chosen</div>
+
+    <!-- Image Preview with Pencil Edit Overlay -->
+    <div id="image-preview-container" style="display: none; position: relative; width: 100%; margin-bottom: 15px; text-align: center;">
+        <label for="recipe-image" class="image-preview-wrapper" style="cursor: pointer; border-radius: var(--radius-md); overflow: hidden;">
+            <img id="recipe-image-preview" src="" alt="Preview" style="max-width: 100%; max-height: 180px; border-radius: var(--radius-md); border: 1px solid var(--border); object-fit: cover; box-shadow: var(--shadow-sm); display: block; margin: 0 auto;">
+            <div class="image-preview-overlay">
+                <span style="font-size: 32px; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));">✎</span>
+            </div>
+        </label>
+    </div>
 
     <input type="hidden" name="ingredients" id="hidden-ingredients">
     <input type="hidden" name="instructions" id="hidden-instructions">
