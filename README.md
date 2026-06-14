@@ -21,7 +21,7 @@ This app lets users:
 - Search for recipes by ingredients with a configurable quantity limit (1-5 recipes)
 - Receive ingredient substitute suggestions dynamically in the UI by clicking ingredients
 - Save custom user recipes (with custom ingredient quantities and instructions) to their profile
-- **Show All Recipes**: Browse a dedicated dashboard showing all saved/cached recipes in the database with full search and filtering capabilities
+- **Show All Recipes**: Browse all saved/cached recipes in the database directly from the home page tab with full filtering capabilities
 - **Chef-AI Custom Recipe Generation (with active filters)**: Ask AI to generate a completely new recipe from scratch based on entered ingredients while respecting active filters (kosher, prep time, vegan, vegetarian, gluten-free)
 - **AI Ingredient Substitution**: Interactively swap specific ingredients in any recipe with smart alternatives recommended by AI
 - **Quick AI Suggestions**: Get a rapid, context-aware 1-2 sentence substitute recommendation for any recipe ingredient
@@ -76,7 +76,6 @@ recipe_project/
 │       └── password_hashing.py  # Password hashing and verification
 ├── templates/
 │   ├── base.html          # Base layout template with navigation
-│   ├── all_recipes.html   # Displays all database recipes with filtering and AI generation
 │   ├── login.html         # Login page
 │   ├── register.html      # Registration page
 │   ├── home.html          # User dashboard showing searched and custom recipes
@@ -100,8 +99,7 @@ recipe_project/
 │       ├── main.js        # Global/main script (optimistic likes, AJAX requests)
 │       ├── auth.js        # Password visibility toggle helper logic
 │       ├── recipe-builder.js # Ingredient list builder and drag & drop logic
-│       ├── cooking-steps.js  # Substitutes and selection mode handlers
-│       └── all-recipes.js # Filter collection and AI generation submission
+│       └── cooking-steps.js  # Substitutes and selection mode handlers
 ├── tests/
 │   ├── __init__.py
 │   ├── conftest.py
@@ -452,8 +450,8 @@ Response:
 ## 🤖 Chef-AI Frontend Interactions & Database Browse
 
 The frontend integrates these AI and database capabilities smoothly in the UI:
-1. **Show All Database Recipes**: A dedicated page `/all` accessible from the navigation bar. It retrieves all cached and custom recipes from the database, allowing users to browse them in one place.
-2. **Global Filtering & AI Recipe Generation**: The search page, the new "All Recipes" page, and the personalized home dashboard share powerful filters (dietary flags like Kosher, Veg, Gluten-free, prep time, and dish types). The "All Recipes" page features a **"Chef-AI Custom Recipe" generator card** that generates new recipes based on entered ingredients while strictly respecting whatever filters are currently active.
+1. **Show All Database Recipes**: A dedicated tab "All Recipes" on the personalized home dashboard. It retrieves all cached and custom recipes from the database, allowing users to browse them in one place.
+2. **Global Filtering & AI Recipe Generation**: The search page and the personalized home dashboard share powerful filters (dietary flags like Kosher, Veg, Gluten-free, prep time, and dish types). The home dashboard features a **"Chef-AI Custom Recipe" generator card** that generates new recipes based on entered ingredients while respecting active filters (kosher, prep time, vegan, vegetarian, gluten-free).
 3. **Ingredient Selection Mode**: Inside the Cooking Steps page, users can click "Select Multiple Ingredients to Replace with AI" to toggle checkbox selection mode, highlight ingredients, and request an adapted recipe version.
 4. **Quick Substitutes Box**: Clicking an ingredient displays standard substitutes, alongside an "Ask AI for Substitute" button that queries the AI and displays a 1-2 sentence contextual suggestion in real-time.
 
@@ -526,10 +524,7 @@ The application uses Jinja2 template inheritance.
 
 ### Page Templates
 
-* **home.html**: User's recipe collection.
-* **search.html**: Search interface.
-* **cooking_steps.html**: Detailed view.
-* **all_recipes.html**: Displays all database recipes with interactive search, filters, and AI recipe generation.
+* **home.html**: User's recipe collection (featuring My Recipes, Liked Recipes, and All Recipes tabs).
 * **login.html** / **register.html**: Auth pages (no navbar).
 
 ### Components

@@ -40,52 +40,83 @@ def _get_auth_headers():
 @login_required
 def home():
     """Home page after login showing previously searched recipes."""
-    user_recipes = []
-    liked_recipes = []
-    
     active_tab = request.args.get('tab', 'recipes')
     filters = extract_filter_params() 
+    
+    current_recipes = []
+    tab_title = ""
+    no_recipes_message = ""
+    has_recipes_total = False
 
     try:
         with SessionLocal() as db:
-            # Load user searches with their cached recipes
-            stmt = select(UserSearch).filter(UserSearch.user_id == session['user_id']).options(selectinload(UserSearch.recipes))
-            searches = db.execute(stmt).scalars().all()
-            
-            seen_recipe_ids = set()
-            for search_obj in searches:
-                for r in search_obj.recipes:
-                    r_id, r_data = _normalize_recipe(r, 'spoonacular_id')
-                    if r_id not in seen_recipe_ids:
-                        seen_recipe_ids.add(r_id)
-                        user_recipes.append(r_data)
-            
-            # Load custom recipes added by the user
-            custom_stmt = select(Recipe).filter(Recipe.user_id == session['user_id'])
-            custom_recipes = db.execute(custom_stmt).scalars().all()
-            for r in custom_recipes:
-                _, r_data = _normalize_recipe(r, 'id')
-                user_recipes.append(r_data)
+            if active_tab == 'recipes':
+                # Load search recipes
+                stmt = select(UserSearch).filter(UserSearch.user_id == session['user_id']).options(selectinload(UserSearch.recipes))
+                searches = db.execute(stmt).scalars().all()
+                seen = set()
+                raw_recipes = []
+                for search_obj in searches:
+                    for r in search_obj.recipes:
+                        r_id, r_data = _normalize_recipe(r, 'spoonacular_id')
+                        if r_id not in seen:
+                            seen.add(r_id)
+                            raw_recipes.append(r_data)
                 
-            # Load user liked recipes
-            user_stmt = select(User).filter(User.id == session['user_id']).options(selectinload(User.liked_recipes))
-            user_obj = db.execute(user_stmt).scalars().first()
-            if user_obj:
-                for r in user_obj.liked_recipes:
-                    _, r_data = _normalize_recipe(r, 'spoonacular_id' if r.spoonacular_id else 'id')
-                    liked_recipes.append(r_data)
+                # Load custom recipes added by the user
+                custom_stmt = select(Recipe).filter(Recipe.user_id == session['user_id'])
+                custom_recipes = db.execute(custom_stmt).scalars().all()
+                for r in custom_recipes:
+                    _, r_data = _normalize_recipe(r, 'id')
+                    raw_recipes.append(r_data)
+
+                current_recipes = _filter_helper(raw_recipes, filters)
+                tab_title = "My Recipes"
+                no_recipes_message = "No matching recipes found."
+                has_recipes_total = len(raw_recipes) > 0
+                
+            elif active_tab == 'liked':
+                # Load user liked recipes
+                user_stmt = select(User).filter(User.id == session['user_id']).options(selectinload(User.liked_recipes))
+                user_obj = db.execute(user_stmt).scalars().first()
+                raw_recipes = []
+                if user_obj:
+                    for r in user_obj.liked_recipes:
+                        _, r_data = _normalize_recipe(r, 'spoonacular_id' if r.spoonacular_id else 'id')
+                        raw_recipes.append(r_data)
+
+                current_recipes = _filter_helper(raw_recipes, filters)
+                tab_title = "Liked Recipes"
+                no_recipes_message = "No matching liked recipes found."
+                has_recipes_total = len(raw_recipes) > 0
+                
+            elif active_tab == 'all':
+                # Load all recipes from database
+                all_stmt = select(Recipe)
+                db_recipes = db.execute(all_stmt).scalars().all()
+                seen = set()
+                raw_recipes = []
+                for r in db_recipes:
+                    r_id, r_data = _normalize_recipe(r, 'spoonacular_id' if r.spoonacular_id else 'id')
+                    if r_id not in seen:
+                        seen.add(r_id)
+                        raw_recipes.append(r_data)
+
+                current_recipes = _filter_helper(raw_recipes, filters)
+                tab_title = "All Database Recipes"
+                no_recipes_message = "No matching database recipes found."
+                has_recipes_total = len(raw_recipes) > 0
                 
     except Exception as e:
-        print(f"Error fetching user recipes: {e}")
-        user_recipes = []
-        liked_recipes = []
+        print(f"Error fetching recipes for tab {active_tab}: {e}")
 
     return render_template(
         'home.html',
         username=session.get('username'),
-        user_recipes=_filter_helper(user_recipes, filters),
-        liked_recipes=_filter_helper(liked_recipes, filters),
-        has_recipes_total=len(user_recipes) > 0 or len(liked_recipes) > 0,
+        current_recipes=current_recipes,
+        tab_title=tab_title,
+        no_recipes_message=no_recipes_message,
+        has_recipes_total=has_recipes_total,
         active_tab=active_tab,
         **filters
     )
@@ -237,32 +268,4 @@ def substitutes():
         print(f"Substitutes backend error: {e}")
         return jsonify({"detail": "Failed to retrieve substitutes from backend"}), 500
 
-@recipes_bp.route('/all')
-@login_required
-def all_recipes():
-    """Display all recipes currently in the database."""
-    recipes = []
-    filters = extract_filter_params()
 
-    try:
-        with SessionLocal() as db:
-            stmt = select(Recipe)
-            db_recipes = db.execute(stmt).scalars().all()
-            
-            seen_ids = set()
-            for r in db_recipes:
-                # Deduplicate and normalize id
-                r_id, r_data = _normalize_recipe(r, 'spoonacular_id' if r.spoonacular_id else 'id')
-                if r_id not in seen_ids:
-                    seen_ids.add(r_id)
-                    recipes.append(r_data)
-    except Exception as e:
-        print(f"Error fetching all database recipes: {e}")
-        recipes = []
-        
-    return render_template(
-        'all_recipes.html',
-        recipes=_filter_helper(recipes, filters),
-        username=session.get('username'),
-        **filters
-    )
