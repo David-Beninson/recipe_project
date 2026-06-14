@@ -41,7 +41,7 @@
 
 {% macro render_ai_quick_substituter(recipe_id) %}
 <div class="ai-quick-substitute-section">
-    <button type="button" id="btn-ai-quick-sub" class="btn btn-secondary">
+    <button type="button" id="btn-ai-quick-sub" class="btn btn-secondary" data-recipe-id="{{ recipe_id }}">
         Ask AI for Substitute
     </button>
     <div id="ai-quick-recommendation">

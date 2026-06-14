@@ -46,46 +46,8 @@
     </div>
 
     <!-- Scripts Section -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     {% block extra_js %}{% endblock %}
-
-    <script>
-        document.addEventListener('click', async (event) => {
-            const likeBtn = event.target.closest('.btn-like-ajax');
-            if (!likeBtn) return;
-
-            event.preventDefault();
-            const recipeId = likeBtn.getAttribute('data-recipe-id');
-            try {
-                const response = await fetch(`/recipe/${recipeId}/like`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-                if (response.ok) {
-                    const data = await response.json();
-
-                    // Update all buttons with this recipe ID
-                    document.querySelectorAll(`.btn-like-ajax[data-recipe-id="${recipeId}"]`).forEach(btn => {
-                        if (data.status === 'liked') {
-                            btn.classList.add('liked');
-                        } else {
-                            btn.classList.remove('liked');
-                        }
-                    });
-
-                    // Update all likes count displays with this recipe ID
-                    document.querySelectorAll(`.recipe-likes-count[data-recipe-id="${recipeId}"]`).forEach(span => {
-                        if (data.likes !== undefined) {
-                            span.textContent = data.likes;
-                        }
-                    });
-                }
-            } catch (e) {
-                console.error('Error toggling like:', e);
-            }
-        });
-    </script>
 </body>
 
 </html>

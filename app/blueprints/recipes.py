@@ -225,7 +225,18 @@ def like_recipe_route(recipe_id):
         with httpx.Client() as client:
             response = client.post(f"{settings.backend_url}/recipes/{recipe_id}/like", headers=headers, timeout=10.0)
             if response.status_code == 200:
-                return jsonify(response.json())
+                data = response.json()
+                # Keep session cache of liked recipe IDs in sync
+                if 'liked_recipe_ids' in session:
+                    liked_ids = list(session['liked_recipe_ids'])
+                    if data.get('status') == 'liked':
+                        if recipe_id not in liked_ids:
+                            liked_ids.append(recipe_id)
+                    elif data.get('status') == 'unliked':
+                        if recipe_id in liked_ids:
+                            liked_ids.remove(recipe_id)
+                    session['liked_recipe_ids'] = liked_ids
+                return jsonify(data)
             else:
                 return jsonify({"error": "Failed to toggle like on backend"}), response.status_code
     except Exception as e:

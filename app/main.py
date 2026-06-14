@@ -35,14 +35,18 @@ def inject_user():
     """Inject username and liked recipe IDs into all templates."""
     liked_ids = []
     if 'user_id' in session:
-        try:
-            with SessionLocal() as db:
-                user_stmt = select(User).filter(User.id == session['user_id']).options(selectinload(User.liked_recipes))
-                user_obj = db.execute(user_stmt).scalars().first()
-                if user_obj:
-                    liked_ids = [r.spoonacular_id if r.spoonacular_id else r.id for r in user_obj.liked_recipes]
-        except Exception as e:
-            print(f"Error injecting liked ids: {e}")
+        if 'liked_recipe_ids' in session:
+            liked_ids = session['liked_recipe_ids']
+        else:
+            try:
+                with SessionLocal() as db:
+                    user_stmt = select(User).filter(User.id == session['user_id']).options(selectinload(User.liked_recipes))
+                    user_obj = db.execute(user_stmt).scalars().first()
+                    if user_obj:
+                        liked_ids = [r.spoonacular_id if r.spoonacular_id else r.id for r in user_obj.liked_recipes]
+                        session['liked_recipe_ids'] = liked_ids
+            except Exception as e:
+                print(f"Error injecting liked ids: {e}")
     return dict(username=session.get('username'), liked_recipe_ids=liked_ids)
 
 @app.route('/')

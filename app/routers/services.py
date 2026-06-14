@@ -150,10 +150,19 @@ async def cache_and_link_recipes(data: list, new_search: models.UserSearch, db: 
     in the local database (caching), and associates them with the user's search history.
     """
     recipes = [schemas.Recipe.model_validate(item) for item in data]
+    if not recipes:
+        await db.commit()
+        return
+
+    recipe_ids = [recipe_obj.id for recipe_obj in recipes]
+    
+    # Batch query all existing recipes by spoonacular_id in a single database roundtrip
+    stmt = select(models.Recipe).filter(models.Recipe.spoonacular_id.in_(recipe_ids))
+    result = await db.execute(stmt)
+    existing_recipes = {r.spoonacular_id: r for r in result.scalars().all()}
+    
     for recipe_obj in recipes:
-        stmt = select(models.Recipe).filter(models.Recipe.spoonacular_id == recipe_obj.id)
-        result = await db.execute(stmt)
-        recipe = result.scalars().first()
+        recipe = existing_recipes.get(recipe_obj.id)
         
         # Cache to local DB if not present
         if not recipe:
@@ -164,6 +173,7 @@ async def cache_and_link_recipes(data: list, new_search: models.UserSearch, db: 
             )
             db.add(recipe)
             await db.flush()
+            existing_recipes[recipe_obj.id] = recipe
         
         new_search.recipes.append(recipe)
         
