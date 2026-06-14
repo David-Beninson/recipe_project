@@ -9,14 +9,14 @@
 {% block content %}
 <section class="recipe-detail-container">
     <div class="back-button-container">
-        <a href="{{ request.referrer or url_for('recipes.home') }}" class="btn btn-primary">← Back</a>
+        <a href="{{ request.referrer or url_for('recipes.home') }}" class="btn btn-primary">Back</a>
     </div>
     <div class="recipe-card">
         <div class="recipe-header">
             <h1 class="recipe-title">{{ recipe.title }}</h1>
-            <button id="like-btn" class="btn btn-outline btn-like-ajax {% if is_liked %}liked{% endif %}"
+            <button class="btn btn-outline btn-like-ajax {% if is_liked %}liked{% endif %}"
                 data-recipe-id="{{ recipe.id }}">
-                <span class="heart-icon">❤️</span> Like
+                <span>❤️</span> Like
             </button>
         </div>
 
@@ -29,7 +29,7 @@
         <div class="info-section">
             <h3>Ingredients</h3>
             <p class="ingredient-hint">
-                💡 <span>Click any ingredient to find a substitute</span>
+                <span>Click ingredient to find a substitute</span>
             </p>
             <ul id="ingredients-list" class="ingredients-list">
                 {% for ingredient in recipe.extendedIngredients %}

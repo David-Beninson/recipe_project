@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnToggle) {
         btnToggle.addEventListener('click', () => {
             const active = document.body.classList.toggle('ai-selection-mode');
-            btnToggle.textContent = active ? 'Cancel Selection' : 'Select Multiple Ingredients to Replace with AI';
+            btnToggle.textContent = active ? 'Cancel Selection' : 'Select & swap ingredients';
             btnToggle.style.backgroundColor = active ? '#f44336' : '';
             
             $$('.ai-select-ingredient-checkbox').forEach(cb => {

@@ -95,7 +95,7 @@ def home():
 
                 current_recipes = _filter_helper(raw_recipes, filters)
                 tab_title = "Liked Recipes"
-                no_recipes_message = "No matching liked recipes found."
+                no_recipes_message = "You do not have any liked recipes, you can add them in the 'Instructions' button."
                 has_recipes_total = len(raw_recipes) > 0
                 
             elif active_tab == 'all':
