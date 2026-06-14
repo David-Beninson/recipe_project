@@ -26,6 +26,12 @@
     --border: #dddddd;
     --border-focus: #e74c3c;
     
+    /* Global design colors for auth and alerts */
+    --error-red: #ff6666;
+    --success-green: #4CAF50;
+    --warning-yellow: #ffc107;
+    --link-blue: #87CEEB;
+    
     /* Layout & Styling Tokens */
     --radius-lg: 12px;
     --radius-md: 8px;
@@ -251,6 +257,18 @@ select.filter-input,
     transform: none !important;
 }
 
+/* Common button hover transformations */
+.btn-primary:hover,
+.btn-secondary:hover,
+.btn-outline:hover {
+    transform: translateY(-2px);
+}
+
+.btn-primary:hover,
+.btn-outline:hover {
+    box-shadow: 0 4px 10px var(--primary-shadow);
+}
+
 .btn-primary {
     background-color: var(--primary);
     color: white;
@@ -258,8 +276,6 @@ select.filter-input,
 
 .btn-primary:hover {
     background-color: var(--primary-hover);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px var(--primary-shadow);
 }
 
 .btn-secondary {
@@ -269,7 +285,6 @@ select.filter-input,
 
 .btn-secondary:hover {
     background-color: var(--secondary-hover);
-    transform: translateY(-2px);
     box-shadow: 0 4px 10px var(--secondary-shadow);
 }
 
@@ -282,8 +297,6 @@ select.filter-input,
 
 .btn-outline:hover {
     background-color: var(--primary-light);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px var(--primary-shadow);
 }
 
 .btn-outline.liked {

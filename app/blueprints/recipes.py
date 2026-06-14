@@ -6,10 +6,35 @@ from sqlalchemy.orm import selectinload
 from app.database import SessionLocal
 from app.models import User, UserSearch, Recipe
 from app.utils.oauth2 import create_access_token
-from app.utils.flask_helpers import login_required, filter_recipes_list, check_kosher, extract_filter_params
+from app.utils.flask_helpers import login_required, filter_recipes_list, extract_filter_params
 from app.config import settings
 
 recipes_bp = Blueprint('recipes', __name__)
+
+def _normalize_recipe(r, default_id_attr='id'):
+    """Extract and normalize recipe ID, title, and raw data from DB model."""
+    recipe_data = (r.raw_data or {}).copy()
+    recipe_id = getattr(r, default_id_attr)
+    recipe_data['id'] = recipe_id
+    recipe_data['title'] = r.title
+    return recipe_id, recipe_data
+
+def _filter_helper(recipes, filters):
+    """Convenience wrapper for filter_recipes_list with filter dict."""
+    return filter_recipes_list(
+        recipes,
+        dish_type=filters['dish_type'],
+        prep_time=filters['prep_time'] if filters['prep_time'] != 9999 else None,
+        vegetarian=filters['vegetarian'],
+        vegan=filters['vegan'],
+        gluten_free=filters['gluten_free'],
+        kosher=filters['kosher']
+    )
+
+def _get_auth_headers():
+    """Generate JWT authorization headers for backend requests."""
+    token = create_access_token(data={"user_id": session['user_id']})
+    return {"Authorization": f"Bearer {token}"}
 
 @recipes_bp.route('/home')
 @login_required
@@ -30,64 +55,36 @@ def home():
             seen_recipe_ids = set()
             for search_obj in searches:
                 for r in search_obj.recipes:
-                    if r.spoonacular_id not in seen_recipe_ids:
-                        seen_recipe_ids.add(r.spoonacular_id)
-                        recipe_data = r.raw_data if r.raw_data else {}
-                        # Make sure necessary keys are set
-                        recipe_data['id'] = r.spoonacular_id
-                        recipe_data['title'] = r.title
-                        user_recipes.append(recipe_data)
+                    r_id, r_data = _normalize_recipe(r, 'spoonacular_id')
+                    if r_id not in seen_recipe_ids:
+                        seen_recipe_ids.add(r_id)
+                        user_recipes.append(r_data)
             
             # Load custom recipes added by the user
             custom_stmt = select(Recipe).filter(Recipe.user_id == session['user_id'])
             custom_recipes = db.execute(custom_stmt).scalars().all()
             for r in custom_recipes:
-                recipe_data = r.raw_data if r.raw_data else {}
-                recipe_data['id'] = r.id
-                recipe_data['title'] = r.title
-                user_recipes.append(recipe_data)
+                _, r_data = _normalize_recipe(r, 'id')
+                user_recipes.append(r_data)
                 
             # Load user liked recipes
             user_stmt = select(User).filter(User.id == session['user_id']).options(selectinload(User.liked_recipes))
             user_obj = db.execute(user_stmt).scalars().first()
             if user_obj:
                 for r in user_obj.liked_recipes:
-                    recipe_data = r.raw_data if r.raw_data else {}
-                    recipe_data['id'] = r.spoonacular_id if r.spoonacular_id else r.id
-                    recipe_data['title'] = r.title
-                    liked_recipes.append(recipe_data)
+                    _, r_data = _normalize_recipe(r, 'spoonacular_id' if r.spoonacular_id else 'id')
+                    liked_recipes.append(r_data)
                 
     except Exception as e:
         print(f"Error fetching user recipes: {e}")
         user_recipes = []
         liked_recipes = []
-        
-    # Apply filtering in Python
-    filtered_user_recipes = filter_recipes_list(
-        user_recipes,
-        dish_type=filters['dish_type'],
-        prep_time=filters['prep_time'] if filters['prep_time'] != 9999 else None,
-        vegetarian=filters['vegetarian'],
-        vegan=filters['vegan'],
-        gluten_free=filters['gluten_free'],
-        kosher=filters['kosher']
-    )
-    
-    filtered_liked_recipes = filter_recipes_list(
-        liked_recipes,
-        dish_type=filters['dish_type'],
-        prep_time=filters['prep_time'] if filters['prep_time'] != 9999 else None,
-        vegetarian=filters['vegetarian'],
-        vegan=filters['vegan'],
-        gluten_free=filters['gluten_free'],
-        kosher=filters['kosher']
-    )
 
     return render_template(
         'home.html',
         username=session.get('username'),
-        user_recipes=filtered_user_recipes,
-        liked_recipes=filtered_liked_recipes,
+        user_recipes=_filter_helper(user_recipes, filters),
+        liked_recipes=_filter_helper(liked_recipes, filters),
         has_recipes_total=len(user_recipes) > 0 or len(liked_recipes) > 0,
         active_tab=active_tab,
         **filters
@@ -107,10 +104,6 @@ def add_recipe():
         print(f"Error parsing ingredients JSON: {e}")
         ingredients = []
         
-    # Generate JWT token for authenticate with FastAPI
-    token = create_access_token(data={"user_id": session['user_id']})
-    headers = {"Authorization": f"Bearer {token}"}
-    
     payload = {
         "title": title,
         "ingredients": ingredients,
@@ -120,7 +113,7 @@ def add_recipe():
     
     try:
         with httpx.Client() as client:
-            response = client.post(f"{settings.backend_url}/recipes/custom", headers=headers, json=payload, timeout=10.0)
+            response = client.post(f"{settings.backend_url}/recipes/custom", headers=_get_auth_headers(), json=payload, timeout=10.0)
             if response.status_code == 200:
                 flash("Recipe added successfully!", "success")
             else:
@@ -149,27 +142,15 @@ def search():
             flash('Please enter ingredients', 'warning')
             return redirect(url_for('recipes.search'))
         
-        # Generate JWT token for authenticate with FastAPI
-        token = create_access_token(data={"user_id": session['user_id']})
-        headers = {"Authorization": f"Bearer {token}"}
         params = {"ingredients": ingredients, "number": number}
         
         try:
             # Call the FastAPI backend service
             with httpx.Client() as client:
-                response = client.get(f"{settings.backend_url}/recipes/find-by-ingredients", headers=headers, params=params, timeout=10.0)
+                response = client.get(f"{settings.backend_url}/recipes/find-by-ingredients", headers=_get_auth_headers(), params=params, timeout=10.0)
                 if response.status_code == 200:
                     raw_recipes = response.json()
-                    # Filter in Python
-                    recipes = filter_recipes_list(
-                        raw_recipes,
-                        dish_type=filters['dish_type'],
-                        prep_time=filters['prep_time'] if filters['prep_time'] != 9999 else None,
-                        vegetarian=filters['vegetarian'],
-                        vegan=filters['vegan'],
-                        gluten_free=filters['gluten_free'],
-                        kosher=filters['kosher']
-                    )
+                    recipes = _filter_helper(raw_recipes, filters)
                     flash(f'Found {len(recipes)} recipes matching filters.', 'success')
                 else:
                     flash(f"Backend API error: {response.text}", "error")
@@ -195,7 +176,6 @@ def cooking_steps(recipe_id):
             response = client.get(f"{settings.backend_url}/recipes/{recipe_id}/information", timeout=10.0)
             if response.status_code == 200:
                 recipe = response.json()
-                # Ensure the ID matches what templates expect
                 recipe['id'] = recipe_id
                 
                 # Check if this recipe is liked by the current user
@@ -219,11 +199,9 @@ def cooking_steps(recipe_id):
 @login_required
 def like_recipe_route(recipe_id):
     """Toggle like for a recipe by calling the backend."""
-    token = create_access_token(data={"user_id": session['user_id']})
-    headers = {"Authorization": f"Bearer {token}"}
     try:
         with httpx.Client() as client:
-            response = client.post(f"{settings.backend_url}/recipes/{recipe_id}/like", headers=headers, timeout=10.0)
+            response = client.post(f"{settings.backend_url}/recipes/{recipe_id}/like", headers=_get_auth_headers(), timeout=10.0)
             if response.status_code == 200:
                 data = response.json()
                 # Keep session cache of liked recipe IDs in sync
@@ -264,7 +242,6 @@ def substitutes():
 def all_recipes():
     """Display all recipes currently in the database."""
     recipes = []
-    
     filters = extract_filter_params()
 
     try:
@@ -275,31 +252,17 @@ def all_recipes():
             seen_ids = set()
             for r in db_recipes:
                 # Deduplicate and normalize id
-                recipe_id = r.spoonacular_id if r.spoonacular_id else r.id
-                if recipe_id not in seen_ids:
-                    seen_ids.add(recipe_id)
-                    recipe_data = r.raw_data if r.raw_data else {}
-                    recipe_data['id'] = recipe_id
-                    recipe_data['title'] = r.title
-                    recipes.append(recipe_data)
+                r_id, r_data = _normalize_recipe(r, 'spoonacular_id' if r.spoonacular_id else 'id')
+                if r_id not in seen_ids:
+                    seen_ids.add(r_id)
+                    recipes.append(r_data)
     except Exception as e:
         print(f"Error fetching all database recipes: {e}")
         recipes = []
         
-    # Apply filtering in Python
-    filtered_recipes = filter_recipes_list(
-        recipes,
-        dish_type=filters['dish_type'],
-        prep_time=filters['prep_time'] if filters['prep_time'] != 9999 else None,
-        vegetarian=filters['vegetarian'],
-        vegan=filters['vegan'],
-        gluten_free=filters['gluten_free'],
-        kosher=filters['kosher']
-    )
-        
     return render_template(
         'all_recipes.html',
-        recipes=filtered_recipes,
+        recipes=_filter_helper(recipes, filters),
         username=session.get('username'),
         **filters
     )

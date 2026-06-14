@@ -102,43 +102,27 @@ async def _fallback_local_search(params: schemas.RecipeSearchParams, db: AsyncSe
         
         # Extract recipe ingredients from local DB cache
         ext_ingredients = recipe.raw_data.get("extendedIngredients", []) or recipe.raw_data.get("usedIngredients", [])
-        recipe_ing_names = [ing["name"].lower() for ing in ext_ingredients if isinstance(ing, dict) and "name" in ing]
         
-        # Check if the search ingredients list overlaps with this recipe's ingredients list
-        matching_indices = [
-            idx for idx, name in enumerate(recipe_ing_names)
-            if any(search_ing in name for search_ing in search_ingredients)
-        ]
-        
-        if matching_indices:
-            # Categorize ingredients into used vs missed
-            used_ings, missed_ings = [], []
-            for idx, ing in enumerate(ext_ingredients):
-                if not isinstance(ing, dict):
-                    continue
+        used_ings, missed_ings = [], []
+        for ing in ext_ingredients:
+            if isinstance(ing, dict) and "name" in ing:
                 mapped = _map_ingredient(ing)
-                if idx in matching_indices:
+                if any(si in ing["name"].lower() for si in search_ingredients):
                     used_ings.append(mapped)
                 else:
                     missed_ings.append(mapped)
-            
+        
+        if used_ings:
             # Construct standard recipe dictionary representation
             matched_recipes.append({
+                **(recipe.raw_data or {}),
                 "id": recipe.spoonacular_id or recipe.id,
                 "title": recipe.title,
-                "image": recipe.raw_data.get("image") or "",
-                "imageType": recipe.raw_data.get("imageType") or "jpg",
                 "usedIngredientCount": len(used_ings),
                 "missedIngredientCount": len(missed_ings),
-                "likes": recipe.raw_data.get("likes") or recipe.raw_data.get("aggregateLikes") or 0,
                 "usedIngredients": used_ings,
                 "missedIngredients": missed_ings,
-                "unusedIngredients": [],
-                "readyInMinutes": recipe.raw_data.get("readyInMinutes"),
-                "dishTypes": recipe.raw_data.get("dishTypes"),
-                "vegetarian": recipe.raw_data.get("vegetarian"),
-                "vegan": recipe.raw_data.get("vegan"),
-                "glutenFree": recipe.raw_data.get("glutenFree")
+                "unusedIngredients": []
             })
             
     return matched_recipes[:params.number] if matched_recipes else None
