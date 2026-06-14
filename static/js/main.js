@@ -33,3 +33,33 @@ document.addEventListener('click', async (event) => {
         updateUI(wasLiked);
     }
 });
+
+// Toggle recipe card active state (open/close dropdown) on click
+document.addEventListener('click', (event) => {
+    const recipeItem = event.target.closest('.recipe-item');
+    const clickedInsideDropdown = event.target.closest('.recipe-dropdown-overlay');
+    
+    // If the click was not inside a recipe item, or if it was inside the dropdown's interactive actions,
+    // we should close any active recipe items that are currently open.
+    if (!recipeItem || clickedInsideDropdown) {
+        if (!clickedInsideDropdown) {
+            document.querySelectorAll('.recipe-item.active').forEach(activeItem => {
+                activeItem.classList.remove('active');
+            });
+        }
+        return;
+    }
+
+    // Toggle the clicked recipe item
+    const wasActive = recipeItem.classList.contains('active');
+    
+    // Close all open cards first
+    document.querySelectorAll('.recipe-item.active').forEach(activeItem => {
+        activeItem.classList.remove('active');
+    });
+
+    // Toggle active state on the clicked item
+    if (!wasActive) {
+        recipeItem.classList.add('active');
+    }
+});

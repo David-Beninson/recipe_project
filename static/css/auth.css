@@ -1,6 +1,4 @@
-/* ===================================================== 
-   AUTHENTICATION PAGE STYLES (Login & Register)
-   ===================================================== */
+/* AUTHENTICATION PAGE STYLES (Login & Register) */
 @import url('style.css');
 
 body {
@@ -11,9 +9,7 @@ body {
     background-position: center;
 }
 
-/* =====================================================
-   AUTH CONTAINER
-   ===================================================== */
+/* AUTH CONTAINER */
 .auth-container {
     width: 100%;
     display: flex;
@@ -46,9 +42,7 @@ body {
     color: var(--primary);
 }
 
-/* =====================================================
-   FORM STYLES
-   ===================================================== */
+/* FORM STYLES */
 .form-group {
     margin-bottom: 20px;
 }
@@ -77,9 +71,7 @@ input[type="password"]:focus {
     transform: scale(1.02);
 }
 
-/* =====================================================
-   PASSWORD FIELD WITH TOGGLE
-   ===================================================== */
+/* PASSWORD FIELD WITH TOGGLE */
 .password-field {
     position: relative;
     width: 100%;
@@ -112,9 +104,7 @@ input[type="password"]:focus {
     outline: none;
 }
 
-/* =====================================================
-   SUBMIT BUTTON
-   ===================================================== */
+/* SUBMIT BUTTON */
 .btn-submit {
     width: 100%;
     padding: 12px;
@@ -140,9 +130,7 @@ input[type="password"]:focus {
     transform: scale(0.98);
 }
 
-/* =====================================================
-   AUTHENTICATION LINKS
-   ===================================================== */
+/* AUTHENTICATION LINKS */
 .auth-link {
     margin-top: 20px;
     font-size: 14px;
@@ -161,9 +149,7 @@ input[type="password"]:focus {
     text-decoration: underline;
 }
 
-/* =====================================================
-   ERROR & ALERT MESSAGES
-   ===================================================== */
+/* ERROR & ALERT MESSAGES */
 .alert {
     padding: 15px;
     margin-bottom: 20px;
@@ -203,9 +189,7 @@ input[type="password"]:focus {
     font-weight: bold;
 }
 
-/* =====================================================
-   RESPONSIVE DESIGN
-   ===================================================== */
+/* RESPONSIVE DESIGN */
 @media (max-width: 480px) {
     .auth-card {
         padding: 30px 20px;

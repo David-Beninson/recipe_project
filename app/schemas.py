@@ -46,7 +46,7 @@ class SubstituteResponse(BaseModel):
     substitutes: List[str]
     message: str
 
-# --- Recipe Schemas (Using Pydantic) ---
+# Recipe Schemas (Using Pydantic)
 
 class Ingredient(BaseModel):
     id: int
@@ -86,7 +86,7 @@ class Recipe(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
 
-# --- Custom Recipe Schemas ---
+# Custom Recipe Schemas
 
 class CustomIngredient(BaseModel):
     name: str
@@ -102,7 +102,7 @@ class CustomRecipeCreate(BaseModel):
     instructions: str
     image: Optional[str] = None
 
-# --- AI Recipe Schemas ---
+# AI Recipe Schemas
 
 class AIRecipeGenerateRequest(BaseModel):
     """Schema for requesting a new recipe generation using AI."""

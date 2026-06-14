@@ -1,8 +1,5 @@
-/* =====================================================
-   GLOBAL VARIABLES & CONFIGURATION
-   ===================================================== */
+/* GLOBAL VARIABLES & CONFIGURATION */
 :root {
-    /* Color Palette */
     --primary: #e74c3c;
     --primary-hover: #c0392b;
     --primary-light: #fdf2f2;
@@ -26,13 +23,11 @@
     --border: #dddddd;
     --border-focus: #e74c3c;
     
-    /* Global design colors for auth and alerts */
     --error-red: #ff6666;
     --success-green: #4CAF50;
     --warning-yellow: #ffc107;
     --link-blue: #87CEEB;
     
-    /* Layout & Styling Tokens */
     --radius-lg: 12px;
     --radius-md: 8px;
     --radius-sm: 4px;
@@ -41,9 +36,7 @@
     --transition: all 0.3s ease;
 }
 
-/* =====================================================
-   GLOBAL RESET & BASE STYLES
-   ===================================================== */
+/* GLOBAL RESET & BASE STYLES */
 * {
     margin: 0;
     padding: 0;
@@ -57,9 +50,7 @@ body {
     min-height: 100vh;
 }
 
-/* =====================================================
-   LAYOUT CONTAINERS & CARDS
-   ===================================================== */
+/* LAYOUT CONTAINERS & CARDS */
 .main-content {
     display: flex;
     flex-wrap: wrap;
@@ -78,7 +69,6 @@ body {
     width: 100%;
 }
 
-/* Unified Card Component */
 .app-card,
 .recipe-card,
 .search-card,
@@ -107,9 +97,7 @@ body {
     flex: 1;
 }
 
-/* =====================================================
-   NAVIGATION BAR
-   ===================================================== */
+/* NAVIGATION BAR */
 #main-nav {
     background-color: var(--primary);
     padding: 15px 30px;
@@ -146,9 +134,7 @@ body {
     background-color: rgba(0, 0, 0, 0.3);
 }
 
-/* =====================================================
-   TYPOGRAPHY & HEADERS
-   ===================================================== */
+/* TYPOGRAPHY & HEADERS */
 h1, h2, h3, h4 {
     margin-bottom: 15px;
 }
@@ -166,9 +152,7 @@ h1.recipe-title {
     padding-bottom: 0;
 }
 
-/* =====================================================
-   FORM CONTROLS (Inputs, Selects, Buttons)
-   ===================================================== */
+/* FORM CONTROLS (Inputs, Selects, Buttons) */
 .form-group {
     display: flex;
     flex-direction: column;
@@ -217,7 +201,6 @@ h1.recipe-title {
     font-size: 14px;
 }
 
-/* Reusable Select Dropdown Styling */
 select.app-input,
 select.filter-input,
 .form-group select {
@@ -232,7 +215,6 @@ select.filter-input,
     cursor: pointer;
 }
 
-/* UNIFIED BUTTONS SYSTEM */
 .btn {
     display: inline-flex;
     align-items: center;
@@ -257,7 +239,6 @@ select.filter-input,
     transform: none !important;
 }
 
-/* Common button hover transformations */
 .btn-primary:hover,
 .btn-secondary:hover,
 .btn-outline:hover {
@@ -320,9 +301,7 @@ select.filter-input,
     border-color: #ced4da;
 }
 
-/* =====================================================
-   TAB BUTTONS & NAVIGATION (Home Page)
-   ===================================================== */
+/* TAB BUTTONS & NAVIGATION (Home Page) */
 .home-content {
     display: flex;
     flex-direction: column;
@@ -368,9 +347,7 @@ select.filter-input,
     display: none;
 }
 
-/* =====================================================
-   FILTER BAR STYLES
-   ===================================================== */
+/* FILTER BAR STYLES */
 .filter-bar {
     border-left: 5px solid var(--primary);
     width: 100%;
@@ -462,49 +439,118 @@ select.filter-input,
     gap: 10px;
 }
 
-/* =====================================================
-   RECIPE COMPONENT STYLES
-   ===================================================== */
+/* RECIPE COMPONENT STYLES */
 .recipe-item {
-    margin-bottom: 10px;
-    padding: 10px;
-    border: 2px solid #ccc;
+    position: relative;
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid var(--border);
     border-radius: var(--radius-md);
+    background-color: var(--card-bg);
     cursor: pointer;
-    transition: border-color 0.3s;
+    z-index: 1;
+    transition: all 0.2s ease-in-out;
 }
 
-.recipe-item:hover {
+.recipe-item:not(.active):hover {
     border-color: var(--primary);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+    background-color: var(--primary-light);
 }
 
-.recipe-item summary {
-    font-weight: bold;
-    outline: none;
-    font-size: 16px;
+.recipe-item.active {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-md);
+    z-index: 100;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
 }
 
-.recipe-item summary::-webkit-details-marker {
+.recipe-card-header {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    width: 100%;
+}
+
+.recipe-expand-arrow {
+    margin-left: auto;
+    padding: 0 10px;
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    transition: transform 0.2s ease-in-out, color 0.2s ease-in-out;
+    user-select: none;
+}
+
+.recipe-item.active .recipe-expand-arrow {
+    transform: rotate(180deg);
     color: var(--primary);
 }
 
-.recipe-details {
-    padding: 15px;
-    background-color: #f9f9f9;
-    border-top: 1px solid #eee;
-    display: flex;
-    gap: 20px;
+.recipe-card-image {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
 }
 
-.recipe-image {
-    max-width: 90px;
-    max-height: 90px;
-    height: auto;
-    border-radius: var(--radius-lg);
-    margin: 20px 0;
-    object-fit: cover;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    border: 2px solid #ddd;
+.recipe-card-main-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.recipe-card-title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: var(--text);
+}
+
+.difficulty-tag {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 12px;
+    display: inline-block;
+    width: fit-content;
+}
+.difficulty-tag.easy { background-color: #e8f5e9; color: #2e7d32; }
+.difficulty-tag.medium { background-color: #fff8e1; color: #f57f17; }
+.difficulty-tag.hard { background-color: #ffebee; color: #c62828; }
+.difficulty-tag.unknown { background-color: #f5f5f5; color: #616161; }
+
+.recipe-dropdown-overlay {
+    position: absolute;
+    top: 100%;
+    left: -1px;
+    right: -1px;
+    background-color: var(--card-bg);
+    border: 1px solid var(--primary);
+    border-top: none;
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+    padding: 20px;
+    display: none;
+    z-index: 101;
+}
+
+.recipe-item.active .recipe-dropdown-overlay {
+    display: block;
+}
+
+.recipe-dropdown-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.recipe-action {
+    display: flex;
+    justify-content: flex-end;
 }
 
 .recipe-info {
@@ -536,9 +582,7 @@ select.filter-input,
 .badge-gluten-free { background-color: #fff3cd; color: #856404; }
 .badge-kosher { background-color: #cce5ff; color: #004085; }
 
-/* =====================================================
-   RECIPE SECTIONS & SUBSTIUTES
-   ===================================================== */
+/* RECIPE SECTIONS & SUBSTIUTES */
 .info-section {
     margin-bottom: 30px;
 }
@@ -642,9 +686,7 @@ select.filter-input,
     font-size: 16px;
 }
 
-/* =====================================================
-   RECIPE BUILDER WORKSPACE
-   ===================================================== */
+/* RECIPE BUILDER WORKSPACE */
 .add-ingredients-container {
     border: 1px solid #ccc;
     padding: 15px;
@@ -744,7 +786,6 @@ select.filter-input,
     transform: scale(0.98);
 }
 
-/* Traffic light logic colors */
 .draggable-ing.red {
     border: 2px solid var(--primary);
     background-color: var(--primary-light);
@@ -781,9 +822,7 @@ select.filter-input,
     color: var(--primary-hover);
 }
 
-/* =====================================================
-   AI CUSTOM COMPONENTS & CARD MODIFIERS
-   ===================================================== */
+/* AI CUSTOM COMPONENTS & CARD MODIFIERS */
 .ai-generation-card {
     margin-top: 20px;
     padding: 20px;
@@ -834,7 +873,6 @@ select.filter-input,
     margin-bottom: 8px;
 }
 
-/* Multi-Ingredient Replacement Styles */
 .ai-multi-replace-container {
     margin-top: 15px;
     text-align: left;
@@ -856,7 +894,6 @@ select.filter-input,
     line-height: 1.4;
 }
 
-/* Quick Substitute Section Styles */
 .ai-quick-substitute-section {
     margin-top: 15px;
     border-top: 1px dashed #ccc;
@@ -880,7 +917,6 @@ select.filter-input,
     line-height: 1.4;
 }
 
-/* Cooking Steps Ingredient Adjustments */
 .cooking-steps-ingredient {
     display: flex;
     align-items: center;
@@ -897,9 +933,7 @@ select.filter-input,
     display: none;
 }
 
-/* =====================================================
-   ALERTS & MESSAGES
-   ===================================================== */
+/* ALERTS & MESSAGES */
 .alert {
     padding: 12px 16px;
     margin-bottom: 15px;
@@ -931,9 +965,7 @@ select.filter-input,
     border: 1px solid #bee5eb;
 }
 
-/* =====================================================
-   RESPONSIVE DESIGN & MEDIA QUERIES
-   ===================================================== */
+/* RESPONSIVE DESIGN & MEDIA QUERIES */
 @media (max-width: 768px) {
     .app-card,
     .recipe-card,

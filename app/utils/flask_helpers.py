@@ -2,7 +2,7 @@ from functools import wraps
 from flask import session, flash, redirect, url_for
 
 nonKosherItems=[
-    # --- Seafood (No fins and scales) ---
+    # Seafood (No fins and scales)
     "shrimp",
     "lobster",
     "crab",
@@ -15,7 +15,7 @@ nonKosherItems=[
     "catfish",
     "eel",
 
-    # --- Land Animals (Do not both chew cud and have cloven hooves) ---
+    # Land Animals (Do not both chew cud and have cloven hooves)
     "pork",
     "bacon",
     "ham",
@@ -24,20 +24,20 @@ nonKosherItems=[
     "horse",
     "wild boar",
 
-    # --- Birds of Prey & Scavengers ---
+    # Birds of Prey & Scavengers
     "eagle",
     "vulture",
     "owl",
     "raven",
     "ostrich",
 
-    # --- Insects & Creeping Things ---
+    # Insects & Creeping Things
     "ants",
     "flies",
     "snails",
     "slugs",
 
-    # --- Disallowed Mixtures & Byproducts ---
+    # Disallowed Mixtures & Byproducts
     "cheeseburger",             # Mixing meat and dairy
     "chicken parmesan",          # Mixing poultry and dairy
     "gelatin",                  # If derived from non-kosher animals (like pork)
