@@ -45,6 +45,18 @@ To keep the user interface responsive and reduce server load, several performanc
 
 ---
 
+## 🛠️ Recent Core Features & DB Resilience
+
+To ensure production stability and complete user flows, the following features and resilience updates have been added:
+
+* **Pessimistic DB Connection Pooling (Neon.tech support)**: Enabled `pool_pre_ping=True` and `pool_recycle=300` on both sync and async SQLAlchemy engines in `app/database.py`. This detects and cleans up stale/closed connections caused by serverless database idle timeouts before queries run, avoiding `InterfaceError: connection is closed` exceptions.
+* **Separated Searched & My Recipes Tabs**: Separated the query search history dashboard list from the user's custom-created recipes. Added a dedicated "My Recipes" tab showing only user-uploaded custom recipes next to the "Searched Recipes" tab.
+* **Full Custom Recipe Editing (DRY Layout Reuse)**: Implemented authorized PUT endpoints and Flask controllers to allow users to update their own custom recipes. Reused the exact same `add_recipe.html` template builder component (via macro variables) and JavaScript builder state to enable pre-populating, modifying, and saving existing custom recipes.
+* **Property Serialization & Self-Healing DOM**: Refactored `recipe-builder.js` to serialize active input elements (`.ing-qty-input`) by synchronizing DOM `value` properties back to HTML attributes on submission. Added name-based matching fallbacks to resolve old mismatched IDs and self-heal quantity values.
+* **Base64 Image Upload & Previews**: Integrated a hidden image input to store and send base64-encoded image Data URLs to the backend, enabling image uploads, storage, and preview loading in edit mode.
+
+---
+
 ## 🗂️ Project Structure
 
 ```

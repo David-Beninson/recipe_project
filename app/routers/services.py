@@ -1,4 +1,5 @@
 import httpx
+import zlib
 from typing import List, Optional
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -7,6 +8,11 @@ from fastapi import HTTPException
 
 from app import models, schemas
 from ..config import settings
+
+
+def _get_deterministic_id(name: str) -> int:
+    """Generates a stable numeric ID for an ingredient based on its name."""
+    return zlib.adler32(name.lower().encode()) % 1000000
 
 
 async def fetch_recipes_with_fallback(params: schemas.RecipeSearchParams, db: AsyncSession):
@@ -172,7 +178,7 @@ async def save_custom_recipe(recipe_in: schemas.CustomRecipeCreate, user_id: int
     # Create normalized ingredient entries
     extended_ingredients = [
         {
-            "id": hash(ing.name) % 1000000,
+            "id": int(ing.id) if ing.id and ing.id.isdigit() else (ing.id if ing.id else str(_get_deterministic_id(ing.name))),
             "name": ing.name,
             "original": f"{ing.name} - {ing.originalAmount}",
             "amount": float(ing.qty),
@@ -207,6 +213,46 @@ async def save_custom_recipe(recipe_in: schemas.CustomRecipeCreate, user_id: int
     db_recipe.raw_data = raw_data
     await db.commit()
     return db_recipe
+
+
+async def update_custom_recipe(recipe_id: int, recipe_in: schemas.CustomRecipeCreate, user_id: int, db: AsyncSession):
+    """Updates a custom recipe if it exists and belongs to the authenticated user."""
+    recipe = await _get_recipe_by_id(recipe_id, db)
+    if not recipe:
+        raise HTTPException(status_code=404, detail="Recipe not found")
+    if recipe.user_id != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to edit this recipe")
+
+    extended_ingredients = [
+        {
+            "id": int(ing.id) if ing.id and ing.id.isdigit() else (ing.id if ing.id else str(_get_deterministic_id(ing.name))),
+            "name": ing.name,
+            "original": f"{ing.name} - {ing.originalAmount}",
+            "amount": float(ing.qty),
+            "unit": ing.unitString
+        } for ing in recipe_in.ingredients
+    ]
+
+    raw_data = {
+        "id": recipe.id,
+        "title": recipe_in.title,
+        "image": recipe_in.image,
+        "extendedIngredients": extended_ingredients,
+        "instructions": recipe_in.instructions,
+        "likes": recipe.raw_data.get("likes", 0) if recipe.raw_data else 0,
+        "usedIngredientCount": len(extended_ingredients),
+        "usedIngredients": extended_ingredients,
+        "missedIngredientCount": 0,
+        "missedIngredients": [],
+        "unusedIngredients": []
+    }
+
+    recipe.title = recipe_in.title
+    recipe.raw_data = raw_data
+    await db.commit()
+    await db.refresh(recipe)
+    return recipe
+
 
 
 async def get_recipe_details(recipe_id: int, db: AsyncSession):

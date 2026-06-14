@@ -1,8 +1,8 @@
-{% macro add_recipes() %}
-<h3>Recipe Builder</h3>
-<form id="add-recipe-form" action="{{ url_for('recipes.add_recipe') }}" method="POST">
+{% macro add_recipes(recipe=None) %}
+<h3>{% if recipe %}Edit Recipe{% else %}Recipe Builder{% endif %}</h3>
+<form id="add-recipe-form" action="{% if recipe %}{{ url_for('recipes.edit_recipe', recipe_id=recipe.id) }}{% else %}{{ url_for('recipes.add_recipe') }}{% endif %}" method="POST">
     <!-- Recipe Title Input -->
-    <input type="text" id="recipe-title" name="title" class="app-input" placeholder="Recipe name" required>
+    <input type="text" id="recipe-title" name="title" class="app-input" placeholder="Recipe name" value="{% if recipe %}{{ recipe.title }}{% endif %}" required>
 
     <!-- Hidden File Input -->
     <input type="file" id="recipe-image" accept="image/*" capture="environment" style="display: none;">
@@ -25,6 +25,10 @@
 
     <input type="hidden" name="ingredients" id="hidden-ingredients">
     <input type="hidden" name="instructions" id="hidden-instructions">
+    <input type="hidden" name="image" id="hidden-image" value="{% if recipe and recipe.image %}{{ recipe.image }}{% endif %}">
+
+    <script id="prepopulated-ingredients" type="application/json">{% if recipe %}{{ recipe.extendedIngredients|tojson|safe }}{% else %}[]{% endif %}</script>
+    <div id="prepopulated-instructions" style="display: none;">{% if recipe %}{{ recipe.instructions|safe }}{% endif %}</div>
 
     <!-- Add Ingredients Form Container -->
     <div class="add-ingredients-container">
@@ -44,6 +48,6 @@
     <div id="instructions-zone" contenteditable="true"></div>
 
     <!-- Submit Button -->
-    <button type="submit" id="btn-submit-recipe" class="btn btn-primary" disabled>Submit Recipe</button>
+    <button type="submit" id="btn-submit-recipe" class="btn btn-primary" {% if not recipe %}disabled{% endif %}>{% if recipe %}Save Recipe{% else %}Submit Recipe{% endif %}</button>
 </form>
 {% endmacro %}

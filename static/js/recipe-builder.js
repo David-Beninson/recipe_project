@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
-    let ingredientsList = [];
-
+    const prepopulatedIngredientsEl = document.getElementById('prepopulated-ingredients');
+    const prepopulatedInstructionsEl = document.getElementById('prepopulated-instructions');
     const ingNameInput = document.getElementById('ing-name');
     const ingAmountInput = document.getElementById('ing-amount');
     const btnAddIngredient = document.getElementById('btn-add-ingredient');
@@ -10,12 +10,62 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!btnAddIngredient || !inventoryZone || !instructionsZone || !submitBtn) return;
 
+    let ingredientsList = [];
+    if (prepopulatedIngredientsEl && prepopulatedIngredientsEl.textContent.trim()) {
+        try {
+            const rawIngs = JSON.parse(prepopulatedIngredientsEl.textContent);
+            ingredientsList = rawIngs.map((ing, index) => {
+                const name = ing.name;
+                const amt = ing.original ? ing.original.replace(`${name} - `, '').trim() : `${ing.amount} ${ing.unit}`;
+                return {
+                    id: ing.id ? String(ing.id) : ('ing-' + index + '-' + Date.now()),
+                    name: name,
+                    originalAmount: amt,
+                    qty: parseFloat(ing.amount) || parseFloat(ing.qty) || 1,
+                    unitString: ing.unit || ing.unitString || '',
+                    usedQty: parseFloat(ing.amount) || parseFloat(ing.qty) || 1
+                };
+            });
+        } catch(e) {
+            console.error("Error parsing ingredientsList:", e);
+        }
+    }
+
+    if (prepopulatedInstructionsEl && instructionsZone) {
+        instructionsZone.innerHTML = prepopulatedInstructionsEl.innerHTML;
+        instructionsZone.querySelectorAll('.ing-qty-input').forEach(input => {
+            const ingId = input.getAttribute('data-id');
+            let ing = ingredientsList.find(i => i.id === ingId);
+            if (!ing && input.parentElement) {
+                const text = input.parentElement.textContent.replace(input.value, '').trim().toLowerCase();
+                ing = ingredientsList.find(i => text.includes(i.name.toLowerCase()));
+                if (ing) {
+                    input.setAttribute('data-id', ing.id);
+                    input.parentElement.setAttribute('data-id', ing.id);
+                }
+            }
+            if (ing && (input.value === "0" || input.value === "")) {
+                input.value = ing.qty;
+                input.setAttribute('value', ing.qty);
+            }
+        });
+    }
+
     // Handle file input name display change and image preview
     const recipeImageInput = document.getElementById('recipe-image');
     const fileNameDisplay = document.getElementById('file-name-display');
     const previewContainer = document.getElementById('image-preview-container');
     const previewImage = document.getElementById('recipe-image-preview');
     const recipeImageLabel = document.getElementById('recipe-image-label');
+    const hiddenImageInput = document.getElementById('hidden-image');
+
+    // Prepopulate preview if image is already saved in hidden-image
+    if (hiddenImageInput && hiddenImageInput.value && previewImage) {
+        previewImage.src = hiddenImageInput.value;
+        if (previewContainer) previewContainer.style.display = 'block';
+        if (recipeImageLabel) recipeImageLabel.style.display = 'none';
+        if (fileNameDisplay) fileNameDisplay.style.display = 'none';
+    }
 
     if (recipeImageInput && fileNameDisplay) {
         recipeImageInput.addEventListener('change', (e) => {
@@ -31,6 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 reader.onload = function (event) {
                     if (previewImage) previewImage.src = event.target.result;
                     if (previewContainer) previewContainer.style.display = 'block';
+                    if (hiddenImageInput) hiddenImageInput.value = event.target.result;
                 };
                 reader.readAsDataURL(file);
             } else {
@@ -71,8 +122,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // Calculate total usage from instructions text input elements
     window.updateTotals = function () {
         ingredientsList.forEach(ing => ing.usedQty = 0);
-        document.querySelectorAll('.ing-qty-input').forEach(input => {
-            const ing = ingredientsList.find(i => i.id === input.getAttribute('data-id'));
+        instructionsZone.querySelectorAll('.ing-qty-input').forEach(input => {
+            const ingId = input.getAttribute('data-id');
+            let ing = ingredientsList.find(i => i.id === ingId);
+            if (!ing && input.parentElement) {
+                const text = input.parentElement.textContent.replace(input.value, '').trim().toLowerCase();
+                ing = ingredientsList.find(i => text.includes(i.name.toLowerCase()));
+                if (ing) {
+                    input.setAttribute('data-id', ing.id);
+                    input.parentElement.setAttribute('data-id', ing.id);
+                }
+            }
             if (ing) ing.usedQty += parseFloat(input.value) || 0;
         });
         renderInventory();
@@ -146,7 +206,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     document.getElementById('add-recipe-form').addEventListener('submit', () => {
+        instructionsZone.querySelectorAll('.ing-qty-input').forEach(input => {
+            input.setAttribute('value', input.value);
+        });
         document.getElementById('hidden-ingredients').value = JSON.stringify(ingredientsList);
         document.getElementById('hidden-instructions').value = instructionsZone.innerHTML;
     });
+
+    if (ingredientsList.length > 0) {
+        updateTotals();
+    }
 });

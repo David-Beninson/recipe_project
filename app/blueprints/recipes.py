@@ -17,6 +17,7 @@ def _normalize_recipe(r, default_id_attr='id'):
     recipe_id = getattr(r, default_id_attr)
     recipe_data['id'] = recipe_id
     recipe_data['title'] = r.title
+    recipe_data['user_id'] = r.user_id
     return recipe_id, recipe_data
 
 def _filter_helper(recipes, filters):
@@ -62,17 +63,24 @@ def home():
                         if r_id not in seen:
                             seen.add(r_id)
                             raw_recipes.append(r_data)
+
+                current_recipes = _filter_helper(raw_recipes, filters)
+                tab_title = "Searched Recipes"
+                no_recipes_message = "No matching searched recipes found."
+                has_recipes_total = len(raw_recipes) > 0
                 
+            elif active_tab == 'my_recipes':
                 # Load custom recipes added by the user
                 custom_stmt = select(Recipe).filter(Recipe.user_id == session['user_id'])
                 custom_recipes = db.execute(custom_stmt).scalars().all()
+                raw_recipes = []
                 for r in custom_recipes:
                     _, r_data = _normalize_recipe(r, 'id')
                     raw_recipes.append(r_data)
 
                 current_recipes = _filter_helper(raw_recipes, filters)
                 tab_title = "My Recipes"
-                no_recipes_message = "No matching recipes found."
+                no_recipes_message = "You haven't added any custom recipes yet."
                 has_recipes_total = len(raw_recipes) > 0
                 
             elif active_tab == 'liked':
@@ -107,6 +115,32 @@ def home():
                 no_recipes_message = "No matching database recipes found."
                 has_recipes_total = len(raw_recipes) > 0
                 
+            elif active_tab == 'edit':
+                recipe_id = request.args.get('recipe_id')
+                if recipe_id:
+                    with httpx.Client() as client:
+                        response = client.get(f"{settings.backend_url}/recipes/{recipe_id}/information", timeout=10.0)
+                        if response.status_code == 200:
+                            recipe_obj = response.json()
+                            recipe_obj['id'] = recipe_id
+                            
+                            custom_stmt = select(Recipe).filter(Recipe.id == int(recipe_id))
+                            db_recipe = db.execute(custom_stmt).scalars().first()
+                            if db_recipe and db_recipe.user_id == session['user_id']:
+                                return render_template(
+                                    'home.html',
+                                    username=session.get('username'),
+                                    recipe=recipe_obj,
+                                    active_tab='edit',
+                                    current_recipes=[],
+                                    tab_title="Edit Recipe",
+                                    no_recipes_message="",
+                                    has_recipes_total=False,
+                                    **filters
+                                )
+                flash("You are not authorized to edit this recipe.", "error")
+                return redirect(url_for('recipes.home'))
+                
     except Exception as e:
         print(f"Error fetching recipes for tab {active_tab}: {e}")
 
@@ -128,18 +162,19 @@ def add_recipe():
     title = request.form.get('title')
     ingredients_raw = request.form.get('ingredients')
     instructions = request.form.get('instructions')
-    
+    image = request.form.get('image') or ""
+
     try:
         ingredients = json.loads(ingredients_raw) if ingredients_raw else []
     except Exception as e:
         print(f"Error parsing ingredients JSON: {e}")
         ingredients = []
-        
+
     payload = {
         "title": title,
         "ingredients": ingredients,
         "instructions": instructions,
-        "image": ""
+        "image": image
     }
     
     try:
@@ -267,5 +302,67 @@ def substitutes():
     except Exception as e:
         print(f"Substitutes backend error: {e}")
         return jsonify({"detail": "Failed to retrieve substitutes from backend"}), 500
+
+
+@recipes_bp.route('/recipe/<int:recipe_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_recipe(recipe_id):
+    """Route to edit an existing custom recipe."""
+    if request.method == 'POST':
+        title = request.form.get('title')
+        ingredients_raw = request.form.get('ingredients')
+        instructions = request.form.get('instructions')
+        image = request.form.get('image') or ""
+
+        try:
+            ingredients = json.loads(ingredients_raw) if ingredients_raw else []
+        except Exception as e:
+            print(f"Error parsing ingredients JSON: {e}")
+            ingredients = []
+
+        payload = {
+            "title": title,
+            "ingredients": ingredients,
+            "instructions": instructions,
+            "image": image
+        }
+
+        try:
+            with httpx.Client() as client:
+                response = client.put(f"{settings.backend_url}/recipes/{recipe_id}", headers=_get_auth_headers(), json=payload, timeout=10.0)
+                if response.status_code == 200:
+                    flash("Recipe updated successfully!", "success")
+                    return redirect(url_for('recipes.home', tab='my_recipes'))
+                else:
+                    flash(f"Backend API error: {response.text}", "error")
+        except Exception as e:
+            print(f"Connection error to backend: {e}")
+            flash("Failed to connect to backend service.", "error")
+
+        return redirect(url_for('recipes.edit_recipe', recipe_id=recipe_id))
+
+    try:
+        with httpx.Client() as client:
+            response = client.get(f"{settings.backend_url}/recipes/{recipe_id}/information", timeout=10.0)
+            if response.status_code == 200:
+                recipe = response.json()
+                recipe['id'] = recipe_id
+
+                with SessionLocal() as db:
+                    stmt = select(Recipe).filter(Recipe.id == recipe_id)
+                    db_recipe = db.execute(stmt).scalars().first()
+                    if not db_recipe or db_recipe.user_id != session['user_id']:
+                        flash("You are not authorized to edit this recipe.", "error")
+                        return redirect(url_for('recipes.home'))
+
+                return render_template('edit_recipe.html', recipe=recipe)
+            else:
+                flash('Recipe not found on server', 'error')
+                return redirect(url_for('recipes.home'))
+    except Exception as e:
+        print(f"Error loading recipe: {e}")
+        flash('Error loading recipe from backend', 'error')
+        return redirect(url_for('recipes.home'))
+
 
 

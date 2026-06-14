@@ -89,6 +89,7 @@ class Recipe(BaseModel):
 # Custom Recipe Schemas
 
 class CustomIngredient(BaseModel):
+    id: Optional[str] = None
     name: str
     originalAmount: str
     qty: float

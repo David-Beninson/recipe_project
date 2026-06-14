@@ -120,6 +120,11 @@
                     <a class="btn btn-primary" href="{{ url_for('recipes.cooking_steps', recipe_id=recipe.id) }}">
                         How to Make
                     </a>
+                    {% if recipe.user_id and recipe.user_id == session.get('user_id') %}
+                    <a class="btn btn-secondary" href="{{ url_for('recipes.home', tab='edit', recipe_id=recipe.id) }}">
+                        Edit Recipe
+                    </a>
+                    {% endif %}
                 </div>
             </div>
         </div>

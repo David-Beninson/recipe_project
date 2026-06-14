@@ -10,11 +10,21 @@ ASYNC_SQLALCHEMY_DATABASE_URL = f"postgresql+asyncpg://{settings.database_userna
 
 
 # Create sync engine for Flask operations
-engine = create_engine(SQLALCHEMY_DATABASE_URL, echo=True)
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL, 
+    echo=True,
+    pool_pre_ping=True,
+    pool_recycle=300
+)
 SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
 
 # Create async engine for FastAPI operations
-async_engine = create_async_engine(ASYNC_SQLALCHEMY_DATABASE_URL, echo=True)
+async_engine = create_async_engine(
+    ASYNC_SQLALCHEMY_DATABASE_URL, 
+    echo=True,
+    pool_pre_ping=True,
+    pool_recycle=300
+)
 AsyncSessionLocal = async_sessionmaker(bind=async_engine, expire_on_commit=False)
 
 
