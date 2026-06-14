@@ -1,23 +1,15 @@
-/* ===================================================== 
-   AUTHENTICATION PAGE STYLES (Login & Register)
-   ===================================================== */
+/* AUTHENTICATION PAGE STYLES (Login & Register) */
+@import url('style.css');
 
 body {
-    margin: 0;
-    min-height: 100vh;
-    display: flex;
     justify-content: center;
     align-items: center;
-    font-family: Arial, sans-serif;
-    color: white;
     background-image: url('https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=1600');
     background-size: cover;
     background-position: center;
 }
 
-/* =====================================================
-   AUTH CONTAINER
-   ===================================================== */
+/* AUTH CONTAINER */
 .auth-container {
     width: 100%;
     display: flex;
@@ -31,7 +23,7 @@ body {
 .auth-card {
     background-color: rgba(0, 0, 0, 0.75);
     padding: 50px 40px;
-    border-radius: 15px;
+    border-radius: var(--radius-lg);
     text-align: center;
     width: 100%;
     max-width: 400px;
@@ -47,16 +39,10 @@ body {
 .auth-card h2 {
     font-size: 24px;
     margin-bottom: 30px;
-    color: #e74c3c;
+    color: var(--primary);
 }
 
-/* =====================================================
-   FORM STYLES
-   ===================================================== */
-form {
-    text-align: left;
-}
-
+/* FORM STYLES */
 .form-group {
     margin-bottom: 20px;
 }
@@ -72,13 +58,8 @@ label {
 
 input[type="text"],
 input[type="password"] {
-    width: 100%;
     padding: 12px;
-    border-radius: 8px;
     border: none;
-    outline: none;
-    box-sizing: border-box;
-    font-size: 14px;
     background-color: rgba(255, 255, 255, 0.9);
     color: #333;
 }
@@ -88,12 +69,9 @@ input[type="password"]:focus {
     background-color: #fff;
     box-shadow: 0 0 15px white;
     transform: scale(1.02);
-    transition: 0.3s;
 }
 
-/* =====================================================
-   PASSWORD FIELD WITH TOGGLE
-   ===================================================== */
+/* PASSWORD FIELD WITH TOGGLE */
 .password-field {
     position: relative;
     width: 100%;
@@ -126,20 +104,18 @@ input[type="password"]:focus {
     outline: none;
 }
 
-/* =====================================================
-   SUBMIT BUTTON
-   ===================================================== */
+/* SUBMIT BUTTON */
 .btn-submit {
     width: 100%;
     padding: 12px;
-    background-color: #4CAF50;
+    background-color: var(--success-green);
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     font-size: 16px;
     font-weight: bold;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: var(--transition);
     margin-top: 10px;
 }
 
@@ -147,16 +123,14 @@ input[type="password"]:focus {
     transform: translateY(-3px);
     box-shadow: 0 10px 20px rgba(0, 114, 255, 0.4);
     background-color: darkorange;
-    transition: 0.3s;
+    transition: var(--transition);
 }
 
 .btn-submit:active {
     transform: scale(0.98);
 }
 
-/* =====================================================
-   AUTHENTICATION LINKS
-   ===================================================== */
+/* AUTHENTICATION LINKS */
 .auth-link {
     margin-top: 20px;
     font-size: 14px;
@@ -164,7 +138,7 @@ input[type="password"]:focus {
 }
 
 .auth-link a {
-    color: #87CEEB;
+    color: var(--link-blue);
     text-decoration: none;
     font-weight: bold;
     transition: color 0.3s;
@@ -175,9 +149,7 @@ input[type="password"]:focus {
     text-decoration: underline;
 }
 
-/* =====================================================
-   ERROR & ALERT MESSAGES
-   ===================================================== */
+/* ERROR & ALERT MESSAGES */
 .alert {
     padding: 15px;
     margin-bottom: 20px;
@@ -191,35 +163,33 @@ input[type="password"]:focus {
 }
 
 .alert-success {
-    color: #4CAF50;
-    border: 1px solid #4CAF50;
+    color: var(--success-green);
+    border: 1px solid var(--success-green);
 }
 
 .alert-error {
-    color: #ff6666;
-    border: 1px solid #ff6666;
+    color: var(--error-red);
+    border: 1px solid var(--error-red);
 }
 
 .alert-warning {
-    color: #ffc107;
-    border: 1px solid #ffc107;
+    color: var(--warning-yellow);
+    border: 1px solid var(--warning-yellow);
 }
 
 .error-message {
-    color: #ff6666;
+    color: var(--error-red);
     font-size: 14px;
     margin: -15px 0 15px 0;
     padding: 10px;
     background-color: rgba(0, 0, 0, 0.6);
     border-radius: 5px;
-    border: 1px solid #ff6666;
+    border: 1px solid var(--error-red);
     text-align: center;
     font-weight: bold;
 }
 
-/* =====================================================
-   RESPONSIVE DESIGN
-   ===================================================== */
+/* RESPONSIVE DESIGN */
 @media (max-width: 480px) {
     .auth-card {
         padding: 30px 20px;

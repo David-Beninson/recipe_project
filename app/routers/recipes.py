@@ -44,6 +44,19 @@ async def create_custom_recipe(
     return {"id": db_recipe.id, "title": db_recipe.title}
 
 
+@router.put("/{recipe_id}", response_model=dict)
+async def update_custom_recipe(
+    recipe_id: int,
+    recipe_in: schemas.CustomRecipeCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: models.User = Depends(oauth2.get_current_user)
+):
+    """Update an existing custom recipe."""
+    db_recipe = await services.update_custom_recipe(recipe_id, recipe_in, current_user.id, db)
+    return {"id": db_recipe.id, "title": db_recipe.title}
+
+
+
 @router.get("/{recipe_id}/information")
 async def get_recipe_info(
     recipe_id: int,

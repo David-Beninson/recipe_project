@@ -20,6 +20,18 @@ class UserOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class UserSettings(BaseModel):
+    """User settings / defaults for recipe search & filters."""
+    default_vegetarian: bool = False
+    default_vegan: bool = False
+    default_gluten_free: bool = False
+    default_kosher: bool = False
+    default_dish_type: str = ""
+    default_prep_time: int = 9999
+    
+    model_config = ConfigDict(from_attributes=True)
+
+
 class Token(BaseModel):
     """JWT token response schema returned after successful login/signup."""
     access_token: str
@@ -35,7 +47,7 @@ class TokenData(BaseModel):
 class RecipeSearchParams(BaseModel):
     """Parameters for searching recipes by ingredients."""
     ingredients: str  # Comma-separated list of ingredients
-    number: int = 5   # Number of recipes to return (default: 5)
+    number: int = 5   # Number of recipes to return (default: 1)
     ranking: int = 1
     ignorePantry: bool = True
 
@@ -46,7 +58,7 @@ class SubstituteResponse(BaseModel):
     substitutes: List[str]
     message: str
 
-# --- Recipe Schemas (Using Pydantic) ---
+# Recipe Schemas (Using Pydantic)
 
 class Ingredient(BaseModel):
     id: int
@@ -86,9 +98,10 @@ class Recipe(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
 
-# --- Custom Recipe Schemas ---
+# Custom Recipe Schemas
 
 class CustomIngredient(BaseModel):
+    id: Optional[str] = None
     name: str
     originalAmount: str
     qty: float
@@ -102,7 +115,7 @@ class CustomRecipeCreate(BaseModel):
     instructions: str
     image: Optional[str] = None
 
-# --- AI Recipe Schemas ---
+# AI Recipe Schemas
 
 class AIRecipeGenerateRequest(BaseModel):
     """Schema for requesting a new recipe generation using AI."""

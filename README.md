@@ -14,6 +14,30 @@ This repository includes:
 
 ---
 
+## 🚀 Key Features
+
+### 🔍 Recipe Search & Customization
+- **Smart Search**: Search for recipes by ingredients with a configurable quantity limit (1-5 recipes).
+- **Culinary Preferences & Settings**: Dedicated user settings profile to set defaults (Vegetarian, Vegan, Gluten-Free, Kosher, max prep time) that automatically apply to searches.
+- **Recipe Management**: Create, view, edit, and delete custom user recipes with base64 image uploads and previews.
+- **Dashboard & History**: Track search history and browse saved recipes via dedicated tabs ("My Recipes" vs. "Searched Recipes").
+
+### Chef-AI Integrations
+- **Custom Recipe Generation**: Ask AI to generate a completely new recipe from scratch based on available ingredients while respecting active dietary filters.
+- **AI Ingredient Substitution**: Interactively select and swap multiple ingredients in any recipe with smart alternatives recommended by AI.
+- **Quick AI Suggestions**: Get a rapid, context-aware 1-2 sentence substitute recommendation for any recipe ingredient instantly.
+
+---
+
+## ⚡ Architecture & Performance Optimizations
+
+To keep the user interface responsive and reduce server load, the application implements several architectural best practices:
+
+* **Optimistic UI Updates**: Toggling recipe likes updates the interface instantly in the background, with an automatic rollback mechanism if the server request fails.
+* **Efficient Session Caching**: Liked recipe IDs are cached in the Flask user session upon login to eliminate database query overhead on page navigation.
+* **Optimized Database Access**: Utilizes batched database operations (SQL `IN` clauses) instead of loop-based individual queries to minimize database network roundtrips.
+* **Resilient Connection Pooling**: Configured with pessimistic connection pre-pinging (`pool_pre_ping=True`) to handle serverless database idle timeouts seamlessly.
+
 ## 🚀 Project Summary
 
 This app lets users:
@@ -21,20 +45,20 @@ This app lets users:
 - Search for recipes by ingredients with a configurable quantity limit (1-5 recipes)
 - Receive ingredient substitute suggestions dynamically in the UI by clicking ingredients
 - Save custom user recipes (with custom ingredient quantities and instructions) to their profile
-- **Show All Recipes**: Browse a dedicated dashboard showing all saved/cached recipes in the database with full search and filtering capabilities
+- **Show All Recipes**: Browse all saved/cached recipes in the database directly from the home page tab with full filtering capabilities
 - **Chef-AI Custom Recipe Generation (with active filters)**: Ask AI to generate a completely new recipe from scratch based on entered ingredients while respecting active filters (kosher, prep time, vegan, vegetarian, gluten-free)
 - **AI Ingredient Substitution**: Interactively swap specific ingredients in any recipe with smart alternatives recommended by AI
 - **Quick AI Suggestions**: Get a rapid, context-aware 1-2 sentence substitute recommendation for any recipe ingredient
 - Save search history and cache recipe details/ingredient substitutes in the database
 - View saved searches and custom recipes on their personalized home dashboard
 
-The project is split into two main parts:
-- `app.fast_api`: the FastAPI backend
-- `app.main`: the Flask web frontend
 
----
+## 🗂️ Project Architecture & Structure
 
-## 🗂️ Project Structure
+The project is split into two main operational parts:
+- `app.fast_api`: The FastAPI backend serving async endpoints, database logic, and AI integrations.
+- `app.main`: The Flask web frontend rendering templates and handling user sessions.
+
 
 ```
 recipe_project/
@@ -44,6 +68,7 @@ recipe_project/
 │   ├── database.py        # Async/Sync SQLAlchemy database initialization
 │   ├── fast_api.py        # FastAPI app and route registration
 │   ├── main.py            # Flask entry point and blueprint registration
+│   ├── schemas.py         # Pydantic request/response schemas
 │   ├── models.py          # SQLAlchemy ORM models (User, Recipe, UserSearch, IngredientSubstitute)
 │   ├── blueprints/        # Flask Blueprints
 │   │   ├── __init__.py    # Export blueprints
@@ -57,18 +82,17 @@ recipe_project/
 │   │   ├── recipes.py     # Recipe searches, custom recipes, and substitutes
 │   │   ├── services.py    # Backend services, API requests, caching, and database logic
 │   │   └── user.py        # Signup endpoint
-│   ├── schemas.py         # Pydantic request/response schemas
 │   └── utils/
 │       ├── __init__.py
-│       ├── flask_helpers.py # Flask authentication and filtering helper functions
-│       ├── oauth2.py      # JWT token validation and auth dependency
-│       └── password_hashing.py  # Password hashing and verification
+│       ├── flask_helpers.py
+│       ├── oauth2.py      
+│       └── password_hashing.py  
 ├── templates/
 │   ├── base.html          # Base layout template with navigation
-│   ├── all_recipes.html   # Displays all recipes in the database with filtering and AI generation
 │   ├── login.html         # Login page
 │   ├── register.html      # Registration page
 │   ├── home.html          # User dashboard showing searched and custom recipes
+│   ├── settings.html      # Standalone settings page for default preferences
 │   ├── cooking_steps.html # Recipe details and interactive ingredients
 │   ├── search.html        # Recipe search page
 │   └── components/
@@ -77,19 +101,25 @@ recipe_project/
 │       ├── filters.html    # Recipe search filters component
 │       └── recipe.html     # Recipe card renderer macro
 ├── static/
-│   ├── favicon.ico        # Site icon / favicon
-│   └── css/
-│       ├── ai.css         # Styles for AI components and selection mode
-│       ├── filters.css     # Styles for recipe search filters
-│       ├── style.css      # Core variables, layout, and global styles
-│       ├── auth.css       # Styling and glow effects for auth forms
-│       ├── home.css       # Dashboards and card grids layout
-│       └── search.css     # Search and filter specific styling
+│   ├── favicon.ico       
+│   ├── css/
+│   │   ├── style.css      
+│   │   └── auth.css     
+│   └── js/
+│       ├── main.js        # Global/main script (optimistic likes, AJAX requests)
+│       ├── auth.js        # Password visibility toggle helper logic
+│       ├── recipe-builder.js # Ingredient list builder and drag & drop logic
+│       └── cooking-steps.js  # Substitutes and selection mode handlers
 ├── tests/
 │   ├── __init__.py
 │   ├── conftest.py
-│   ├── test_auth.py
-│   └── test_recipes.py
+|   ├── test_ai.py
+|   ├── test_auth.py
+|   ├── test_db_ssl.py
+|   ├── test_latency.py
+|   ├── test_pooler_latency.py
+│   ├── test_recipes.py
+│   └── test_user_settings.py 
 ├── example.env
 ├── requirements.txt
 └── README.md
@@ -97,79 +127,75 @@ recipe_project/
 
 ---
 
-## 📦 Installation
+## 📦 Installation & Setup
 
 ### Prerequisites
+- **Python**: Version 3.8 or newer
+- **PostgreSQL**: Local or cloud-hosted database instance
+- **Spoonacular API Key**: Optional, required for external recipe and substitute lookups
 
-* Python 3.8 or newer
-* PostgreSQL database
-* Optional: Spoonacular API key for recipe and substitute lookup
-
-### Install dependencies
+### Step 1: Clone and Install Dependencies
+It is highly recommended to use a virtual environment:
 
 ```bash
-pip3 install -r requirements.txt
+# Create and activate a virtual environment
+python3 -m venv venv
+source venv/bin/activate  
+
+# Install required packages
+pip install -r requirements.txt
 ```
 
-### Environment variables
-
-Copy `example.env` to a new `.env` file in the project root and update the values:
+### Step 2: Environment Configuration
+Copy `example.env` to a new `.env` file in the project root and update the configuration variables with your credentials:
 
 ```env
-database_hostname=localhost
-database_port=5432
-database_username=your_db_user
-database_password=your_db_password
-database_name=recipe_db
-secret_key=your_secret_key_for_jwt
-algorithm=HS256
-spoonacular_api_key=your_spoonacular_api_key
-spoonacular_url=https://api.spoonacular.com/recipes/findByIngredients
+DATABASE_HOSTNAME=localhost
+DATABASE_PORT=5432
+DATABASE_USERNAME=your_db_user
+DATABASE_PASSWORD=your_db_password
+DATABASE_NAME=recipe_db
+SECRET_KEY=your_secret_key_for_jwt
+ALGORITHM=HS256
+SPOONACULAR_API_KEY=your_spoonacular_api_key
+SPOONACULAR_URL=https://api.spoonacular.com/recipes/findByIngredients
 AI_URL=http://localhost:11434/chat/completions
 BACKEND_URL=http://127.0.0.1:8000
 ```
-
-> The application loads settings from `.env` using Pydantic settings.
-
+> *Note: Settings are automatically loaded and validated at runtime using Pydantic Settings.*
 ---
 
-## ▶️ Run the application
+## ▶️ Running the Application
 
-### FastAPI backend
+To run the complete application, you need to start both the FastAPI backend and the Flask frontend server.
 
-Start the backend with:
+### 1. Start the FastAPI Backend
 
 ```bash
 uvicorn app.fast_api:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-This starts the API server on the host/port you configure (defaults to `http://127.0.0.1:8000` via `BACKEND_URL`).
+The API server will be available at `http://127.0.0.1:8000`. You can explore and test the endpoints directly using the built-in interactive documentation:
+- **Swagger UI**: `http://127.0.0.1:8000/docs`
+- **ReDoc**: `http://127.0.0.1:8000/redoc`
 
-Documentation (when running on localhost:8000):
-
-* Swagger UI: `http://127.0.0.1:8000/docs`
-* ReDoc: `http://127.0.0.1:8000/redoc`
-
-### Flask frontend page
-
-Start the Flask frontend with:
-
+### 2. Start the Flask Frontend
+In a new terminal window (with your virtual environment activated), start the web controller:
 ```bash
 python3 -m app.main
 ```
-
-By default, the Flask page runs on `http://127.0.0.1:5000`.
+The frontend web application will be accessible via your browser at `http://127.0.0.1:5000`.
 
 ---
 
-## ‿ Authentication
+## 🔒 Authentication Flow
 
-### Signup endpoint
+All user management endpoints handle encryption and validation. Protected endpoints require a valid JSON Web Token (JWT).
 
+### Sign Up Endpoint
 `POST /sign_up/`
 
-Request body (JSON):
-
+**Request Body (JSON):**
 ```json
 {
   "user_name": "john_doe",
@@ -177,8 +203,7 @@ Request body (JSON):
 }
 ```
 
-Response:
-
+**Response (JSON):**
 ```json
 {
   "access_token": "<jwt_token>",
@@ -186,19 +211,17 @@ Response:
 }
 ```
 
-### Login endpoint
-
+### Login Endpoint
 `POST /login/`
 
-Login uses form data with `application/x-www-form-urlencoded`:
+**Request Body (`application/x-www-form-urlencoded`):**
 
 ```
 username=john_doe
 password=securepassword123
 ```
 
-Response:
-
+**Response (JSON):**
 ```json
 {
   "access_token": "<jwt_token>",
@@ -206,48 +229,30 @@ Response:
 }
 ```
 
-### Protected endpoints
-
-Protected endpoints require the JWT token inside the `Authorization` header:
-
-```
+### Accessing Protected Endpoints
+To query protected routes on the FastAPI backend, include the retrieved token in the `Authorization` header:
+```http
 Authorization: Bearer <jwt_token>
 ```
+## 🍳 API Endpoints Reference
 
-The backend validates the token using the `get_current_user` dependency in `app.utils.oauth2`.
+All endpoints below reside on the FastAPI backend server. Routes requiring authentication expect a valid JWT token in the header: `Authorization: Bearer <jwt_token>`.
 
----
+### 🔍 Recipe & Substitute Endpoints
 
-## 🍳 API Endpoints
+#### 1. Search Recipes by Ingredients
+* **Route**: `GET /recipes/find-by-ingredients`
+* **Authentication**: Required
+* **Query Parameters**:
+  * `ingredients` (Required): Comma-separated list (e.g., `chicken,rice,garlic`)
+  * `number` (Optional): Maximum number of recipes to return (Default: 1)
+* **Description**: Logs the user search history, queries Spoonacular for matching recipes, fetches bulk details (dietary preferences, cook times), caches new discoveries locally, and returns an enhanced recipe payload.
 
-### 1. Search recipes by ingredients
-
-`GET /recipes/find-by-ingredients`
-
-Requires authentication.
-
-Query parameters:
-
-* `ingredients` (required): comma-separated ingredient list, e.g. `chicken,rice,garlic`
-* `number` (optional): maximum number of recipes to return (configured in search page between 1 and 5, default is 1)
-
-Example:
-```
+**Example Request:**
+```http
 GET /recipes/find-by-ingredients?ingredients=chicken,rice&number=1
 ```
-
-What this endpoint does:
-
-* Creates a new `UserSearch` record for the authenticated user
-* Calls Spoonacular using the configured `spoonacular_url`
-* Calls Spoonacular `informationBulk` endpoint to retrieve details (cook time, dish types, and dietary preferences)
-* Validates each recipe response item against a Pydantic schema
-* Caches any new recipe in the local database with full details (including instructions)
-* Links the found recipes to the user search record
-* Returns the enhanced Spoonacular JSON payload containing prep time, dish types, and dietary flags for filtering
-
-Example response:
-
+**Example Response:**
 ```json
 [
   {
@@ -267,35 +272,16 @@ Example response:
 ]
 ```
 
-### 2. Ingredient substitutes
+#### 2. Get Ingredient Substitutes
+* **Route**: `GET /recipes/substitutes`
+* **Authentication**: Optional
+* **Query Parameters**:
+  * `ingredient` (Required): Target ingredient name (e.g., `milk`)
+  * `amount` (Optional): Numeric quantity
+  * `unit` (Optional): Measurement unit (e.g., `cup`)
+* **Description**: Checks the local database cache first. If a match is found, it returns the cached alternatives instantly; otherwise, it fetches results from Spoonacular and updates the local cache.
 
-`GET /recipes/substitutes`
-
-Does not require authentication.
-
-Query parameters:
-
-* `ingredient` (required): ingredient name to look up substitutions for, e.g. `milk`
-* `amount` (optional): numeric quantity of the ingredient to substitute
-* `unit` (optional): measurement unit (e.g. `cups`, `grams`)
-
-Example:
-
-```
-GET /recipes/substitutes?ingredient=milk&amount=1&unit=cup
-```
-
-What this endpoint does:
-
-* Formulates a cache key by combining the lowercase, trimmed `ingredient`, optional `amount`, and optional `unit` (e.g. `"milk_1.0_cup"` or `"milk"`)
-* Checks whether substitute data is already cached in the `ingredient_substitutes` table under the generated cache key
-* If cached, returns the cached substitute list immediately
-* Otherwise, queries the Spoonacular substitute API
-* Caches the list of substitutes in `ingredient_substitutes` under the cache key
-* Returns the substitute data
-
-Example response:
-
+**Example Response:**
 ```json
 {
   "ingredient": "milk",
@@ -307,14 +293,12 @@ Example response:
 }
 ```
 
-### 3. Add custom recipe
+#### 3. Add Custom Recipe
+* **Route**: `POST /recipes/custom`
+* **Authentication**: Required
+* **Description**: Saves a user-created recipe along with specific ingredient measurements, HTML formatting instructions, and optional base64 image data to their personal profile.
 
-`POST /recipes/custom`
-
-Requires authentication.
-
-Request body (JSON, matches `CustomRecipeCreate` Pydantic schema):
-
+**Request Body (JSON):**
 ```json
 {
   "title": "Grandma's Tomato Soup",
@@ -332,96 +316,46 @@ Request body (JSON, matches `CustomRecipeCreate` Pydantic schema):
 }
 ```
 
-Response:
+#### 4. Like / Favorite a Recipe
+* **Route**: `POST /recipes/{recipe_id}/like`
+* **Authentication**: Required
+* **Description**: Toggles the favorite/liked status of a cached recipe for the authenticated user and returns the updated global like counter.
 
-```json
-{
-  "id": 1,
-  "title": "Grandma's Tomato Soup"
-}
-```
+---
 
-### 4. Like / Favorite a recipe
+### Chef-AI Endpoints
 
-`POST /recipes/{recipe_id}/like`
+#### 5. Generate Custom Recipe with AI
+* **Route**: `POST /ai/generate`
+* **Authentication**: Required
+* **Description**: Instructs the LLM to generate a completely new, structured recipe using the submitted ingredients while conforming to the user's active dietary filters.
 
-Requires authentication.
-
-Toggles the liked status of a recipe for the authenticated user.
-
-Response:
-
-```json
-{
-  "status": "liked",
-  "likes": 6
-}
-```
-
-### 5. Generate custom recipe with AI
-
-`POST /ai/generate`
-
-Requires authentication.
-
-Request body (JSON):
-
+**Request Body (JSON):**
 ```json
 {
   "ingredients": "chicken, broccoli, cheese"
 }
 ```
 
-Response:
+#### 6. Substitute Multiple Ingredients with AI
+* **Route**: `POST /ai/substitute/{recipe_id}`
+* **Authentication**: Required
+* **Description**: Creates an adapted copy of an existing recipe, rewriting instructions and ingredients by swapping requested items with AI-suggested alternatives.
 
-```json
-{
-  "id": 42,
-  "title": "Creamy AI Garlic Chicken & Broccoli"
-}
-```
-
-### 6. Substitute recipe ingredient with AI
-
-`POST /ai/substitute/{recipe_id}`
-
-Requires authentication.
-
-Request body (JSON):
-
+**Request Body (JSON):**
 ```json
 {
   "ingredient_to_replace": "heavy cream"
 }
 ```
 
-Response:
+#### 7. Get Quick AI Suggestion
+* **Route**: `GET /ai/quick-substitute`
+* **Authentication**: Required
+* **Query Parameters**: `recipe_id`, `ingredient`
+* **Description**: Returns a context-aware, rapid 1-2 sentence culinary substitution tip for a specific ingredient inside a recipe layout without full-page updates.
 
-```json
-{
-  "id": 43,
-  "title": "Adapted Creamy AI Garlic Chicken & Broccoli"
-}
-```
-
-### 7. Get quick ingredient substitute recommendation
-
-`GET /ai/quick-substitute`
-
-Requires authentication.
-
-Query parameters:
-
-* `recipe_id` (required): the database/spoonacular ID of the recipe
-* `ingredient` (required): the ingredient to replace
-
-Example:
-```
-GET /ai/quick-substitute?recipe_id=42&ingredient=milk
-```
-
-Response:
-
+**Example Response:**
 ```json
 {
   "recommendation": "Use 1 cup of almond milk mixed with a tablespoon of lemon juice as a dairy-free substitute for regular milk."
@@ -430,124 +364,91 @@ Response:
 
 ---
 
-## 🤖 Chef-AI Frontend Interactions & Database Browse
+### ⚙️ User Settings Endpoints
 
-The frontend integrates these AI and database capabilities smoothly in the UI:
-1. **Show All Database Recipes**: A dedicated page `/all` accessible from the navigation bar. It retrieves all cached and custom recipes from the database, allowing users to browse them in one place.
-2. **Global Filtering & AI Recipe Generation**: The search page, the new "All Recipes" page, and the personalized home dashboard share powerful filters (dietary flags like Kosher, Veg, Gluten-free, prep time, and dish types). The "All Recipes" page features a **"Chef-AI Custom Recipe" generator card** that generates new recipes based on entered ingredients while strictly respecting whatever filters are currently active.
-3. **Ingredient Selection Mode**: Inside the Cooking Steps page, users can click "Select Multiple Ingredients to Replace with AI" to toggle checkbox selection mode, highlight ingredients, and request an adapted recipe version.
-4. **Quick Substitutes Box**: Clicking an ingredient displays standard substitutes, alongside an "Ask AI for Substitute" button that queries the AI and displays a 1-2 sentence contextual suggestion in real-time.
+#### 8. Get User Default Preferences
+* **Route**: `GET /users/settings`
+* **Authentication**: Required
+* **Description**: Retrieves the authenticated user's default profile configurations (dietary rules, default dish styles, and max preparation times).
 
----
-
-## 🧠 Database models
-
-The app uses SQLAlchemy ORM models defined in `app.models`.
-
-### Users
-
-* `users` table stores:
-  * `id`
-  * `user_name` (unique)
-  * `password` (bcrypt hashed)
-  * `custom_recipes` (relationship linking to custom recipes created by this user)
-  * `liked_recipes` (relationship linking to recipes liked by this user)
-
-### User searches
-
-* `user_searches` table stores:
-  * `id`
-  * `user_id` (foreign key to users)
-  * `query_ingredients`
-  * relationships to saved recipes
-
-### Recipes
-
-* `recipes` table stores:
-  * `id`
-  * `spoonacular_id` (unique external recipe ID, optional/nullable for custom user recipes)
-  * `title`
-  * `raw_data` (JSON payload from Spoonacular or custom user input)
-  * `user_id` (foreign key to users, nullable, linking custom recipes to their creator)
-  * `liked_by_users` (relationship linking to users who liked this recipe)
-
-### User Liked Recipes
-
-* `user_liked_recipes` table:
-  * many-to-many association table containing `user_id` and `recipe_id`
-
-### Ingredient substitutes
-
-* `ingredient_substitutes` table stores:
-  * `id`
-  * `ingredient_name` (unique)
-  * `substitutes` (JSON list)
+#### 9. Update User Default Preferences
+* **Route**: `PUT /users/settings`
+* **Authentication**: Required
+* **Description**: Updates and overrides the default settings dictionary for the authenticated profile.
 
 ---
 
-## 🧪 Testing
+## 🧠 Database Architecture & Models
 
-Run tests with:
+The application utilizes SQLAlchemy ORM for database modeling and management. The schema includes the following core models:
 
+### 👤 Users (`users`)
+* Stores user credentials and linked profiles.
+* Fields: `id`, `user_name` (unique), and `password` (bcrypt hashed).
+* Relationships: One-to-many with custom recipes and many-to-many with favorited/liked recipes.
+
+### 🔍 User Searches (`user_searches`)
+* Logs historical searches to populate the dashboard.
+* Fields: `id`, `user_id` (foreign key), and `query_ingredients` (string).
+
+### 🍳 Recipes (`recipes`)
+* Unified table storing both cached third-party recipes and user-generated custom recipes.
+* Fields: `id`, `spoonacular_id` (nullable external ID), `title`, `raw_data` (JSON block containing full details/instructions), and `user_id` (nullable owner ID for custom recipes).
+
+### ❤️ User Liked Recipes (`user_liked_recipes`)
+* Many-to-many junction/association table linking user profiles (`user_id`) to their favorited recipe cards (`recipe_id`).
+
+### 🧪 Ingredient Substitutes (`ingredient_substitutes`)
+* Local lookup cache to reduce redundant third-party API payloads.
+* Fields: `id`, `ingredient_name` (unique cache key), and `substitutes` (JSON array of safe alternatives).
+
+---
+
+## 🧪 Automated Testing Suite
+
+The project includes an automated test suite powered by `pytest` to validate authentication states, route security boundaries, and search utility functionality.
+
+To execute the full test suite, run:
 ```bash
 pytest
 ```
-
-The test suite covers user signup/login, protected route access, search logic, and substitute endpoint behavior.
-
----
-
-## 🎨 Template Structure (Jinja2)
-
-The application uses Jinja2 template inheritance.
-
-### Base Template
-
-* **base.html**: Contains navigation bar, metadata, CSS links, and block placeholders. All pages extend this.
-
-### Page Templates
-
-* **home.html**: User's recipe collection.
-* **search.html**: Search interface.
-* **cooking_steps.html**: Detailed view.
-* **all_recipes.html**: Displays all database recipes with interactive search, filters, and AI recipe generation.
-* **login.html** / **register.html**: Auth pages (no navbar).
-
-### Components
-
-* **components/recipe.html**: Contains `render_recipes()` macro.
-* **components/filters.html**: Contains `render_filters()` macro for dietary, prep time, and dish type filters.
-* **components/ai.html**: Contains macros for AI recipe generation and quick/multi ingredient substitution.
-
-### Usage Example
-
-```html
-{% extends "base.html" %}
-{% block title %}Page Title{% endblock %}
-{% block content %}
-{% endblock %}
-
-```
+*The configuration details, isolation cleanups, and standard client mock fixtures reside inside `tests/conftest.py`.*
 
 ---
 
-## ⚠️ Best Practices
+## 🎨 Frontend Template Structure (Jinja2)
 
-* Keep the `.env` file secret and do not commit it.
-* Use caching to reduce duplicate Spoonacular API calls.
-* CORS is enabled for all origins in `app.fast_api.py`.
+The user interface follows a modular component-driven architecture using Jinja2 layouts and template macros.
 
+### 🏛️ Layout Baseline
+* **`base.html`**: The structural backbone containing standard headers, metadata, conditional navigation bars, global toast notification blocks, and asset link setups.
+
+### 📄 View Views
+* **`home.html`**: The personalized cockpit layout utilizing tab matrices ("Searched History", "My Recipes", and "Liked Recipes").
+* **`search.html`**: The main discovery view managing criteria setups, filter triggers, and custom generation.
+* **`settings.html`**: A dedicated panel for editing profile defaults and dietary constraints.
+* **`login.html` / `register.html`**: Isolated workflow views (rendering without global navigation headers).
+
+### ⚙️ Component Macros (`templates/components/`)
+* **`recipe.html`**: Contains the `render_recipes()` grid system card layout maker.
+* **`filters.html`**: Contains the `render_filters()` macro managing dietary flags, cooking intervals, and course categories.
+* **`ai.html`**: Contains the modular `render_ai_generator()`, `render_ai_filter_generator()`, and substitute macros.
 
 ---
 
-## ⚠️ Notes and best practices
+## Performance Considerations
 
-- Use `pip3 install -r requirements.txt` for dependency installation.
-- Start the FastAPI backend with `uvicorn app.fast_api:app --host 127.0.0.1 --port 8000 --reload`.
-- Start the Flask frontend with `python3 -m app.main`.
+To maintain application integrity and reduce operational latency, ensure adherence to the following guidelines:
+
+* **Credential Security**: Never commit the configuration `.env` file to source control. A template is provided in `example.env` for local adjustments.
+* **API Rate Limiting**: The built-in caching system for recipes and ingredients automatically decreases redundant third-party network payloads to Spoonacular. Keep the database active to leverage this.
+* **Cross-Origin Requests**: CORS (Cross-Origin Resource Sharing) is currently configured in `app/fast_api.py` to allow cross-communication during local development modes.
+
 ---
 
-## 👥 Authors
+## 👥 Authors & Contributors
 
-* [David Beninson](https://github.com/David-Beninson)
-* [Oliver Radivan](https://github.com/oliverradivan)
+This system was designed and maintained by:
+
+* **David Beninson** - [GitHub Profile](https://github.com/David-Beninson)
+* **Oliver Radivan** - [GitHub Profile](https://github.com/oliverradivan)

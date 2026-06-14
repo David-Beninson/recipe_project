@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import async_engine
 from app.models import Base
-from app.routers import user_router, auth_router, recipe_router, ai_router
+from app.routers import user_router, settings_router, auth_router, recipe_router, ai_router
 from contextlib import asynccontextmanager
 
 @asynccontextmanager
@@ -25,6 +25,7 @@ app.add_middleware(
 )
 
 app.include_router(user_router)
+app.include_router(settings_router)
 app.include_router(auth_router)
 app.include_router(recipe_router)
 app.include_router(ai_router)

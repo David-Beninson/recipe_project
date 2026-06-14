@@ -1,4 +1,5 @@
 import httpx
+import zlib
 from typing import List, Optional
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -7,6 +8,11 @@ from fastapi import HTTPException
 
 from app import models, schemas
 from ..config import settings
+
+
+def _get_deterministic_id(name: str) -> int:
+    """Generates a stable numeric ID for an ingredient based on its name."""
+    return zlib.adler32(name.lower().encode()) % 1000000
 
 
 async def fetch_recipes_with_fallback(params: schemas.RecipeSearchParams, db: AsyncSession):
@@ -102,43 +108,27 @@ async def _fallback_local_search(params: schemas.RecipeSearchParams, db: AsyncSe
         
         # Extract recipe ingredients from local DB cache
         ext_ingredients = recipe.raw_data.get("extendedIngredients", []) or recipe.raw_data.get("usedIngredients", [])
-        recipe_ing_names = [ing["name"].lower() for ing in ext_ingredients if isinstance(ing, dict) and "name" in ing]
         
-        # Check if the search ingredients list overlaps with this recipe's ingredients list
-        matching_indices = [
-            idx for idx, name in enumerate(recipe_ing_names)
-            if any(search_ing in name for search_ing in search_ingredients)
-        ]
-        
-        if matching_indices:
-            # Categorize ingredients into used vs missed
-            used_ings, missed_ings = [], []
-            for idx, ing in enumerate(ext_ingredients):
-                if not isinstance(ing, dict):
-                    continue
+        used_ings, missed_ings = [], []
+        for ing in ext_ingredients:
+            if isinstance(ing, dict) and "name" in ing:
                 mapped = _map_ingredient(ing)
-                if idx in matching_indices:
+                if any(si in ing["name"].lower() for si in search_ingredients):
                     used_ings.append(mapped)
                 else:
                     missed_ings.append(mapped)
-            
+        
+        if used_ings:
             # Construct standard recipe dictionary representation
             matched_recipes.append({
+                **(recipe.raw_data or {}),
                 "id": recipe.spoonacular_id or recipe.id,
                 "title": recipe.title,
-                "image": recipe.raw_data.get("image") or "",
-                "imageType": recipe.raw_data.get("imageType") or "jpg",
                 "usedIngredientCount": len(used_ings),
                 "missedIngredientCount": len(missed_ings),
-                "likes": recipe.raw_data.get("likes") or recipe.raw_data.get("aggregateLikes") or 0,
                 "usedIngredients": used_ings,
                 "missedIngredients": missed_ings,
-                "unusedIngredients": [],
-                "readyInMinutes": recipe.raw_data.get("readyInMinutes"),
-                "dishTypes": recipe.raw_data.get("dishTypes"),
-                "vegetarian": recipe.raw_data.get("vegetarian"),
-                "vegan": recipe.raw_data.get("vegan"),
-                "glutenFree": recipe.raw_data.get("glutenFree")
+                "unusedIngredients": []
             })
             
     return matched_recipes[:params.number] if matched_recipes else None
@@ -150,10 +140,19 @@ async def cache_and_link_recipes(data: list, new_search: models.UserSearch, db: 
     in the local database (caching), and associates them with the user's search history.
     """
     recipes = [schemas.Recipe.model_validate(item) for item in data]
+    if not recipes:
+        await db.commit()
+        return
+
+    recipe_ids = [recipe_obj.id for recipe_obj in recipes]
+    
+    # Batch query all existing recipes by spoonacular_id in a single database roundtrip
+    stmt = select(models.Recipe).filter(models.Recipe.spoonacular_id.in_(recipe_ids))
+    result = await db.execute(stmt)
+    existing_recipes = {r.spoonacular_id: r for r in result.scalars().all()}
+    
     for recipe_obj in recipes:
-        stmt = select(models.Recipe).filter(models.Recipe.spoonacular_id == recipe_obj.id)
-        result = await db.execute(stmt)
-        recipe = result.scalars().first()
+        recipe = existing_recipes.get(recipe_obj.id)
         
         # Cache to local DB if not present
         if not recipe:
@@ -164,6 +163,7 @@ async def cache_and_link_recipes(data: list, new_search: models.UserSearch, db: 
             )
             db.add(recipe)
             await db.flush()
+            existing_recipes[recipe_obj.id] = recipe
         
         new_search.recipes.append(recipe)
         
@@ -178,7 +178,7 @@ async def save_custom_recipe(recipe_in: schemas.CustomRecipeCreate, user_id: int
     # Create normalized ingredient entries
     extended_ingredients = [
         {
-            "id": hash(ing.name) % 1000000,
+            "id": int(ing.id) if ing.id and ing.id.isdigit() else (ing.id if ing.id else str(_get_deterministic_id(ing.name))),
             "name": ing.name,
             "original": f"{ing.name} - {ing.originalAmount}",
             "amount": float(ing.qty),
@@ -213,6 +213,46 @@ async def save_custom_recipe(recipe_in: schemas.CustomRecipeCreate, user_id: int
     db_recipe.raw_data = raw_data
     await db.commit()
     return db_recipe
+
+
+async def update_custom_recipe(recipe_id: int, recipe_in: schemas.CustomRecipeCreate, user_id: int, db: AsyncSession):
+    """Updates a custom recipe if it exists and belongs to the authenticated user."""
+    recipe = await _get_recipe_by_id(recipe_id, db)
+    if not recipe:
+        raise HTTPException(status_code=404, detail="Recipe not found")
+    if recipe.user_id != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to edit this recipe")
+
+    extended_ingredients = [
+        {
+            "id": int(ing.id) if ing.id and ing.id.isdigit() else (ing.id if ing.id else str(_get_deterministic_id(ing.name))),
+            "name": ing.name,
+            "original": f"{ing.name} - {ing.originalAmount}",
+            "amount": float(ing.qty),
+            "unit": ing.unitString
+        } for ing in recipe_in.ingredients
+    ]
+
+    raw_data = {
+        "id": recipe.id,
+        "title": recipe_in.title,
+        "image": recipe_in.image,
+        "extendedIngredients": extended_ingredients,
+        "instructions": recipe_in.instructions,
+        "likes": recipe.raw_data.get("likes", 0) if recipe.raw_data else 0,
+        "usedIngredientCount": len(extended_ingredients),
+        "usedIngredients": extended_ingredients,
+        "missedIngredientCount": 0,
+        "missedIngredients": [],
+        "unusedIngredients": []
+    }
+
+    recipe.title = recipe_in.title
+    recipe.raw_data = raw_data
+    await db.commit()
+    await db.refresh(recipe)
+    return recipe
+
 
 
 async def get_recipe_details(recipe_id: int, db: AsyncSession):

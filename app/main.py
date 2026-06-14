@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 from flask import Flask, redirect, url_for, session
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.orm import selectinload
 from app.database import SessionLocal, engine
 from app.models import Base, User
@@ -21,9 +21,18 @@ app.register_blueprint(recipes_bp)
 app.register_blueprint(ai_bp)
 
 def init_db_sync():
-    """Initialize database tables synchronously on startup."""
+    """Initialize database tables synchronously on startup and perform column migrations."""
     try:
         Base.metadata.create_all(engine)
+        # Add columns if they do not exist (migrations)
+        with engine.connect() as conn:
+            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS default_vegetarian BOOLEAN DEFAULT FALSE NOT NULL"))
+            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS default_vegan BOOLEAN DEFAULT FALSE NOT NULL"))
+            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS default_gluten_free BOOLEAN DEFAULT FALSE NOT NULL"))
+            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS default_kosher BOOLEAN DEFAULT FALSE NOT NULL"))
+            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS default_dish_type VARCHAR DEFAULT '' NOT NULL"))
+            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS default_prep_time INTEGER DEFAULT 9999 NOT NULL"))
+            conn.commit()
     except Exception as e:
         print(f"Database initialization error: {e}")
 
@@ -35,14 +44,18 @@ def inject_user():
     """Inject username and liked recipe IDs into all templates."""
     liked_ids = []
     if 'user_id' in session:
-        try:
-            with SessionLocal() as db:
-                user_stmt = select(User).filter(User.id == session['user_id']).options(selectinload(User.liked_recipes))
-                user_obj = db.execute(user_stmt).scalars().first()
-                if user_obj:
-                    liked_ids = [r.spoonacular_id if r.spoonacular_id else r.id for r in user_obj.liked_recipes]
-        except Exception as e:
-            print(f"Error injecting liked ids: {e}")
+        if 'liked_recipe_ids' in session:
+            liked_ids = session['liked_recipe_ids']
+        else:
+            try:
+                with SessionLocal() as db:
+                    user_stmt = select(User).filter(User.id == session['user_id']).options(selectinload(User.liked_recipes))
+                    user_obj = db.execute(user_stmt).scalars().first()
+                    if user_obj:
+                        liked_ids = [r.spoonacular_id if r.spoonacular_id else r.id for r in user_obj.liked_recipes]
+                        session['liked_recipe_ids'] = liked_ids
+            except Exception as e:
+                print(f"Error injecting liked ids: {e}")
     return dict(username=session.get('username'), liked_recipe_ids=liked_ids)
 
 @app.route('/')

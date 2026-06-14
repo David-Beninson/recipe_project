@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, JSON, ForeignKey, Table
+from sqlalchemy import Column, Integer, String, JSON, ForeignKey, Table, Boolean
 from sqlalchemy.orm import relationship
 from .database import Base
 
@@ -24,6 +24,15 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_name = Column(String, unique=True, nullable=False)
     password = Column(String, nullable=False)
+    
+    # Default search preferences
+    default_vegetarian = Column(Boolean, default=False, nullable=False)
+    default_vegan = Column(Boolean, default=False, nullable=False)
+    default_gluten_free = Column(Boolean, default=False, nullable=False)
+    default_kosher = Column(Boolean, default=False, nullable=False)
+    default_dish_type = Column(String, default="", nullable=False)
+    default_prep_time = Column(Integer, default=9999, nullable=False)
+
     # Relationship to all searches performed by this user
     searches = relationship("UserSearch", back_populates="user")
     custom_recipes = relationship("Recipe", back_populates="user")

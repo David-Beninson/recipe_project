@@ -127,3 +127,62 @@ async def test_like_recipe(client, session):
     res = await session.execute(stmt)
     recipe = res.scalars().first()
     assert recipe.raw_data.get("likes") == 5
+
+
+@pytest.mark.anyio
+async def test_update_custom_recipe_success(client, session):
+    db_user = models.User(id=1, user_name="Oliver", password="hashed_password")
+    session.add(db_user)
+    db_recipe = models.Recipe(id=102, title="Original Title", user_id=1, raw_data={"title": "Original Title", "ingredients": []})
+    session.add(db_recipe)
+    await session.commit()
+
+    app.dependency_overrides[get_current_user] = lambda: db_user
+
+    update_payload = {
+        "title": "Updated Title",
+        "ingredients": [
+            {
+                "name": "Sugar",
+                "originalAmount": "1 cup",
+                "qty": 1.0,
+                "unitString": "cup",
+                "usedQty": 1.0
+            }
+        ],
+        "instructions": "Mix it.",
+        "image": "http://image.url"
+    }
+
+    response = await client.put("/recipes/102", json=update_payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["title"] == "Updated Title"
+
+    from sqlalchemy import select
+    stmt = select(models.Recipe).filter(models.Recipe.id == 102)
+    res = await session.execute(stmt)
+    recipe = res.scalars().first()
+    assert recipe.title == "Updated Title"
+    assert recipe.raw_data.get("instructions") == "Mix it."
+
+
+@pytest.mark.anyio
+async def test_update_custom_recipe_unauthorized(client, session):
+    db_user = models.User(id=1, user_name="Oliver", password="hashed_password")
+    session.add(db_user)
+    db_recipe = models.Recipe(id=103, title="Secret Title", user_id=2, raw_data={"title": "Secret Title"})
+    session.add(db_recipe)
+    await session.commit()
+
+    app.dependency_overrides[get_current_user] = lambda: db_user
+
+    update_payload = {
+        "title": "Hack Title",
+        "ingredients": [],
+        "instructions": "Hack.",
+        "image": None
+    }
+
+    response = await client.put("/recipes/103", json=update_payload)
+    assert response.status_code == 403

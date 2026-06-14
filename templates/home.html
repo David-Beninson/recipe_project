@@ -12,15 +12,18 @@
 <section class="home-content">
 
     <div class="tab-buttons">
-        <a href="{{ url_for('recipes.home', tab='recipes', dish_type=dish_type, prep_time=prep_time, vegetarian='on' if vegetarian else None, vegan='on' if vegan else None, gluten_free='on' if gluten_free else None) }}" id="btn-recipes" class="tab-btn {% if active_tab == 'recipes' %}active{% endif %}">My Recipes</a>
-        <a href="{{ url_for('recipes.home', tab='liked', dish_type=dish_type, prep_time=prep_time, vegetarian='on' if vegetarian else None, vegan='on' if vegan else None, gluten_free='on' if gluten_free else None) }}" id="btn-liked" class="tab-btn {% if active_tab == 'liked' %}active{% endif %}">Liked Recipes</a>
-        <a href="{{ url_for('recipes.home', tab='add', dish_type=dish_type, prep_time=prep_time, vegetarian='on' if vegetarian else None, vegan='on' if vegan else None, gluten_free='on' if gluten_free else None) }}" id="btn-add" class="tab-btn {% if active_tab == 'add' %}active{% endif %}">Add Recipe</a>
+        <a href="{{ url_for('recipes.home', tab='recipes', dish_type=dish_type, prep_time=prep_time, vegetarian='on' if vegetarian else None, vegan='on' if vegan else None, gluten_free='on' if gluten_free else None, kosher='on' if kosher else None) }}" id="btn-recipes" class="tab-btn {% if active_tab == 'recipes' %}active{% endif %}">Searched Recipes</a>
+        <a href="{{ url_for('recipes.home', tab='my_recipes', dish_type=dish_type, prep_time=prep_time, vegetarian='on' if vegetarian else None, vegan='on' if vegan else None, gluten_free='on' if gluten_free else None, kosher='on' if kosher else None) }}" id="btn-my-recipes" class="tab-btn {% if active_tab == 'my_recipes' %}active{% endif %}">My Recipes</a>
+        <a href="{{ url_for('recipes.home', tab='liked', dish_type=dish_type, prep_time=prep_time, vegetarian='on' if vegetarian else None, vegan='on' if vegan else None, gluten_free='on' if gluten_free else None, kosher='on' if kosher else None) }}" id="btn-liked" class="tab-btn {% if active_tab == 'liked' %}active{% endif %}">Liked Recipes</a>
+        <a href="{{ url_for('recipes.home', tab='all', dish_type=dish_type, prep_time=prep_time, vegetarian='on' if vegetarian else None, vegan='on' if vegan else None, gluten_free='on' if gluten_free else None, kosher='on' if kosher else None) }}" id="btn-all" class="tab-btn {% if active_tab == 'all' %}active{% endif %}">All Recipes</a>
+        <a href="{{ url_for('recipes.home', tab='add', dish_type=dish_type, prep_time=prep_time, vegetarian='on' if vegetarian else None, vegan='on' if vegan else None, gluten_free='on' if gluten_free else None, kosher='on' if kosher else None) }}" id="btn-add" class="tab-btn {% if active_tab == 'add' %}active{% endif %}">Add Recipe</a>
     </div>
 
     <!-- Filter Bar -->
-    {% if has_recipes_total and active_tab != 'add' %}
+    {% if has_recipes_total and active_tab != 'add' and active_tab != 'edit' and active_tab != 'settings' %}
     <form method="get" action="{{ url_for('recipes.home') }}" class="filter-bar">
         <input type="hidden" name="tab" value="{{ active_tab }}">
+        <input type="hidden" name="filter_submitted" value="true">
         <h3>Filter Recipes</h3>
         <div class="filter-groups">
             {{ render_filters(dish_type=dish_type, prep_time=prep_time, vegetarian=vegetarian, vegan=vegan, gluten_free=gluten_free, kosher=kosher) }}
@@ -33,28 +36,20 @@
     {% endif %}
 
     <nav id="home-nav">
-        {% if active_tab == 'add' %}
+        {% if active_tab == 'add' or active_tab == 'edit' %}
         <div id="view-add" class="sidebar">
-            {{ add_recipes() }}
+            {{ add_recipes(recipe) }}
         </div>
-        {% elif active_tab == 'recipes' %}
+        {% else %}
         <div id="view-recipes" class="recipes">
-            {% if user_recipes %}
-            {{ render_recipes(title="My Recipes", recipes=user_recipes) }}
+            {% if current_recipes %}
+            {{ render_recipes(title=tab_title, recipes=current_recipes) }}
             {% else %}
             <div class="no-recipes">
-                <p>No matching recipes found.</p>
+                <p>{{ no_recipes_message }}</p>
+                {% if active_tab == 'recipes' %}
                 <p>Try clearing your filters or go to <a href="{{ url_for('recipes.search') }}">Find Recipes</a> to get started!</p>
-            </div>
-            {% endif %}
-        </div>
-        {% elif active_tab == 'liked' %}
-        <div id="view-liked" class="recipes">
-            {% if liked_recipes %}
-            {{ render_recipes(title="Liked Recipes", recipes=liked_recipes) }}
-            {% else %}
-            <div class="no-recipes">
-                <p>No matching liked recipes found.</p>
+                {% endif %}
             </div>
             {% endif %}
         </div>
@@ -62,4 +57,8 @@
     </nav>
 
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/recipe-builder.js') }}"></script>
 {% endblock %}

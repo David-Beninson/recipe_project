@@ -1,15 +1,34 @@
-{% macro add_recipes() %}
-<h3>Recipe Builder</h3>
-<form id="add-recipe-form" action="{{ url_for('recipes.add_recipe') }}" method="POST">
+{% macro add_recipes(recipe=None) %}
+<h3>{% if recipe %}Edit Recipe{% else %}Recipe Builder{% endif %}</h3>
+<form id="add-recipe-form" action="{% if recipe %}{{ url_for('recipes.edit_recipe', recipe_id=recipe.id) }}{% else %}{{ url_for('recipes.add_recipe') }}{% endif %}" method="POST">
     <!-- Recipe Title Input -->
-    <input type="text" id="recipe-title" name="title" class="app-input" placeholder="Recipe name" required>
+    <input type="text" id="recipe-title" name="title" class="app-input" placeholder="Recipe name" value="{% if recipe %}{{ recipe.title }}{% endif %}" required>
 
-    <!-- Recipe Image Input -->
-    <label for="recipe-image" class="app-file-input">Upload Image / Take Photo:</label><br>
-    <input type="file" id="recipe-image" class="app-file-input" accept="image/*" capture="environment"><br><br>
+    <!-- Hidden File Input -->
+    <input type="file" id="recipe-image" accept="image/*" capture="environment" style="display: none;">
+
+    <!-- Recipe Image Input Label (Visible when no image) -->
+    <label for="recipe-image" id="recipe-image-label" class="custom-file-upload">
+        Upload Image / Take Photo
+    </label>
+    <div id="file-name-display" style="text-align: center; font-size: 13px; color: var(--text-muted); margin-top: -6px; margin-bottom: 10px;">No file chosen</div>
+
+    <!-- Image Preview with Pencil Edit Overlay -->
+    <div id="image-preview-container" style="display: none; position: relative; width: 100%; margin-bottom: 15px; text-align: center;">
+        <label for="recipe-image" class="image-preview-wrapper" style="cursor: pointer; border-radius: var(--radius-md); overflow: hidden;">
+            <img id="recipe-image-preview" src="" alt="Preview" style="max-width: 100%; max-height: 180px; border-radius: var(--radius-md); border: 1px solid var(--border); object-fit: cover; box-shadow: var(--shadow-sm); display: block; margin: 0 auto;">
+            <div class="image-preview-overlay">
+                <span style="font-size: 32px; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));">✎</span>
+            </div>
+        </label>
+    </div>
 
     <input type="hidden" name="ingredients" id="hidden-ingredients">
     <input type="hidden" name="instructions" id="hidden-instructions">
+    <input type="hidden" name="image" id="hidden-image" value="{% if recipe and recipe.image %}{{ recipe.image }}{% endif %}">
+
+    <script id="prepopulated-ingredients" type="application/json">{% if recipe %}{{ recipe.extendedIngredients|tojson|safe }}{% else %}[]{% endif %}</script>
+    <div id="prepopulated-instructions" style="display: none;">{% if recipe %}{{ recipe.instructions|safe }}{% endif %}</div>
 
     <!-- Add Ingredients Form Container -->
     <div class="add-ingredients-container">
@@ -29,179 +48,6 @@
     <div id="instructions-zone" contenteditable="true"></div>
 
     <!-- Submit Button -->
-    <button type="submit" id="btn-submit-recipe" class="btn btn-primary" disabled>Submit Recipe</button>
+    <button type="submit" id="btn-submit-recipe" class="btn btn-primary" {% if not recipe %}disabled{% endif %}>{% if recipe %}Save Recipe{% else %}Submit Recipe{% endif %}</button>
 </form>
-
-<script>
-    // State to manage ingredients and their usage
-    let ingredientsList = [];
-
-    // DOM Elements
-    const ingNameInput = document.getElementById('ing-name');
-    const ingAmountInput = document.getElementById('ing-amount');
-    const btnAddIngredient = document.getElementById('btn-add-ingredient');
-    const inventoryZone = document.getElementById('inventory-zone');
-    const instructionsZone = document.getElementById('instructions-zone');
-    const submitBtn = document.getElementById('btn-submit-recipe');
-
-    // Add new ingredient
-    btnAddIngredient.addEventListener('click', () => {
-        if (!ingNameInput.value || !ingAmountInput.value) return;
-
-        const rawAmount = ingAmountInput.value;
-        // Smart extract: gets the number from strings like "2 pcs" or "1.5 cups"
-        const parsedQty = parseFloat(rawAmount) || 1;
-        // Smart extract: gets the text part (e.g., "pcs" from "2 pcs")
-        const parsedUnit = rawAmount.replace(/[0-9.]/g, '').trim();
-
-        const newIng = {
-            id: 'ing-' + Date.now(),
-            name: ingNameInput.value,
-            originalAmount: rawAmount,
-            qty: parsedQty,
-            unitString: parsedUnit,
-            usedQty: 0 // Track usage in instructions
-        };
-
-        ingredientsList.push(newIng);
-
-        // Clear inputs
-        ingNameInput.value = '';
-        ingAmountInput.value = '';
-
-        renderInventory();
-    });
-
-    // Remove ingredient entirely
-    window.deleteIngredient = function (id) {
-        ingredientsList = ingredientsList.filter(ing => ing.id !== id);
-        // Remove associated inline elements from the text editor
-        document.querySelectorAll(`.inline-ing[data-id="${id}"]`).forEach(el => el.remove());
-        updateTotals();
-    };
-
-    // Calculate total usage by reading all numeric inputs inside the instructions text
-    window.updateTotals = function () {
-        // Reset all to 0
-        ingredientsList.forEach(ing => ing.usedQty = 0);
-
-        // Find all inline quantity inputs embedded in the text
-        const inputs = document.querySelectorAll('.ing-qty-input');
-        inputs.forEach(input => {
-            const id = input.getAttribute('data-id');
-            const val = parseFloat(input.value) || 0;
-            const ing = ingredientsList.find(i => i.id === id);
-            if (ing) {
-                ing.usedQty += val;
-            }
-        });
-
-        renderInventory();
-    };
-
-    // Recalculate totals if the user deletes a block using backspace in the editor
-    instructionsZone.addEventListener('input', updateTotals);
-
-    // Setup drag starting point
-    function setupDragAndDrop() {
-        const items = document.querySelectorAll('.draggable-ing');
-        items.forEach(item => {
-            item.addEventListener('dragstart', e => {
-                e.dataTransfer.setData('text/custom-id', item.id);
-            });
-        });
-    }
-
-    // Handle dropping an ingredient into the instructions text
-    instructionsZone.addEventListener('dragover', e => {
-        e.preventDefault();
-    });
-
-    instructionsZone.addEventListener('drop', e => {
-        e.preventDefault();
-        const id = e.dataTransfer.getData('text/custom-id');
-        if (!id) return;
-
-        const ing = ingredientsList.find(i => i.id === id);
-        if (!ing) return;
-
-        // Create an un-editable inline block with a number input inside it
-        const htmlToInsert = `
-            <span class="inline-ing" contenteditable="false" data-id="${ing.id}">
-                ${ing.name} 
-                <input type="number" class="ing-qty-input" data-id="${ing.id}" value="0" min="0" max="${ing.qty}" step="any" oninput="updateTotals()"> 
-                ${ing.unitString}
-            </span>&nbsp;`;
-
-        // Logic to place the block exactly where the cursor dropped it
-        let range;
-        if (document.caretRangeFromPoint) {
-            range = document.caretRangeFromPoint(e.clientX, e.clientY);
-        } else if (document.caretPositionFromPoint) {
-            const pos = document.caretPositionFromPoint(e.clientX, e.clientY);
-            range = document.createRange();
-            range.setStart(pos.offsetNode, pos.offset);
-            range.collapse(true);
-        }
-
-        if (range) {
-            const sel = window.getSelection();
-            sel.removeAllRanges();
-            sel.addRange(range);
-        }
-
-        document.execCommand('insertHTML', false, htmlToInsert);
-
-        // Return focus to editor
-        instructionsZone.focus();
-    });
-
-    // Render the Inventory UI and handle Validation
-    function renderInventory() {
-        // Clear current inventory UI
-        document.querySelectorAll('.draggable-ing').forEach(el => el.remove());
-
-        let allGreen = true;
-        let hasItems = ingredientsList.length > 0;
-
-        ingredientsList.forEach(ing => {
-            const el = document.createElement('div');
-            el.id = ing.id;
-            el.className = 'draggable-ing';
-            el.draggable = true;
-
-            // Traffic light logic (Red/Orange/Green)
-            let borderColor = 'red';
-            if (ing.usedQty === ing.qty) {
-                borderColor = 'green';
-            } else if (ing.usedQty > 0 && ing.usedQty < ing.qty) {
-                borderColor = 'orange';
-                allGreen = false;
-            } else {
-                allGreen = false;
-            }
-
-            // Assign color class for border & background styling from CSS
-            el.className = `draggable-ing ${borderColor}`;
-
-            el.innerHTML = `
-                ${ing.name} - ${ing.originalAmount} 
-                <small>(Used: ${ing.usedQty})</small>
-                <button type="button" onclick="deleteIngredient('${ing.id}')" class="btn-delete-ing">X</button>
-            `;
-
-            inventoryZone.appendChild(el);
-        });
-
-        // Unlock submit only if there are items AND all amounts match exactly (Green)
-        submitBtn.disabled = !(hasItems && allGreen);
-
-        setupDragAndDrop();
-    }
-
-    document.getElementById('add-recipe-form').addEventListener('submit', () => {
-        document.getElementById('hidden-ingredients').value = JSON.stringify(ingredientsList);
-        document.getElementById('hidden-instructions').value = instructionsZone.innerHTML;
-    });
-</script>
 {% endmacro %}
