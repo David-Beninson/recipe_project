@@ -770,27 +770,89 @@ select.filter-input,
 }
 
 .inline-ing {
-    background: #e0e0e0;
-    padding: 3px 8px;
-    border-radius: 4px;
-    margin: 2px 5px;
-    display: inline-block;
-    font-weight: 500;
+    background: transparent;
+    padding: 2px 4px;
+    margin: 2px 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
     font-size: 14px;
-    color: #333;
-    border: 1px solid #ccc;
+    vertical-align: middle;
+}
+
+.inline-ing .ing-name {
+    transition: var(--transition);
+}
+
+.inline-ing .ing-unit {
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
 }
 
 .ing-qty-input {
     width: 60px;
-    padding: 2px 5px;
-    border: 1px solid #bbb;
-    border-radius: 4px;
-    font-size: 13px;
-    margin-left: 4px;
-    margin-right: 4px;
+    height: 30px;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    background-color: #ffffff;
     text-align: center;
+    outline: none;
+    transition: var(--transition);
 }
+
+/* Status colors (Unused: Red, Partial: Orange, Exact: Green) */
+.inline-ing.red .ing-name,
+.inline-ing:not(.orange):not(.green) .ing-name {
+    color: var(--primary);
+}
+.inline-ing.red .ing-qty-input,
+.inline-ing:not(.orange):not(.green) .ing-qty-input {
+    border: 2px solid var(--primary);
+    color: var(--primary);
+}
+.inline-ing.red .ing-qty-input:focus,
+.inline-ing:not(.orange):not(.green) .ing-qty-input:focus {
+    box-shadow: 0 0 0 3px var(--primary-shadow);
+}
+
+.inline-ing.orange .ing-name {
+    color: var(--warning);
+}
+.inline-ing.orange .ing-qty-input {
+    border: 2px solid var(--warning);
+    color: var(--warning);
+}
+.inline-ing.orange .ing-qty-input:focus {
+    box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.2);
+}
+
+.inline-ing.green .ing-name {
+    color: var(--success);
+}
+.inline-ing.green .ing-qty-input {
+    border: 2px solid var(--success);
+    color: var(--success);
+}
+.inline-ing.green .ing-qty-input:focus {
+    box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2);
+}
+
+.ing-qty-input::-webkit-outer-spin-button,
+.ing-qty-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.ing-qty-input[type=number] {
+    -moz-appearance: textfield;
+}
+
+
+
 
 .draggable-ing {
     padding: 6px 12px;

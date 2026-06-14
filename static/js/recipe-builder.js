@@ -1,16 +1,23 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Fetch hidden DOM elements that contain pre-populated data (e.g., when editing an existing recipe)
     const prepopulatedIngredientsEl = document.getElementById('prepopulated-ingredients');
     const prepopulatedInstructionsEl = document.getElementById('prepopulated-instructions');
+
+    // Fetch input fields used for adding a new ingredient: name and amount
     const ingNameInput = document.getElementById('ing-name');
     const ingAmountInput = document.getElementById('ing-amount');
+
+    // Fetch critical UI components: the add button, display zones, and final submission button
     const btnAddIngredient = document.getElementById('btn-add-ingredient');
     const inventoryZone = document.getElementById('inventory-zone');
     const instructionsZone = document.getElementById('instructions-zone');
     const submitBtn = document.getElementById('btn-submit-recipe');
 
+    // Guard clause: If any required element is missing from the DOM, abort execution to prevent runtime errors
     if (!btnAddIngredient || !inventoryZone || !instructionsZone || !submitBtn) return;
 
     let ingredientsList = [];
+    // Check if the pre-populated ingredients element exists and actually contains text
     if (prepopulatedIngredientsEl && prepopulatedIngredientsEl.textContent.trim()) {
         try {
             const rawIngs = JSON.parse(prepopulatedIngredientsEl.textContent);
@@ -135,6 +142,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (ing) ing.usedQty += parseFloat(input.value) || 0;
         });
+        ingredientsList.forEach(ing => {
+            const isExact = ing.usedQty === ing.qty;
+            const isPartial = ing.usedQty > 0 && ing.usedQty < ing.qty;
+            const statusClass = isExact ? 'green' : (isPartial ? 'orange' : 'red');
+
+            instructionsZone.querySelectorAll(`.inline-ing[data-id="${ing.id}"]`).forEach(el => {
+                el.classList.remove('red', 'orange', 'green');
+                el.classList.add(statusClass);
+            });
+        });
         renderInventory();
     };
 
@@ -156,9 +173,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const htmlToInsert = `
             <span class="inline-ing" contenteditable="false" data-id="${ing.id}">
-                ${ing.name} 
+                <span class="ing-name">${ing.name}</span>
                 <input type="number" class="ing-qty-input" data-id="${ing.id}" value="0" min="0" max="${ing.qty}" step="any" oninput="updateTotals()"> 
-                ${ing.unitString}
+                <span class="ing-unit">${ing.unitString}</span>
             </span>&nbsp;`;
 
         let range = document.caretRangeFromPoint ? document.caretRangeFromPoint(e.clientX, e.clientY) : null;
