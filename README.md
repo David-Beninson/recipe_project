@@ -34,6 +34,17 @@ The project is split into two main parts:
 
 ---
 
+## ⚡ Performance & Frontend Architecture
+
+To keep the user interface responsive and reduce server load, several performance optimizations and architectural improvements are implemented:
+
+* **Optimistic UI Updates**: Toggling recipe likes updates the heart icon state and active counters instantly. The server request runs in the background; if the request fails, the interface rolls back to its original state automatically.
+* **Session Caching**: Liked recipe IDs are cached in the Flask user session on login and dynamically updated. This eliminates database query overhead from the `inject_user` context processor on every single template rendering and page navigation.
+* **Batched Database Operations (SQL `IN`)**: Replaced loop-based individual queries with single batched queries when checking cached recipe existences, significantly reducing database network roundtrips.
+* **Modular External Scripts**: All inline script tags were removed from HTML files and separated into dedicated modules under `static/js/`, ensuring cleaner markup, better browser cache utilization, and modular code management.
+
+---
+
 ## 🗂️ Project Structure
 
 ```
@@ -65,7 +76,7 @@ recipe_project/
 │       └── password_hashing.py  # Password hashing and verification
 ├── templates/
 │   ├── base.html          # Base layout template with navigation
-│   ├── all_recipes.html   # Displays all recipes in the database with filtering and AI generation
+│   ├── all_recipes.html   # Displays all database recipes with filtering and AI generation
 │   ├── login.html         # Login page
 │   ├── register.html      # Registration page
 │   ├── home.html          # User dashboard showing searched and custom recipes
@@ -78,18 +89,26 @@ recipe_project/
 │       └── recipe.html     # Recipe card renderer macro
 ├── static/
 │   ├── favicon.ico        # Site icon / favicon
-│   └── css/
-│       ├── ai.css         # Styles for AI components and selection mode
-│       ├── filters.css     # Styles for recipe search filters
-│       ├── style.css      # Core variables, layout, and global styles
-│       ├── auth.css       # Styling and glow effects for auth forms
-│       ├── home.css       # Dashboards and card grids layout
-│       └── search.css     # Search and filter specific styling
+│   ├── css/
+│   │   ├── ai.css         # Styles for AI components and selection mode
+│   │   ├── filters.css    # Styles for recipe search filters
+│   │   ├── style.css      # Core variables, layout, and global styles
+│   │   ├── auth.css       # Styling and glow effects for auth forms
+│   │   ├── home.css       # Dashboards and card grids layout
+│   │   └── search.css     # Search and filter specific styling
+│   └── js/
+│       ├── main.js        # Global/main script (optimistic likes, AJAX requests)
+│       ├── auth.js        # Password visibility toggle helper logic
+│       ├── recipe-builder.js # Ingredient list builder and drag & drop logic
+│       ├── cooking-steps.js  # Substitutes and selection mode handlers
+│       └── all-recipes.js # Filter collection and AI generation submission
 ├── tests/
 │   ├── __init__.py
 │   ├── conftest.py
 │   ├── test_auth.py
-│   └── test_recipes.py
+│   ├── test_recipes.py
+│   ├── test_latency.py        # DB and Spoonacular API latency test utility
+│   └── test_pooler_latency.py # DB pooler connection latency test utility
 ├── example.env
 ├── requirements.txt
 └── README.md
