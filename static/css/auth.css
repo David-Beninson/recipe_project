@@ -58,8 +58,13 @@ label {
 
 input[type="text"],
 input[type="password"] {
+    width: 100%;
     padding: 12px;
+    border-radius: 8px;
     border: none;
+    outline: none;
+    box-sizing: border-box;
+    font-size: 14px;
     background-color: rgba(255, 255, 255, 0.9);
     color: #333;
 }
