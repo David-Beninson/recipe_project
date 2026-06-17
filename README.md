@@ -8,6 +8,10 @@ A recipe search and AI-assisted kitchen helper built with **Flask**, **Jinja2**,
   </a>
 </p>
 
+<p align="center">
+  <video src="images/demo.mp4" width="100%" controls autoplay loop muted style="border-radius: 8px; border: 1px solid #e1e4e8; max-width: 800px;"></video>
+</p>
+
 ---
 
 ## App Preview
