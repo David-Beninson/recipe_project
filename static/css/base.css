@@ -150,12 +150,8 @@ ul { list-style: none; }
 
 .welcome-nav span {
     font-size: 13px;
-    font-weight: 600;
     color: var(--text-muted);
-    background: var(--bg);
     padding: 5px 14px;
-    border-radius: var(--r-pill);
-    border: 1px solid var(--border);
 }
 
 .nav-links { display: flex; align-items: center; gap: 4px; }
