@@ -29,7 +29,7 @@
         <div class="welcome-nav">
             <h2><a href="{{ url_for('recipes.home') }}" hx-get="{{ url_for('recipes.home') }}" hx-target="#page-content"
                     hx-push-url="true" hx-indicator="#page-loader">Recipe App 🍴</a></h2>
-            <span>Welcome, {{ username | capitalize }}!</span>
+            <span>Welcome back, {{ username | capitalize }}!</span>
         </div>
 
         <div class="nav-links">
