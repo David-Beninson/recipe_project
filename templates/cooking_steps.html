@@ -9,7 +9,7 @@
 {% block content %}
 <section class="recipe-detail-container">
     <div class="back-button-container">
-        <a href="{{ request.referrer or url_for('recipes.home') }}" class="btn btn-primary">Back</a>
+        <a href="{{ url_for('recipes.home') }}" class="btn btn-primary">Back</a>
     </div>
     <div class="recipe-card">
         <div class="recipe-header">

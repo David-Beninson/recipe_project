@@ -1,0 +1,58 @@
+{% from "components/recipe.html" import render_recipes %}
+{% from "components/ai.html" import render_ai_generator, render_ai_filter_generator %}
+{% from "components/filters.html" import render_filters %}
+
+<section class="search-container">
+    <div class="search-card">
+        <h1>🔍 Find Recipes</h1>
+
+        <!-- Search Form -->
+        <form method="post" id="search-form" class="search-form">
+            <div class="form-group">
+                <label for="ingredients">Enter ingredients (comma separated):</label>
+                <input type="text" id="ingredients" name="ingredients" class="app-input"
+                    placeholder="e.g., chicken, tomato, basil" value="{{ ingredients }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="number"> Max recipes to return:</label>
+                <select id="number" name="number" class="app-input">
+                    <option value="1" {% if number==1 or number=='1' %}selected{% endif %}>1 recipe</option>
+                    <option value="2" {% if number==2 or number=='2' %}{% endif %}>2 recipes</option>
+                    <option value="3" {% if number==3 or number=='3' %}{% endif %}>3 recipes</option>
+                    <option value="4" {% if number==4 or number=='4' %}{% endif %}>4 recipes</option>
+                    <option value="5" {% if number==5 or number=='5' or not number %}{% endif %}>5 recipes</option>
+                </select>
+            </div>
+
+            <div class="filter-groups">
+                <h3>Filters (Optional)</h3>
+                {{ render_filters(dish_type=dish_type, prep_time=prep_time, vegetarian=vegetarian, vegan=vegan,
+                gluten_free=gluten_free, kosher=kosher) }}
+            </div>
+
+            <button type="submit" class="btn btn-primary">Search Recipes</button>
+        </form>
+        <!-- AI Generation Component -->
+        {{ render_ai_filter_generator(ingredients) }}
+
+        <!-- Display flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- AI Generation Component -->
+    {{ render_ai_generator(ingredients) }}
+
+    <!-- Search Results -->
+    {% if recipes %}
+    <div class="recipes">
+        {{ render_recipes(title="Search Results", recipes=recipes) }}
+    </div>
+    {% endif %}
+</section>

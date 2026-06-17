@@ -147,7 +147,7 @@ def filter_recipes_list(recipes, dish_type=None, prep_time=None, vegetarian=Fals
 def get_user_settings(user_id):
     """Fetch user settings directly from database for Flask helpers."""
     from app.database import SessionLocal
-    from app.models import User
+    from app.database import User
     from sqlalchemy import select
     try:
         with SessionLocal() as db:

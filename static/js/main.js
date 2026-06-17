@@ -63,3 +63,23 @@ document.addEventListener('click', (event) => {
         recipeItem.classList.add('active');
     }
 });
+
+// Handle AI filter generator submit button on the search page
+document.addEventListener('click', (event) => {
+    const btnSubmit = event.target.closest('#btn-ai-filter-submit');
+    if (!btnSubmit) return;
+
+    const input = document.getElementById('ai-ingredients-input');
+    const form = document.getElementById('ai-filter-form');
+    const field = document.getElementById('ai-form-ingredients-field');
+
+    if (input && form && field) {
+        const value = input.value.trim();
+        if (!value) {
+            alert('Please enter ingredients for the AI to use.');
+            return;
+        }
+        field.value = value;
+        form.submit();
+    }
+});

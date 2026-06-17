@@ -1,13 +1,10 @@
 import json
-import httpx
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
-from app.database import SessionLocal
-from app.models import User, UserSearch, Recipe
-from app.utils.oauth2 import create_access_token
+from app.database import SessionLocal, User, UserSearch, Recipe
 from app.utils.flask_helpers import login_required, filter_recipes_list, extract_filter_params
-from app.config import settings
+from app.services import recipe_service
 
 recipes_bp = Blueprint('recipes', __name__)
 
@@ -32,10 +29,6 @@ def _filter_helper(recipes, filters):
         kosher=filters['kosher']
     )
 
-def _get_auth_headers():
-    """Generate JWT authorization headers for backend requests."""
-    token = create_access_token(data={"user_id": session['user_id']})
-    return {"Authorization": f"Bearer {token}"}
 
 @recipes_bp.route('/home')
 @login_required
@@ -51,107 +44,85 @@ def home():
 
     try:
         with SessionLocal() as db:
-            if active_tab == 'recipes':
-                # Load search recipes
-                stmt = select(UserSearch).filter(UserSearch.user_id == session['user_id']).options(selectinload(UserSearch.recipes))
-                searches = db.execute(stmt).scalars().all()
-                seen = set()
-                raw_recipes = []
-                for search_obj in searches:
-                    for r in search_obj.recipes:
-                        r_id, r_data = _normalize_recipe(r, 'spoonacular_id')
-                        if r_id not in seen:
-                            seen.add(r_id)
-                            raw_recipes.append(r_data)
+            # Query active user with preloaded search history and custom recipes
+            user_stmt = select(User).filter(User.id == session['user_id']).options(
+                selectinload(User.searches).selectinload(UserSearch.recipes),
+                selectinload(User.custom_recipes),
+                selectinload(User.liked_recipes)
+            )
+            user_obj = db.execute(user_stmt).scalars().first()
+            
+            if user_obj:
+                # Count total recipes available across all custom/searched items
+                searched_recipes_exist = any(len(s.recipes) > 0 for s in user_obj.searches)
+                custom_recipes_exist = len(user_obj.custom_recipes) > 0
+                has_recipes_total = searched_recipes_exist or custom_recipes_exist
 
-                current_recipes = _filter_helper(raw_recipes, filters)
-                tab_title = "Searched Recipes"
-                no_recipes_message = "No matching searched recipes found."
-                has_recipes_total = len(raw_recipes) > 0
-                
-            elif active_tab == 'my_recipes':
-                # Load custom recipes added by the user
-                custom_stmt = select(Recipe).filter(Recipe.user_id == session['user_id'])
-                custom_recipes = db.execute(custom_stmt).scalars().all()
-                raw_recipes = []
-                for r in custom_recipes:
-                    _, r_data = _normalize_recipe(r, 'id')
-                    raw_recipes.append(r_data)
+                if active_tab == 'recipes':
+                    tab_title = "Searched Recipes"
+                    no_recipes_message = "No recently searched recipes found. Go to 'Find Recipes' to discover new meals!"
+                    
+                    seen_ids = set()
+                    for search_history in reversed(user_obj.searches):
+                        for r in search_history.recipes:
+                            recipe_id, recipe_data = _normalize_recipe(r, 'spoonacular_id')
+                            if recipe_id not in seen_ids:
+                                seen_ids.add(recipe_id)
+                                current_recipes.append(recipe_data)
 
-                current_recipes = _filter_helper(raw_recipes, filters)
-                tab_title = "My Recipes"
-                no_recipes_message = "You haven't added any custom recipes yet."
-                has_recipes_total = len(raw_recipes) > 0
-                
-            elif active_tab == 'liked':
-                # Load user liked recipes
-                user_stmt = select(User).filter(User.id == session['user_id']).options(selectinload(User.liked_recipes))
-                user_obj = db.execute(user_stmt).scalars().first()
-                raw_recipes = []
-                if user_obj:
-                    for r in user_obj.liked_recipes:
-                        _, r_data = _normalize_recipe(r, 'spoonacular_id' if r.spoonacular_id else 'id')
-                        raw_recipes.append(r_data)
+                elif active_tab == 'my_recipes':
+                    tab_title = "My Recipes"
+                    no_recipes_message = "You haven't created any custom recipes yet. Use the 'Create Custom Recipe' tool on this page to build your own!"
+                    
+                    for r in reversed(user_obj.custom_recipes):
+                        recipe_id, recipe_data = _normalize_recipe(r)
+                        current_recipes.append(recipe_data)
 
-                current_recipes = _filter_helper(raw_recipes, filters)
-                tab_title = "Liked Recipes"
-                no_recipes_message = "You do not have any liked recipes, you can add them in the 'Instructions' button."
-                has_recipes_total = len(raw_recipes) > 0
-                
-            elif active_tab == 'all':
-                # Load all recipes from database
-                all_stmt = select(Recipe)
-                db_recipes = db.execute(all_stmt).scalars().all()
-                seen = set()
-                raw_recipes = []
-                for r in db_recipes:
-                    r_id, r_data = _normalize_recipe(r, 'spoonacular_id' if r.spoonacular_id else 'id')
-                    if r_id not in seen:
-                        seen.add(r_id)
-                        raw_recipes.append(r_data)
+                elif active_tab == 'liked':
+                    tab_title = "Liked Recipes"
+                    no_recipes_message = "You haven't liked any recipes yet. Click the heart icon on any recipe steps page to save it here!"
+                    
+                    for r in reversed(user_obj.liked_recipes):
+                        recipe_id, recipe_data = _normalize_recipe(r, 'spoonacular_id' if r.spoonacular_id else 'id')
+                        current_recipes.append(recipe_data)
 
-                current_recipes = _filter_helper(raw_recipes, filters)
-                tab_title = "All Database Recipes"
-                no_recipes_message = "No matching database recipes found."
-                has_recipes_total = len(raw_recipes) > 0
-                
-            elif active_tab == 'edit':
-                recipe_id = request.args.get('recipe_id')
-                if recipe_id:
-                    with httpx.Client() as client:
-                        response = client.get(f"{settings.backend_url}/recipes/{recipe_id}/information", timeout=10.0)
-                        if response.status_code == 200:
-                            recipe_obj = response.json()
-                            recipe_obj['id'] = recipe_id
-                            
-                            custom_stmt = select(Recipe).filter(Recipe.id == int(recipe_id))
-                            db_recipe = db.execute(custom_stmt).scalars().first()
-                            if db_recipe and db_recipe.user_id == session['user_id']:
-                                return render_template(
-                                    'home.html',
-                                    username=session.get('username'),
-                                    recipe=recipe_obj,
-                                    active_tab='edit',
-                                    current_recipes=[],
-                                    tab_title="Edit Recipe",
-                                    no_recipes_message="",
-                                    has_recipes_total=False,
-                                    **filters
-                                )
-                flash("You are not authorized to edit this recipe.", "error")
-                return redirect(url_for('recipes.home'))
-                
+                elif active_tab == 'all':
+                    tab_title = "All Recipes"
+                    no_recipes_message = "No recipes found in your dashboard yet."
+                    
+                    seen_ids = set()
+                    # Add custom user recipes first
+                    for r in reversed(user_obj.custom_recipes):
+                        recipe_id, recipe_data = _normalize_recipe(r)
+                        if recipe_id not in seen_ids:
+                            seen_ids.add(recipe_id)
+                            current_recipes.append(recipe_data)
+                    # Add searched recipes second
+                    for search_history in reversed(user_obj.searches):
+                        for r in search_history.recipes:
+                            recipe_id, recipe_data = _normalize_recipe(r, 'spoonacular_id')
+                            if recipe_id not in seen_ids:
+                                seen_ids.add(recipe_id)
+                                current_recipes.append(recipe_data)
+            
+            # Apply user dietary/filtering choices to dashboard list
+            current_recipes = _filter_helper(current_recipes, filters)
+
     except Exception as e:
-        print(f"Error fetching recipes for tab {active_tab}: {e}")
+        print(f"Error loading home dashboard: {e}")
+        flash("Failed to load recipe dashboard.", "error")
 
+    is_htmx = request.headers.get('HX-Request') == 'true'
+    template = 'partials/home_content.html' if is_htmx else 'home.html'
     return render_template(
-        'home.html',
+        template,
         username=session.get('username'),
         current_recipes=current_recipes,
+        active_tab=active_tab,
         tab_title=tab_title,
         no_recipes_message=no_recipes_message,
         has_recipes_total=has_recipes_total,
-        active_tab=active_tab,
+        recipe=None,
         **filters
     )
 
@@ -169,31 +140,21 @@ def add_recipe():
     except Exception as e:
         print(f"Error parsing ingredients JSON: {e}")
         ingredients = []
-
-    payload = {
-        "title": title,
-        "ingredients": ingredients,
-        "instructions": instructions,
-        "image": image
-    }
     
     try:
-        with httpx.Client() as client:
-            response = client.post(f"{settings.backend_url}/recipes/custom", headers=_get_auth_headers(), json=payload, timeout=10.0)
-            if response.status_code == 200:
-                flash("Recipe added successfully!", "success")
-            else:
-                flash(f"Backend API error: {response.text}", "error")
+        with SessionLocal() as db:
+            recipe_service.save_custom_recipe(title, ingredients, instructions, image, session['user_id'], db)
+            flash("Recipe added successfully!", "success")
     except Exception as e:
-        print(f"Connection error to backend: {e}")
-        flash("Failed to connect to backend service.", "error")
+        print(f"Error saving custom recipe: {e}")
+        flash("Failed to save custom recipe.", "error")
         
     return redirect(url_for('recipes.home'))
 
 @recipes_bp.route('/search', methods=['GET', 'POST'])
 @login_required
 def search():
-    """Search for recipes page and handler - calls FastAPI backend."""
+    """Search for recipes page and handler."""
     recipes = []
     ingredients = ""
     number = 5
@@ -208,24 +169,26 @@ def search():
             flash('Please enter ingredients', 'warning')
             return redirect(url_for('recipes.search'))
         
-        params = {"ingredients": ingredients, "number": number}
-        
         try:
-            # Call the FastAPI backend service
-            with httpx.Client() as client:
-                response = client.get(f"{settings.backend_url}/recipes/find-by-ingredients", headers=_get_auth_headers(), params=params, timeout=10.0)
-                if response.status_code == 200:
-                    raw_recipes = response.json()
+            with SessionLocal() as db:
+                new_search = UserSearch(user_id=session['user_id'], query_ingredients=ingredients, recipes=[])
+                db.add(new_search)
+                
+                raw_recipes = recipe_service.fetch_recipes_with_fallback(ingredients, int(number), db)
+                if raw_recipes:
+                    recipe_service.cache_and_link_recipes(raw_recipes, new_search, db)
                     recipes = _filter_helper(raw_recipes, filters)
                     flash(f'Found {len(recipes)} recipes matching filters.', 'success')
                 else:
-                    flash(f"Backend API error: {response.text}", "error")
+                    flash("No matching recipes found.", "warning")
         except Exception as e:
-            print(f"Connection error to backend: {e}")
-            flash("Failed to connect to backend service.", "error")
+            print(f"Error searching recipes: {e}")
+            flash("Failed to search recipes.", "error")
     
+    is_htmx = request.headers.get('HX-Request') == 'true'
+    template = 'partials/search_content.html' if is_htmx else 'search.html'
     return render_template(
-        'search.html',
+        template,
         recipes=recipes,
         ingredients=ingredients,
         number=number,
@@ -235,41 +198,36 @@ def search():
 @recipes_bp.route('/recipe/<int:recipe_id>')
 @login_required
 def cooking_steps(recipe_id):
-    """Retrieve recipe details from FastAPI and display cooking steps."""
+    """Retrieve recipe details and display cooking steps."""
     try:
-        # Fetch detailed recipe information (including instructions and ingredients)
-        with httpx.Client() as client:
-            response = client.get(f"{settings.backend_url}/recipes/{recipe_id}/information", timeout=10.0)
-            if response.status_code == 200:
-                recipe = response.json()
+        with SessionLocal() as db:
+            recipe = recipe_service.get_recipe_details(recipe_id, db)
+            if recipe:
                 recipe['id'] = recipe_id
                 
-                # Check if this recipe is liked by the current user
                 is_liked = False
-                with SessionLocal() as db:
-                    user_stmt = select(User).filter(User.id == session['user_id']).options(selectinload(User.liked_recipes))
-                    user_obj = db.execute(user_stmt).scalars().first()
-                    if user_obj:
-                        is_liked = any(r.spoonacular_id == recipe_id or r.id == recipe_id for r in user_obj.liked_recipes)
+                user_stmt = select(User).filter(User.id == session['user_id']).options(selectinload(User.liked_recipes))
+                user_obj = db.execute(user_stmt).scalars().first()
+                if user_obj:
+                    is_liked = any(r.spoonacular_id == recipe_id or r.id == recipe_id for r in user_obj.liked_recipes)
                         
                 return render_template('cooking_steps.html', recipe=recipe, is_liked=is_liked)
             else:
-                flash('Recipe detail not found on server', 'error')
+                flash('Recipe detail not found', 'error')
                 return redirect(url_for('recipes.home'))
     except Exception as e:
         print(f"Error fetching recipe: {e}")
-        flash('Error loading recipe details from backend', 'error')
+        flash('Error loading recipe details', 'error')
         return redirect(url_for('recipes.home'))
 
 @recipes_bp.route('/recipe/<int:recipe_id>/like', methods=['POST'])
 @login_required
 def like_recipe_route(recipe_id):
-    """Toggle like for a recipe by calling the backend."""
+    """Toggle like/unlike status for a recipe."""
     try:
-        with httpx.Client() as client:
-            response = client.post(f"{settings.backend_url}/recipes/{recipe_id}/like", headers=_get_auth_headers(), timeout=10.0)
-            if response.status_code == 200:
-                data = response.json()
+        with SessionLocal() as db:
+            data = recipe_service.toggle_like_recipe(recipe_id, session['user_id'], db)
+            if data:
                 # Keep session cache of liked recipe IDs in sync
                 if 'liked_recipe_ids' in session:
                     liked_ids = list(session['liked_recipe_ids'])
@@ -282,26 +240,26 @@ def like_recipe_route(recipe_id):
                     session['liked_recipe_ids'] = liked_ids
                 return jsonify(data)
             else:
-                return jsonify({"error": "Failed to toggle like on backend"}), response.status_code
+                return jsonify({"error": "Recipe not found"}), 404
     except Exception as e:
-        print(f"Error calling like backend: {e}")
-        return jsonify({"error": "Connection error to backend"}), 500
+        print(f"Error toggling like: {e}")
+        return jsonify({"error": "Failed to toggle like"}), 500
 
 @recipes_bp.route('/substitutes')
 @login_required
 def substitutes():
-    """Proxy route to call FastAPI substitutes endpoint."""
+    """Get ingredient substitute suggestions."""
     ingredient = request.args.get('ingredient')
     if not ingredient:
         return jsonify({"detail": "Missing ingredient parameter"}), 400
         
     try:
-        with httpx.Client() as client:
-            response = client.get(f"{settings.backend_url}/recipes/substitutes", params={"ingredient": ingredient}, timeout=10.0)
-            return jsonify(response.json()), response.status_code
+        with SessionLocal() as db:
+            data = recipe_service.get_ingredient_substitutes(ingredient, db)
+            return jsonify(data)
     except Exception as e:
-        print(f"Substitutes backend error: {e}")
-        return jsonify({"detail": "Failed to retrieve substitutes from backend"}), 500
+        print(f"Substitutes error: {e}")
+        return jsonify({"detail": "Failed to retrieve substitutes"}), 500
 
 
 @recipes_bp.route('/recipe/<int:recipe_id>/edit', methods=['GET', 'POST'])
@@ -320,55 +278,46 @@ def edit_recipe(recipe_id):
             print(f"Error parsing ingredients JSON: {e}")
             ingredients = []
 
-        payload = {
-            "title": title,
-            "ingredients": ingredients,
-            "instructions": instructions,
-            "image": image
-        }
-
         try:
-            with httpx.Client() as client:
-                response = client.put(f"{settings.backend_url}/recipes/{recipe_id}", headers=_get_auth_headers(), json=payload, timeout=10.0)
-                if response.status_code == 200:
-                    flash("Recipe updated successfully!", "success")
-                    return redirect(url_for('recipes.home', tab='my_recipes'))
-                else:
-                    flash(f"Backend API error: {response.text}", "error")
+            with SessionLocal() as db:
+                recipe_service.update_custom_recipe(recipe_id, title, ingredients, instructions, image, session['user_id'], db)
+                flash("Recipe updated successfully!", "success")
+                return redirect(url_for('recipes.home', tab='my_recipes'))
+        except PermissionError:
+            flash("You are not authorized to edit this recipe.", "error")
+            return redirect(url_for('recipes.home'))
         except Exception as e:
-            print(f"Connection error to backend: {e}")
-            flash("Failed to connect to backend service.", "error")
+            print(f"Error updating recipe: {e}")
+            flash("Failed to update recipe.", "error")
 
         return redirect(url_for('recipes.edit_recipe', recipe_id=recipe_id))
 
     try:
-        with httpx.Client() as client:
-            response = client.get(f"{settings.backend_url}/recipes/{recipe_id}/information", timeout=10.0)
-            if response.status_code == 200:
-                recipe = response.json()
+        with SessionLocal() as db:
+            recipe = recipe_service.get_recipe_details(recipe_id, db)
+            if recipe:
                 recipe['id'] = recipe_id
 
-                with SessionLocal() as db:
-                    stmt = select(Recipe).filter(Recipe.id == recipe_id)
-                    db_recipe = db.execute(stmt).scalars().first()
-                    if not db_recipe or db_recipe.user_id != session['user_id']:
-                        flash("You are not authorized to edit this recipe.", "error")
-                        return redirect(url_for('recipes.home'))
+                stmt = select(Recipe).filter(Recipe.id == recipe_id)
+                db_recipe = db.execute(stmt).scalars().first()
+                if not db_recipe or db_recipe.user_id != session['user_id']:
+                    flash("You are not authorized to edit this recipe.", "error")
+                    return redirect(url_for('recipes.home'))
 
                 return render_template('edit_recipe.html', recipe=recipe)
             else:
-                flash('Recipe not found on server', 'error')
+                flash('Recipe not found', 'error')
                 return redirect(url_for('recipes.home'))
     except Exception as e:
         print(f"Error loading recipe: {e}")
-        flash('Error loading recipe from backend', 'error')
+        flash('Error loading recipe', 'error')
         return redirect(url_for('recipes.home'))
 
 
 @recipes_bp.route('/update_settings', methods=['POST'])
 @login_required
 def update_settings():
-    """Route to update user default preferences via FastAPI backend."""
+    """Route to update user default dietary preferences."""
     default_vegetarian = request.form.get('default_vegetarian') == 'on'
     default_vegan = request.form.get('default_vegan') == 'on'
     default_gluten_free = request.form.get('default_gluten_free') == 'on'
@@ -378,30 +327,23 @@ def update_settings():
     default_prep_time_str = request.form.get('default_prep_time', '9999')
     default_prep_time = int(default_prep_time_str) if default_prep_time_str.isdigit() else 9999
     
-    payload = {
-        "default_vegetarian": default_vegetarian,
-        "default_vegan": default_vegan,
-        "default_gluten_free": default_gluten_free,
-        "default_kosher": default_kosher,
-        "default_dish_type": default_dish_type,
-        "default_prep_time": default_prep_time
-    }
-    
     try:
-        with httpx.Client() as client:
-            response = client.put(
-                f"{settings.backend_url}/users/settings",
-                headers=_get_auth_headers(),
-                json=payload,
-                timeout=10.0
-            )
-            if response.status_code == 200:
+        with SessionLocal() as db:
+            user = db.execute(select(User).filter(User.id == session['user_id'])).scalars().first()
+            if user:
+                user.default_vegetarian = default_vegetarian
+                user.default_vegan = default_vegan
+                user.default_gluten_free = default_gluten_free
+                user.default_kosher = default_kosher
+                user.default_dish_type = default_dish_type
+                user.default_prep_time = default_prep_time
+                db.commit()
                 flash("Default settings updated successfully!", "success")
             else:
-                flash(f"Backend API error: {response.text}", "error")
+                flash("User not found.", "error")
     except Exception as e:
         print(f"Error updating settings: {e}")
-        flash("Failed to connect to backend service.", "error")
+        flash("Failed to update settings.", "error")
         
     return redirect(url_for('recipes.settings_page'))
 
@@ -419,22 +361,24 @@ def settings_page():
         "default_prep_time": 9999
     }
     try:
-        with httpx.Client() as client:
-            response = client.get(
-                f"{settings.backend_url}/users/settings",
-                headers=_get_auth_headers(),
-                timeout=10.0
-            )
-            if response.status_code == 200:
-                user_settings = response.json()
+        with SessionLocal() as db:
+            user = db.execute(select(User).filter(User.id == session['user_id'])).scalars().first()
+            if user:
+                user_settings = {
+                    "default_vegetarian": user.default_vegetarian,
+                    "default_vegan": user.default_vegan,
+                    "default_gluten_free": user.default_gluten_free,
+                    "default_kosher": user.default_kosher,
+                    "default_dish_type": user.default_dish_type,
+                    "default_prep_time": user.default_prep_time
+                }
     except Exception as e:
         print(f"Error loading settings: {e}")
         
+    is_htmx = request.headers.get('HX-Request') == 'true'
+    template = 'partials/settings_content.html' if is_htmx else 'settings.html'
     return render_template(
-        'settings.html',
+        template,
         username=session.get('username'),
         user_settings=user_settings
     )
-
-
-

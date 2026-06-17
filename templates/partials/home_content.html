@@ -1,0 +1,110 @@
+{% from "components/recipe.html" import render_recipes %}
+{% from "components/add_recipe.html" import add_recipes %}
+{% from "components/filters.html" import render_filters %}
+
+<div class="home-content">
+
+    <!-- ── Sticky subnav: tabs + compact filter ── -->
+    <div class="home-subnav">
+
+        <!-- Tab pills -->
+        <div class="tab-buttons">
+            <a href="{{ url_for('recipes.home', tab='recipes') }}"
+               id="btn-recipes"
+               class="tab-btn {% if active_tab == 'recipes' %}active{% endif %}"
+               hx-get="{{ url_for('recipes.home', tab='recipes') }}"
+               hx-target="#page-content"
+               hx-push-url="true"
+               hx-indicator="#page-loader">Searched</a>
+
+            <a href="{{ url_for('recipes.home', tab='my_recipes') }}"
+               id="btn-my-recipes"
+               class="tab-btn {% if active_tab == 'my_recipes' %}active{% endif %}"
+               hx-get="{{ url_for('recipes.home', tab='my_recipes') }}"
+               hx-target="#page-content"
+               hx-push-url="true"
+               hx-indicator="#page-loader">My Recipes</a>
+
+            <a href="{{ url_for('recipes.home', tab='liked') }}"
+               id="btn-liked"
+               class="tab-btn {% if active_tab == 'liked' %}active{% endif %}"
+               hx-get="{{ url_for('recipes.home', tab='liked') }}"
+               hx-target="#page-content"
+               hx-push-url="true"
+               hx-indicator="#page-loader">Liked</a>
+
+            <a href="{{ url_for('recipes.home', tab='all') }}"
+               id="btn-all"
+               class="tab-btn {% if active_tab == 'all' %}active{% endif %}"
+               hx-get="{{ url_for('recipes.home', tab='all') }}"
+               hx-target="#page-content"
+               hx-push-url="true"
+               hx-indicator="#page-loader">All Recipes</a>
+
+            <a href="{{ url_for('recipes.home', tab='add') }}"
+               id="btn-add"
+               class="tab-btn {% if active_tab == 'add' %}active{% endif %}"
+               hx-get="{{ url_for('recipes.home', tab='add') }}"
+               hx-target="#page-content"
+               hx-push-url="true"
+               hx-indicator="#page-loader">Add Recipe</a>
+        </div>
+
+        <!-- Compact filter (only shown when recipes exist and not on add/edit) -->
+        {% if has_recipes_total and active_tab != 'add' and active_tab != 'edit' %}
+        <form method="get" action="{{ url_for('recipes.home') }}"
+              class="filter-bar"
+              hx-get="{{ url_for('recipes.home') }}"
+              hx-target="#page-content"
+              hx-push-url="true"
+              hx-indicator="#page-loader">
+            <input type="hidden" name="tab" value="{{ active_tab }}">
+            <input type="hidden" name="filter_submitted" value="true">
+
+            <div class="filter-groups">
+                {{ render_filters(dish_type=dish_type, prep_time=prep_time, vegetarian=vegetarian, vegan=vegan, gluten_free=gluten_free, kosher=kosher) }}
+                <div class="filter-actions">
+                    <button type="submit" class="btn btn-primary">Apply</button>
+                    <a href="{{ url_for('recipes.home', tab=active_tab) }}"
+                       class="btn btn-muted"
+                       hx-get="{{ url_for('recipes.home', tab=active_tab) }}"
+                       hx-target="#page-content"
+                       hx-push-url="true"
+                       hx-indicator="#page-loader">Clear</a>
+                </div>
+            </div>
+        </form>
+        {% endif %}
+
+    </div><!-- /home-subnav -->
+
+    <!-- ── Scrollable content area ── -->
+    <div class="home-body">
+        <div id="home-nav">
+            {% if active_tab == 'add' or active_tab == 'edit' %}
+                <div id="view-add" class="sidebar">
+                    {{ add_recipes(recipe) }}
+                </div>
+            {% else %}
+                {% if current_recipes %}
+                    {{ render_recipes(title=tab_title, recipes=current_recipes) }}
+                {% else %}
+                    <div class="no-recipes">
+                        <p>{{ no_recipes_message }}</p>
+                        {% if active_tab == 'recipes' %}
+                        <p>Try clearing filters or go to
+                            <a href="{{ url_for('recipes.search') }}"
+                               hx-get="{{ url_for('recipes.search') }}"
+                               hx-target="#page-content"
+                               hx-push-url="true"
+                               hx-indicator="#page-loader">Find Recipes</a>
+                            to get started!
+                        </p>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div><!-- /home-body -->
+
+</div><!-- /home-content -->
