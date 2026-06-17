@@ -9,7 +9,8 @@ A recipe search and AI-assisted kitchen helper built with **Flask**, **Jinja2**,
 </p>
 
 <p align="center">
-  <video src="https://github.com/David-Beninson/recipe_project/raw/main/images/demo.mp4" width="100%" controls autoplay loop muted style="border-radius: 8px; border: 1px solid #e1e4e8; max-width: 800px;"></video>
+  
+  <video src="https://github.com/user-attachments/assets/cc07fd8e-24e7-461e-818d-02ae5693c914" width="100%" controls autoplay loop muted style="border-radius: 8px; border: 1px solid #e1e4e8; max-width: 800px;"></video>
 </p>
 
 ---
