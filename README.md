@@ -263,5 +263,5 @@ Tests use an **in-memory SQLite database** and mock all external API calls (Spoo
 
 ## Authors
 
-- **David Beninson** — [GitHub](https://github.com/David-Beninson)
-- **Oliver Radivan** — [GitHub](https://github.com/oliverradivan)
+- [**David Beninson**](https://github.com/David-Beninson)
+- [**Oliver Radivan**](https://github.com/oliverradivan)

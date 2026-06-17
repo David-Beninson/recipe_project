@@ -64,12 +64,21 @@ document.addEventListener('DOMContentLoaded', () => {
             if (txt) txt.textContent = 'Thinking...';
             if (box) box.style.display = 'block';
 
+            // Disable button and show loading text
+            btnQuick.disabled = true;
+            const originalText = btnQuick.textContent;
+            btnQuick.textContent = 'Consulting AI...';
+
             try {
                 const res = await fetch(`/ai/quick-substitute?recipe_id=${id}&ingredient=${encodeURIComponent(ing)}`);
                 const data = await res.json();
                 if (txt) txt.textContent = data.recommendation || 'Could not retrieve recommendation.';
             } catch {
                 if (txt) txt.textContent = 'Error loading AI recommendation.';
+            } finally {
+                // Re-enable button and restore text
+                btnQuick.disabled = false;
+                btnQuick.textContent = originalText;
             }
         });
     }
@@ -84,6 +93,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 return alert('Please select at least one ingredient to replace.');
             }
             if ($('ai-multi-replace-val')) $('ai-multi-replace-val').value = checked.join(', ');
+
+            // Disable submit button and show loading feedback
+            const btnSubmit = $('btn-ai-multi-replace');
+            if (btnSubmit) {
+                btnSubmit.disabled = true;
+                btnSubmit.textContent = 'Adapting recipe...';
+            }
         });
     }
 });

@@ -64,7 +64,7 @@ document.addEventListener('click', (event) => {
     }
 });
 
-// Handle AI filter generator submit button on the search page
+// Handle AI filter generator submit button on the search page with loading feedback
 document.addEventListener('click', (event) => {
     const btnSubmit = event.target.closest('#btn-ai-filter-submit');
     if (!btnSubmit) return;
@@ -80,6 +80,25 @@ document.addEventListener('click', (event) => {
             return;
         }
         field.value = value;
+        
+        // Disable button and show loading text
+        btnSubmit.disabled = true;
+        btnSubmit.textContent = 'Looking for recipe...';
+        
+        form.submit();
+    }
+});
+
+// Handle AI generator fallback submit button on the search results page with loading feedback
+document.addEventListener('click', (event) => {
+    const btnAiGenerate = event.target.closest('#btn-ai-generate');
+    if (!btnAiGenerate) return;
+
+    btnAiGenerate.disabled = true;
+    btnAiGenerate.textContent = 'Looking for recipe...';
+    
+    const form = document.getElementById('ai-generate-form');
+    if (form) {
         form.submit();
     }
 });
