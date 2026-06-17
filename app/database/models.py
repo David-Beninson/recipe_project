@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, JSON, ForeignKey, Table, Boolean
 from sqlalchemy.orm import relationship
-from .database import Base
+from .connection import Base
 
 # Many-to-many association table linking searches to recipes
 # This allows us to track which recipes were found in each search

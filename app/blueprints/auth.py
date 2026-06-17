@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import select
 from app.database import SessionLocal
-from app.models import User
+from app.database import User
 
 auth_bp = Blueprint('auth', __name__)
 

@@ -1,10 +1,14 @@
 {% macro add_recipes(recipe=None) %}
-<h3 class="recipe-builder-title">{% if recipe %}Edit Recipe{% else %}Recipe Builder{% endif %}</h3>
-<form id="add-recipe-form" action="{% if recipe %}{{ url_for('recipes.edit_recipe', recipe_id=recipe.id) }}{% else %}{{ url_for('recipes.add_recipe') }}{% endif %}" method="POST">
+<h3 class="recipe-builder-title">{% if recipe %}Edit Recipe{% else %}Add Recipe{% endif %}</h3>
+<form id="add-recipe-form"
+    action="{% if recipe %}{{ url_for('recipes.edit_recipe', recipe_id=recipe.id) }}{% else %}{{ url_for('recipes.add_recipe') }}{% endif %}"
+    method="POST">
     <!-- Top Row: Title Input (Left) and Image Upload/Preview (Right) -->
     <div class="recipe-builder-top-row">
         <div class="recipe-title-col">
-            <input type="text" id="recipe-title" name="title" class="app-input" placeholder="Recipe name (e.g. Grandma's Lasagna)" value="{% if recipe %}{{ recipe.title }}{% endif %}" required>
+            <input type="text" id="recipe-title" name="title" class="app-input"
+                placeholder="Recipe name (e.g. Grandma's Lasagna)" value="{% if recipe %}{{ recipe.title }}{% endif %}"
+                required>
         </div>
         <div class="recipe-image-col">
             <!-- Hidden File Input -->
@@ -12,7 +16,14 @@
 
             <!-- Recipe Image Input Label -->
             <label for="recipe-image" id="recipe-image-label" class="custom-file-upload">
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="camera-icon"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="camera-icon">
+                    <path
+                        d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z">
+                    </path>
+                    <circle cx="12" cy="13" r="3"></circle>
+                </svg>
                 <span>Upload photo</span>
             </label>
             <div id="file-name-display">No file chosen</div>
@@ -31,16 +42,19 @@
 
     <input type="hidden" name="ingredients" id="hidden-ingredients">
     <input type="hidden" name="instructions" id="hidden-instructions">
-    <input type="hidden" name="image" id="hidden-image" value="{% if recipe and recipe.image %}{{ recipe.image }}{% endif %}">
+    <input type="hidden" name="image" id="hidden-image"
+        value="{% if recipe and recipe.image %}{{ recipe.image }}{% endif %}">
 
-    <script id="prepopulated-ingredients" type="application/json">{% if recipe %}{{ recipe.extendedIngredients|tojson|safe }}{% else %}[]{% endif %}</script>
+    <script id="prepopulated-ingredients"
+        type="application/json">{% if recipe %}{{ recipe.extendedIngredients|tojson|safe }}{% else %}[]{% endif %}</script>
     <div id="prepopulated-instructions">{% if recipe %}{{ recipe.instructions|safe }}{% endif %}</div>
 
     <!-- Add Ingredients Form Container -->
     <div class="add-ingredients-container">
         <h4>Add Ingredients</h4>
         <div class="ingredient-input-row">
-            <input type="text" id="ing-name" class="app-input ing-name-input" placeholder="Ingredient name (e.g. Tomato)">
+            <input type="text" id="ing-name" class="app-input ing-name-input"
+                placeholder="Ingredient name (e.g. Tomato)">
             <input type="text" id="ing-amount" class="app-input ing-amount-input" placeholder="Amount (e.g. 2 pcs)">
             <button type="button" id="btn-add-ingredient" class="btn btn-add-ing-row">Add</button>
         </div>
@@ -53,9 +67,12 @@
 
     <!-- Instructions Zone -->
     <h4 class="instructions-label">Instructions</h4>
-    <div id="instructions-zone" contenteditable="true" placeholder="Write your preparation steps here, and drag ingredients from the inventory to integrate them..."></div>
+    <div id="instructions-zone" contenteditable="true"
+        placeholder="Write your preparation steps here, and drag ingredients from the inventory to integrate them...">
+    </div>
 
     <!-- Submit Button -->
-    <button type="submit" id="btn-submit-recipe" class="btn" {% if not recipe %}disabled{% endif %}>{% if recipe %}Save Recipe{% else %}Submit Recipe{% endif %}</button>
+    <button type="submit" id="btn-submit-recipe" class="btn" {% if not recipe %}disabled{% endif %}>{% if recipe %}Save
+        Recipe{% else %}Submit Recipe{% endif %}</button>
 </form>
 {% endmacro %}

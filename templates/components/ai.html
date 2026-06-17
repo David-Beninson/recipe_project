@@ -3,7 +3,7 @@
 {% macro render_ai_generator(ingredients) %}
 {% if ingredients %}
 <div class="ai-generation-card">
-    <h2>AI Custom Recipe</h2>
+    <h2>Ask AI for a custom recipe</h2>
     <p>Can't find what you need? Let our AI generate a unique recipe based on your ingredients: <strong>{{ ingredients
             }}</strong></p>
     <form action="{{ url_for('ai.generate_ai') }}" method="post" id="ai-generate-form">
@@ -55,7 +55,7 @@
 
 {% macro render_ai_filter_generator(redirect_to) %}
 <div class="ai-generation-card">
-    <h2>AI Custom Recipe</h2>
+    <h2>Ask AI for a custom recipe</h2>
     <p>
         Enter the ingredients you have on hand, and our AI will create a unique recipe tailored to your active filters!
     </p>

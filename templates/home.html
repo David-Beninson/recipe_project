@@ -1,62 +1,9 @@
 {% extends "base.html" %}
-{% from "components/recipe.html" import render_recipes %}
-{% from "components/add_recipe.html" import add_recipes %}
-{% from "components/filters.html" import render_filters %}
 
 {% block title %}Home{% endblock %}
 
-{% block extra_css %}
-{% endblock %}
-
 {% block content %}
-<section class="home-content">
-
-    <div class="tab-buttons">
-        <a href="{{ url_for('recipes.home', tab='recipes', dish_type=dish_type, prep_time=prep_time, vegetarian='on' if vegetarian else None, vegan='on' if vegan else None, gluten_free='on' if gluten_free else None, kosher='on' if kosher else None) }}" id="btn-recipes" class="tab-btn {% if active_tab == 'recipes' %}active{% endif %}">Searched Recipes</a>
-        <a href="{{ url_for('recipes.home', tab='my_recipes', dish_type=dish_type, prep_time=prep_time, vegetarian='on' if vegetarian else None, vegan='on' if vegan else None, gluten_free='on' if gluten_free else None, kosher='on' if kosher else None) }}" id="btn-my-recipes" class="tab-btn {% if active_tab == 'my_recipes' %}active{% endif %}">My Recipes</a>
-        <a href="{{ url_for('recipes.home', tab='liked', dish_type=dish_type, prep_time=prep_time, vegetarian='on' if vegetarian else None, vegan='on' if vegan else None, gluten_free='on' if gluten_free else None, kosher='on' if kosher else None) }}" id="btn-liked" class="tab-btn {% if active_tab == 'liked' %}active{% endif %}">Liked Recipes</a>
-        <a href="{{ url_for('recipes.home', tab='all', dish_type=dish_type, prep_time=prep_time, vegetarian='on' if vegetarian else None, vegan='on' if vegan else None, gluten_free='on' if gluten_free else None, kosher='on' if kosher else None) }}" id="btn-all" class="tab-btn {% if active_tab == 'all' %}active{% endif %}">All Recipes</a>
-        <a href="{{ url_for('recipes.home', tab='add', dish_type=dish_type, prep_time=prep_time, vegetarian='on' if vegetarian else None, vegan='on' if vegan else None, gluten_free='on' if gluten_free else None, kosher='on' if kosher else None) }}" id="btn-add" class="tab-btn {% if active_tab == 'add' %}active{% endif %}">Add Recipe</a>
-    </div>
-
-    <!-- Filter Bar -->
-    {% if has_recipes_total and active_tab != 'add' and active_tab != 'edit' and active_tab != 'settings' %}
-    <form method="get" action="{{ url_for('recipes.home') }}" class="filter-bar">
-        <input type="hidden" name="tab" value="{{ active_tab }}">
-        <input type="hidden" name="filter_submitted" value="true">
-        <h3>Filter Recipes</h3>
-        <div class="filter-groups">
-            {{ render_filters(dish_type=dish_type, prep_time=prep_time, vegetarian=vegetarian, vegan=vegan, gluten_free=gluten_free, kosher=kosher) }}
-            <div class="filter-actions">
-                <button type="submit" class="btn btn-primary">Apply Filters</button>
-                <a href="{{ url_for('recipes.home', tab=active_tab) }}" class="btn btn-muted">Clear Filters</a>
-            </div>
-        </div>
-    </form>
-    {% endif %}
-
-    <nav id="home-nav">
-        {% if active_tab == 'add' or active_tab == 'edit' %}
-        <div id="view-add" class="sidebar">
-            {{ add_recipes(recipe) }}
-        </div>
-        {% else %}
-        <div id="view-recipes" class="recipes">
-            {% if current_recipes %}
-            {{ render_recipes(title=tab_title, recipes=current_recipes) }}
-            {% else %}
-            <div class="no-recipes">
-                <p>{{ no_recipes_message }}</p>
-                {% if active_tab == 'recipes' %}
-                <p>Try clearing your filters or go to <a href="{{ url_for('recipes.search') }}">Find Recipes</a> to get started!</p>
-                {% endif %}
-            </div>
-            {% endif %}
-        </div>
-        {% endif %}
-    </nav>
-
-</section>
+{% include "partials/home_content.html" %}
 {% endblock %}
 
 {% block extra_js %}

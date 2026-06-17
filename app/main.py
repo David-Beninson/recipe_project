@@ -4,7 +4,7 @@ from flask import Flask, redirect, url_for, session
 from sqlalchemy import select, text
 from sqlalchemy.orm import selectinload
 from app.database import SessionLocal, engine
-from app.models import Base, User
+from app.database import Base, User
 from app.blueprints import auth_bp, recipes_bp, ai_bp
 
 # Get absolute paths

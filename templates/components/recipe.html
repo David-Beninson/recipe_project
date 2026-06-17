@@ -1,136 +1,133 @@
 {% macro render_recipes(title="My Recipes", recipes=[]) %}
 <div class="recipes-container">
-    <h2>{{ title }}</h2>
-
-    <!-- Recipe counter -->
-    <p class="recipes-count">
-        (Found {{ recipes|length }} recipe{{ 's' if recipes|length != 1 else '' }})
-    </p>
-
-    <!-- Recipe List -->
-    {% for recipe in recipes %}
-    <div class="recipe-item"
-        data-prep-time="{% if recipe.readyInMinutes is defined and recipe.readyInMinutes is not none %}{{ recipe.readyInMinutes }}{% elif recipe.ready_in_minutes is defined and recipe.ready_in_minutes is not none %}{{ recipe.ready_in_minutes }}{% else %}9999{% endif %}"
-        data-dish-types="{% if recipe.dishTypes is defined and recipe.dishTypes is not none %}{{ recipe.dishTypes|join(',')|lower }}{% elif recipe.dish_types is defined and recipe.dish_types is not none %}{{ recipe.dish_types|join(',')|lower }}{% endif %}"
-        data-vegetarian="{% if recipe.vegetarian is defined and recipe.vegetarian %}true{% else %}false{% endif %}"
-        data-vegan="{% if recipe.vegan is defined and recipe.vegan %}true{% else %}false{% endif %}"
-        data-gluten-free="{% if recipe.glutenFree is defined and recipe.glutenFree %}true{% elif recipe.gluten_free is defined and recipe.gluten_free %}true{% else %}false{% endif %}">
-
-        <!-- Recipe Main Card Header (Always Visible) -->
-        <div class="recipe-card-header">
-            <!-- Recipe Image -->
-            {% if recipe.image %}
-            <img src="{{ recipe.image }}" alt="{{ recipe.title }}" class="recipe-card-image">
-            {% endif %}
-
-            <div class="recipe-card-main-info">
-                <!-- Recipe Title -->
-                <h3 class="recipe-card-title">{{ recipe.title }}</h3>
-
-                <!-- Dietary Badges (Vegan, Vegetarian, etc.) -->
-                <div class="recipe-badges">
-                    {% if recipe.vegetarian is defined and recipe.vegetarian %}
-                    <span class="badge badge-vegetarian">🌱 Vegetarian</span>
-                    {% endif %}
-                    {% if recipe.vegan is defined and recipe.vegan %}
-                    <span class="badge badge-vegan">🌿 Vegan</span>
-                    {% endif %}
-                    {% if (recipe.glutenFree is defined and recipe.glutenFree) or (recipe.gluten_free is defined and
-                    recipe.gluten_free) %}
-                    <span class="badge badge-gluten-free">🌾 Gluten Free</span>
-                    {% endif %}
-                    {% if recipe.isKosher is defined and recipe.isKosher %}
-                    <span class="badge badge-kosher">✡️ Kosher</span>
-                    {% endif %}
-                </div>
-
-                <!-- Recipe Difficulty based on preparation time -->
-                <div class="recipe-difficulty">
-                    {% set mins = recipe.readyInMinutes or recipe.ready_in_minutes or 0 %}
-                    {% if mins > 0 %}
-                    {% if mins <= 20 %} <span class="difficulty-tag easy">🟢 Easy ({{ mins }} mins)</span>
-                        {% elif mins <= 45 %} <span class="difficulty-tag medium">🟡 Medium ({{ mins }} mins)</span>
-                            {% else %}
-                            <span class="difficulty-tag hard">🔴 Hard ({{ mins }} mins)</span>
-                            {% endif %}
-                            {% else %}
-                            <span class="difficulty-tag unknown">⚪ Standard</span>
-                            {% endif %}
-                </div>
-            </div>
-
-            <!-- Visual indicator to show that the card is expandable (clickable) -->
-            <div class="recipe-expand-arrow">▼</div>
-        </div>
-
-        <!-- Hover Dropdown Overlay (displays on top of other elements when hovered) -->
-        <div class="recipe-dropdown-overlay">
-            <div class="recipe-dropdown-content">
-                <!-- Short Description / Recipe Information -->
-                <div class="recipe-info">
-                    <!-- Like Count -->
-                    <p>
-                        <strong>Likes:</strong>
-                        <span class="recipe-likes-count" data-recipe-id="{{ recipe.id }}">
-                            {% if recipe.likes is not none and recipe.likes is defined %}
-                            {{ recipe.likes }}
-                            {% elif recipe.aggregateLikes is not none and recipe.aggregateLikes is defined %}
-                            {{ recipe.aggregateLikes }}
-                            {% else %}
-                            0
-                            {% endif %}
-                        </span>
-                    </p>
-
-                    <!-- Ingredients List based on structure -->
-                    {% if recipe.usedIngredients or recipe.missedIngredients %}
-                    <!-- Used Ingredients -->
-                    {% if recipe.usedIngredients %}
-                    <h4>Used Ingredients ({{ recipe.usedIngredientCount }}):</h4>
-                    <ul>
-                        {% for ingredient in recipe.usedIngredients %}
-                        <li>{{ ingredient.original }}</li>
-                        {% endfor %}
-                    </ul>
-                    {% endif %}
-
-                    <!-- Missed Ingredients -->
-                    {% if recipe.missedIngredients %}
-                    <h4>Missed Ingredients ({{ recipe.missedIngredientCount }}):</h4>
-                    <ul>
-                        {% for ingredient in recipe.missedIngredients %}
-                        <li>{{ ingredient.original }}</li>
-                        {% endfor %}
-                    </ul>
-                    {% endif %}
-                    {% elif recipe.extendedIngredients %}
-                    <!-- Extended Ingredients -->
-                    <h4>Ingredients ({{ recipe.extendedIngredients|length }}):</h4>
-                    <ul>
-                        {% for ingredient in recipe.extendedIngredients %}
-                        <li>{{ ingredient.original }}</li>
-                        {% endfor %}
-                    </ul>
-                    {% endif %}
-                </div>
-
-                <!-- Action Button -->
-                <div class="recipe-action">
-                    <a class="btn btn-primary" href="{{ url_for('recipes.cooking_steps', recipe_id=recipe.id) }}">
-                        Instructions
-                    </a>
-                    &ensp;
-                    {% if recipe.user_id and recipe.user_id == session.get('user_id') %}
-                    <a class="btn btn-secondary" href="{{ url_for('recipes.home', tab='edit', recipe_id=recipe.id) }}">
-                        Edit Recipe
-                    </a>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
+    <div class="recipes-header">
+        <h2>{{ title }}</h2>
+        <span class="recipes-count">{{ recipes|length }} recipe{{ 's' if recipes|length != 1 else '' }}</span>
     </div>
-    {% else %}
-    <p class="no-results">No recipes were found.</p>
-    {% endfor %}
+
+    <!-- 2-column recipe grid -->
+    <div class="recipe-grid">
+        {% for recipe in recipes %}
+        <div class="recipe-item"
+            data-prep-time="{% if recipe.readyInMinutes is defined and recipe.readyInMinutes is not none %}{{ recipe.readyInMinutes }}{% elif recipe.ready_in_minutes is defined and recipe.ready_in_minutes is not none %}{{ recipe.ready_in_minutes }}{% else %}9999{% endif %}"
+            data-dish-types="{% if recipe.dishTypes is defined and recipe.dishTypes is not none %}{{ recipe.dishTypes|join(',')|lower }}{% elif recipe.dish_types is defined and recipe.dish_types is not none %}{{ recipe.dish_types|join(',')|lower }}{% endif %}"
+            data-vegetarian="{% if recipe.vegetarian is defined and recipe.vegetarian %}true{% else %}false{% endif %}"
+            data-vegan="{% if recipe.vegan is defined and recipe.vegan %}true{% else %}false{% endif %}"
+            data-gluten-free="{% if recipe.glutenFree is defined and recipe.glutenFree %}true{% elif recipe.gluten_free is defined and recipe.gluten_free %}true{% else %}false{% endif %}">
+
+            <!-- Card header -->
+            <div class="recipe-card-header">
+                {% if recipe.image %}
+                <img src="{{ recipe.image }}" alt="{{ recipe.title }}" class="recipe-card-image">
+                {% endif %}
+
+                <div class="recipe-card-main-info">
+                    <h3 class="recipe-card-title">{{ recipe.title }}</h3>
+
+                    <div class="recipe-badges">
+                        {% if recipe.vegetarian is defined and recipe.vegetarian %}
+                        <span class="badge badge-vegetarian">🌱 Vegetarian</span>
+                        {% endif %}
+                        {% if recipe.vegan is defined and recipe.vegan %}
+                        <span class="badge badge-vegan">🌿 Vegan</span>
+                        {% endif %}
+                        {% if (recipe.glutenFree is defined and recipe.glutenFree) or (recipe.gluten_free is defined and
+                        recipe.gluten_free) %}
+                        <span class="badge badge-gluten-free">🌾 Gluten Free</span>
+                        {% endif %}
+                        {% if recipe.isKosher is defined and recipe.isKosher %}
+                        <span class="badge badge-kosher">✡️ Kosher</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="recipe-difficulty">
+                        {% set mins = recipe.readyInMinutes or recipe.ready_in_minutes or 0 %}
+                        {% if mins > 0 %}
+                        {% if mins <= 20 %}<span class="difficulty-tag easy">🟢 {{ mins }}m</span>
+                            {% elif mins <= 45 %}<span class="difficulty-tag medium">🟡 {{ mins }}m</span>
+                                {% else %}<span class="difficulty-tag hard">🔴 {{ mins }}m</span>
+                                {% endif %}
+                                {% else %}
+                                <span class="difficulty-tag unknown">⚪ Quick</span>
+                                {% endif %}
+                    </div>
+                </div>
+
+                <div class="recipe-expand-arrow">▼</div>
+            </div>
+
+            <!-- Styled dropdown — shown when card is active -->
+            <div class="recipe-dropdown-overlay">
+                <div class="recipe-dropdown-inner">
+
+                    <!-- Likes pill -->
+                    <div class="recipe-meta-row">
+                        <span class="recipe-likes">
+                            ❤️
+                            <span class="recipe-likes-count" data-recipe-id="{{ recipe.id }}">
+                                {% if recipe.likes is not none and recipe.likes is defined %}{{ recipe.likes }}
+                                {% elif recipe.aggregateLikes is not none and recipe.aggregateLikes is defined %}{{
+                                recipe.aggregateLikes }}
+                                {% else %}0{% endif %}
+                            </span> likes
+                        </span>
+                    </div>
+
+                    <!-- Ingredients in two columns -->
+                    {% if recipe.usedIngredients or recipe.missedIngredients %}
+                    <div class="recipe-ing-cols">
+                        {% if recipe.usedIngredients %}
+                        <div class="recipe-ing-group">
+                            <h4>Used Ingredients ({{ recipe.usedIngredientCount }})</h4>
+                            <ul>
+                                {% for ingredient in recipe.usedIngredients %}
+                                <li>{{ ingredient.original }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                        {% if recipe.missedIngredients %}
+                        <div class="recipe-ing-group">
+                            <h4>Missing Ingredients ({{ recipe.missedIngredientCount }})</h4>
+                            <ul>
+                                {% for ingredient in recipe.missedIngredients %}
+                                <li>{{ ingredient.original }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% elif recipe.extendedIngredients %}
+                    <div class="recipe-ing-group">
+                        <h4>Ingredients ({{ recipe.extendedIngredients|length }})</h4>
+                        <ul style="column-count:2;column-gap:16px;">
+                            {% for ingredient in recipe.extendedIngredients %}
+                            <li>{{ ingredient.original }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    <!-- Actions -->
+                    <div class="recipe-action">
+                        <a class="btn btn-primary" href="{{ url_for('recipes.cooking_steps', recipe_id=recipe.id) }}">
+                            View Instructions
+                        </a>
+                        {% if recipe.user_id and recipe.user_id == session.get('user_id') %}
+                        <a class="btn btn-secondary"
+                            href="{{ url_for('recipes.home', tab='edit', recipe_id=recipe.id) }}">
+                            Edit Recipe
+                        </a>
+                        {% endif %}
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+        {% else %}
+        <p class="no-results">No recipes were found.</p>
+        {% endfor %}
+    </div>
 </div>
 {% endmacro %}
