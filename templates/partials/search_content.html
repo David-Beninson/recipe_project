@@ -51,11 +51,11 @@
     <div class="recipes">
         {{ render_recipes(title="Search Results", recipes=recipes) }}
         
-        <div class="ai-gen-wrapper" style="margin-top: 24px; width: 100%;">
+        <div class="ai-gen-wrapper">
             {{ render_ai_generator(ingredients) }}
         </div>
 
-        <div class="search-again-container" style="display: flex; justify-content: center; margin-top: 28px; width: 100%;">
+        <div class="search-again-container">
             <button type="button" id="btn-new-search" class="btn btn-secondary">New Search</button>
         </div>
     </div>

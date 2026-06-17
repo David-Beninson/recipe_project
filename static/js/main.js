@@ -131,3 +131,26 @@ document.addEventListener('click', (event) => {
         aiIngredientsInput.value = '';
     }
 });
+
+// Auto-dismiss success alerts after 5 seconds
+function setupAlertDismissal() {
+    document.querySelectorAll('.alert-success').forEach(alert => {
+        if (alert.dataset.dismissedSetup) return;
+        alert.dataset.dismissedSetup = "true";
+        
+        setTimeout(() => {
+            alert.style.transition = 'opacity 0.5s ease, transform 0.5s ease, margin 0.5s ease, padding 0.5s ease';
+            alert.style.opacity = '0';
+            alert.style.transform = 'translateY(-8px)';
+            setTimeout(() => {
+                alert.remove();
+            }, 500);
+        }, 5000);
+    });
+}
+
+// Initialize alert dismissal
+setupAlertDismissal();
+document.addEventListener('DOMContentLoaded', setupAlertDismissal);
+document.addEventListener('htmx:afterSwap', setupAlertDismissal);
+

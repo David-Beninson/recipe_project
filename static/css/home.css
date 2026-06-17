@@ -378,11 +378,18 @@
     width: 100%;
 }
 
+.recipe-builder-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 22px;
+}
+
 .recipe-builder-title {
     font-size: 20px;
     font-weight: 800;
     color: var(--text);
-    margin-bottom: 22px;
+    margin-bottom: 0;
     letter-spacing: -0.3px;
 }
 

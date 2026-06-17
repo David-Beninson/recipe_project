@@ -243,6 +243,18 @@ h1.recipe-title {
     cursor: pointer;
 }
 
+.ai-gen-wrapper {
+    margin-top: 24px;
+    width: 100%;
+}
+
+.search-again-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 28px;
+    width: 100%;
+}
+
 /* RESPONSIVE — PAGES */
 @media (max-width: 768px) {
     .search-container,

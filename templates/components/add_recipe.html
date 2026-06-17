@@ -1,5 +1,17 @@
 {% macro add_recipes(recipe=None) %}
-<h3 class="recipe-builder-title">{% if recipe %}Edit Recipe{% else %}Add Recipe{% endif %}</h3>
+<div class="recipe-builder-header">
+    <h3 class="recipe-builder-title">{% if recipe %}Edit Recipe{% else %}Add Recipe{% endif %}</h3>
+    {% if recipe %}
+    <a href="{{ url_for('recipes.home', tab='my_recipes') }}" 
+       class="btn btn-muted" 
+       hx-get="{{ url_for('recipes.home', tab='my_recipes') }}" 
+       hx-target="#page-content" 
+       hx-push-url="true" 
+       hx-indicator="#page-loader">
+        Cancel
+    </a>
+    {% endif %}
+</div>
 <form id="add-recipe-form"
     action="{% if recipe %}{{ url_for('recipes.edit_recipe', recipe_id=recipe.id) }}{% else %}{{ url_for('recipes.add_recipe') }}{% endif %}"
     method="POST">

@@ -38,24 +38,61 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    if (prepopulatedInstructionsEl && instructionsZone) {
-        instructionsZone.innerHTML = prepopulatedInstructionsEl.innerHTML;
-        instructionsZone.querySelectorAll('.ing-qty-input').forEach(input => {
-            const ingId = input.getAttribute('data-id');
-            let ing = ingredientsList.find(i => i.id === ingId);
-            if (!ing && input.parentElement) {
-                const text = input.parentElement.textContent.replace(input.value, '').trim().toLowerCase();
-                ing = ingredientsList.find(i => text.includes(i.name.toLowerCase()));
-                if (ing) {
-                    input.setAttribute('data-id', ing.id);
-                    input.parentElement.setAttribute('data-id', ing.id);
+    function autoMatchIngredients() {
+        let content = instructionsZone.innerHTML;
+        const sortedIngs = [...ingredientsList].sort((a, b) => b.name.length - a.name.length);
+        const fillers = ['fresh', 'organic', 'raw', 'large', 'small', 'cloves', 'sliced', 'chopped', 'diced', 'peeled', 'powder'];
+        
+        sortedIngs.forEach(ing => {
+            const words = ing.name.toLowerCase().replace(/[*(),]/g, '').trim().split(/\s+/);
+            const keyWords = words.filter(w => !fillers.includes(w) && w.length > 2);
+            
+            if (keyWords.length === 0) {
+                keyWords.push(words[words.length - 1]);
+            }
+            
+            for (const keyWord of keyWords) {
+                const regex = new RegExp('\\b' + keyWord + '\\b', 'i');
+                if (regex.test(content)) {
+                    content = content.replace(regex, (match) => {
+                        return `<span class="inline-ing green" contenteditable="false" data-id="${ing.id}">` +
+                               `<span class="ing-name">${match}</span>` +
+                               `<input type="number" class="ing-qty-input" data-id="${ing.id}" value="${ing.qty}" min="0" max="${ing.qty}" step="any" oninput="updateTotals()">` +
+                               `<span class="ing-unit">${ing.unitString}</span>` +
+                               `</span>`;
+                    });
+                    break;
                 }
             }
-            if (ing && (input.value === "0" || input.value === "")) {
-                input.value = ing.qty;
-                input.setAttribute('value', ing.qty);
-            }
         });
+        instructionsZone.innerHTML = content;
+    }
+
+    if (prepopulatedInstructionsEl && instructionsZone) {
+        instructionsZone.innerHTML = prepopulatedInstructionsEl.innerHTML;
+        
+        // Auto-match ingredients if instructions are loaded as plain text (no inline tag styling present)
+        const hasInlineIngs = instructionsZone.querySelector('.inline-ing') !== null;
+        if (!hasInlineIngs && ingredientsList.length > 0) {
+            autoMatchIngredients();
+        } else {
+            instructionsZone.querySelectorAll('.ing-qty-input').forEach(input => {
+                const ingId = input.getAttribute('data-id');
+                let ing = ingredientsList.find(i => i.id === ingId);
+                if (!ing && input.parentElement) {
+                    const text = input.parentElement.textContent.replace(input.value, '').trim().toLowerCase();
+                    ing = ingredientsList.find(i => text.includes(i.name.toLowerCase()));
+                    if (ing) {
+                        input.setAttribute('data-id', ing.id);
+                        input.parentElement.setAttribute('data-id', ing.id);
+                    }
+                }
+                if (ing && (input.value === "0" || input.value === "")) {
+                    input.value = ing.qty;
+                    input.setAttribute('value', ing.qty);
+                }
+            });
+        }
     }
 
     // Handle file input name display change and image preview

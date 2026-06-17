@@ -41,6 +41,7 @@ def home():
     tab_title = ""
     no_recipes_message = ""
     has_recipes_total = False
+    recipe_obj = None
 
     try:
         with SessionLocal() as db:
@@ -104,6 +105,14 @@ def home():
                             if recipe_id not in seen_ids:
                                 seen_ids.add(recipe_id)
                                 current_recipes.append(recipe_data)
+
+                elif active_tab == 'edit':
+                    # Fetch recipe details to populate the edit form
+                    recipe_id_val = request.args.get('recipe_id', type=int)
+                    if recipe_id_val:
+                        recipe_obj = recipe_service.get_recipe_details(recipe_id_val, db)
+                        if recipe_obj:
+                            recipe_obj['id'] = recipe_id_val
             
             # Apply user dietary/filtering choices to dashboard list
             current_recipes = _filter_helper(current_recipes, filters)
@@ -122,7 +131,7 @@ def home():
         tab_title=tab_title,
         no_recipes_message=no_recipes_message,
         has_recipes_total=has_recipes_total,
-        recipe=None,
+        recipe=recipe_obj,
         **filters
     )
 
