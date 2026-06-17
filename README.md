@@ -12,28 +12,13 @@ A recipe search and AI-assisted kitchen helper built with **Flask**, **Jinja2**,
 
 ## App Preview
 
-<table width="100%">
-  <tr>
-    <td width="50%" align="center" valign="top">
-      <b>Dashboard</b><br>
-      <img src="images/dashboard.png" alt="Dashboard" style="border-radius: 8px; border: 1px solid #e1e4e8; width: 100%; margin-top: 8px;">
-    </td>
-    <td width="50%" align="center" valign="top">
-      <b>Find & Ask AI</b><br>
-      <img src="images/search_ai.png" alt="Find & Ask AI" style="border-radius: 8px; border: 1px solid #e1e4e8; width: 100%; margin-top: 8px;">
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" align="center" valign="top">
-      <b>Recipe Steps & Substitutes</b><br>
-      <img src="images/recipe_detail.png" alt="Recipe Steps" style="border-radius: 8px; border: 1px solid #e1e4e8; width: 100%; margin-top: 8px;">
-    </td>
-    <td width="50%" align="center" valign="top">
-      <b>Recipe Builder (Drag & Drop)</b><br>
-      <img src="images/recipe_builder.png" alt="Recipe Builder" style="border-radius: 8px; border: 1px solid #e1e4e8; width: 100%; margin-top: 8px;">
-    </td>
-  </tr>
-</table>
+| **Dashboard** | **Find & Ask AI** |
+| :---: | :---: |
+| ![Dashboard](images/dashboard.png) | ![Find & Ask AI](images/search_ai.png) |
+
+| **Recipe Steps** | **Recipe Builder** |
+| :---: | :---: |
+| ![Recipe Steps](images/recipe_detail.png) | ![Recipe Builder](images/recipe_builder.png) |
 
 ---
 
