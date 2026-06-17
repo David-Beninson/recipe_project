@@ -83,3 +83,32 @@ document.addEventListener('click', (event) => {
         form.submit();
     }
 });
+
+// Handle "New Search" button click to show the search card again, clear inputs, and hide results
+document.addEventListener('click', (event) => {
+    const btnNewSearch = event.target.closest('#btn-new-search');
+    if (!btnNewSearch) return;
+
+    const searchCard = document.querySelector('.search-card');
+    const recipesContainer = document.querySelector('.recipes');
+
+    // Show the search inputs card again
+    if (searchCard) {
+        searchCard.classList.remove('hidden');
+    }
+    
+    // Hide all search results and the AI custom generator card
+    if (recipesContainer) {
+        recipesContainer.classList.add('hidden');
+    }
+
+    // Clear the search query inputs so the user starts fresh
+    const ingredientsInput = document.getElementById('ingredients');
+    if (ingredientsInput) {
+        ingredientsInput.value = '';
+    }
+    const aiIngredientsInput = document.getElementById('ai-ingredients-input');
+    if (aiIngredientsInput) {
+        aiIngredientsInput.value = '';
+    }
+});

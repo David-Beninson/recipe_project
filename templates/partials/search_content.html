@@ -3,7 +3,7 @@
 {% from "components/filters.html" import render_filters %}
 
 <section class="search-container">
-    <div class="search-card">
+    <div class="search-card {% if recipes %}hidden{% endif %}">
         <h1>🔍 Find Recipes</h1>
 
         <!-- Search Form -->
@@ -46,13 +46,18 @@
         {% endwith %}
     </div>
 
-    <!-- AI Generation Component -->
-    {{ render_ai_generator(ingredients) }}
-
     <!-- Search Results -->
     {% if recipes %}
     <div class="recipes">
         {{ render_recipes(title="Search Results", recipes=recipes) }}
+        
+        <div class="ai-gen-wrapper" style="margin-top: 24px; width: 100%;">
+            {{ render_ai_generator(ingredients) }}
+        </div>
+
+        <div class="search-again-container" style="display: flex; justify-content: center; margin-top: 28px; width: 100%;">
+            <button type="button" id="btn-new-search" class="btn btn-secondary">New Search</button>
+        </div>
     </div>
     {% endif %}
 </section>
