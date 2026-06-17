@@ -18,12 +18,10 @@
 
 {% macro render_ai_multi_substituter(recipe_id) %}
 <div class="ai-multi-replace-container">
-    <!-- Toggle Selection Mode Button -->
     <button type="button" id="btn-toggle-select-mode" class="btn btn-secondary">
         Select & swap ingredients
     </button>
 
-    <!-- Action Card (hidden initially) -->
     <div id="ai-multi-replace-card" class="ai-multi-replace-card">
         <p>
             Select ingredients from the list, then click to remake your recipe:
@@ -47,7 +45,7 @@
         Ask AI for Substitute
     </button>
     <div id="ai-quick-recommendation">
-        <strong>🤖 AI Recommendation:</strong>
+        <strong>AI Recommendation:</strong>
         <p id="ai-quick-recommendation-text"></p>
     </div>
 </div>
