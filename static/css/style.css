@@ -3,9 +3,7 @@
 @import url('./components.css');
 @import url('./home.css');
 
-/* ════════════════════════════════════════════════
-   PAGES — Search / Settings / Cooking Steps
-════════════════════════════════════════════════ */
+/* PAGES — Search / Settings / Cooking Steps */
 
 /* Shared page container */
 .page-card-container {
@@ -66,9 +64,7 @@
     margin-bottom: 24px;
 }
 
-/* ════════════════════════════════════════════════
-   COOKING STEPS (Recipe Detail)
-════════════════════════════════════════════════ */
+/* COOKING STEPS (Recipe Detail) */
 .recipe-detail-container {
     max-width: 800px;
     margin: 40px auto;
@@ -186,9 +182,7 @@ h1.recipe-title {
 
 .instructions { font-size: 15px; line-height: 1.9; color: var(--text-2); }
 
-/* ════════════════════════════════════════════════
-   AI WIDGETS
-════════════════════════════════════════════════ */
+/* AI WIDGETS */
 .ai-generation-card {
     background: linear-gradient(135deg, var(--violet-pale) 0%, #ede9fe 100%);
     border: 1.5px solid rgba(124,58,237,0.2);
@@ -249,9 +243,7 @@ h1.recipe-title {
     cursor: pointer;
 }
 
-/* ════════════════════════════════════════════════
-   RESPONSIVE — PAGES
-════════════════════════════════════════════════ */
+/* RESPONSIVE — PAGES */
 @media (max-width: 768px) {
     .search-container,
     .settings-container,

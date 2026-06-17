@@ -2,9 +2,7 @@
 
 @view-transition { navigation: auto; }
 
-/* ════════════════════════════════════════════════
-   DESIGN TOKENS
-════════════════════════════════════════════════ */
+/* DESIGN TOKENS */
 :root {
     --red:          #e74c3c;
     --red-dark:     #c0392b;
@@ -51,9 +49,7 @@
     --nav-height: 64px;
 }
 
-/* ════════════════════════════════════════════════
-   RESET & BASE
-════════════════════════════════════════════════ */
+/* RESET & BASE */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 
@@ -70,9 +66,7 @@ a { color: inherit; text-decoration: none; transition: var(--t); }
 img { max-width: 100%; display: block; }
 ul { list-style: none; }
 
-/* ════════════════════════════════════════════════
-   GLOBAL LAYOUT SHELL
-════════════════════════════════════════════════ */
+/* GLOBAL LAYOUT SHELL */
 .main-content { display: flex; flex-direction: column; min-height: calc(100vh - var(--nav-height)); }
 
 /* Consistent centered wrapper used across all pages */
@@ -83,9 +77,7 @@ ul { list-style: none; }
     padding: 0 24px;
 }
 
-/* ════════════════════════════════════════════════
-   FLASH MESSAGES
-════════════════════════════════════════════════ */
+/* FLASH MESSAGES */
 .flash-messages {
     padding: 16px 24px 0;
     max-width: 1000px;
@@ -117,9 +109,7 @@ ul { list-style: none; }
 .alert-warning  { background: var(--warning-pale); color: #92400e; border-color: #fde68a; }
 .alert-info     { background: var(--violet-pale);  color: var(--violet);   border-color: #ddd6fe; }
 
-/* ════════════════════════════════════════════════
-   HTMX PAGE TRANSITION
-════════════════════════════════════════════════ */
+/* HTMX PAGE TRANSITION */
 #page-content {
     animation: page-in 0.22s var(--ease);
 }
@@ -129,9 +119,7 @@ ul { list-style: none; }
     to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ════════════════════════════════════════════════
-   NAVBAR
-════════════════════════════════════════════════ */
+/* NAVBAR */
 #main-nav {
     position: sticky;
     top: 0;
@@ -188,9 +176,7 @@ ul { list-style: none; }
 .nav-links a[href*="logout"] { color: var(--text-muted); }
 .nav-links a[href*="logout"]:hover { background: #fee2e2; color: var(--red-dark); }
 
-/* ════════════════════════════════════════════════
-   HTMX LOADER
-════════════════════════════════════════════════ */
+/* HTMX LOADER */
 .page-loader { display: none; position: fixed; inset: 0; z-index: 9999; pointer-events: none; }
 .page-loader.htmx-request { display: block; }
 
@@ -247,9 +233,7 @@ ul { list-style: none; }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ════════════════════════════════════════════════
-   UTILITIES
-════════════════════════════════════════════════ */
+/* UTILITIES */
 .hidden,
 #recipe-image,
 #file-name-display,

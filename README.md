@@ -4,13 +4,13 @@ A recipe search and AI-assisted kitchen helper built with **Flask**, **Jinja2**,
 
 ---
 
-## 🚀 Key Features
+## Key Features
 
-### 🔍 Recipe Search & Customization
+### Recipe Search & Customization
 - **Smart Search**: Search for recipes by ingredients with a configurable quantity limit (1–5 results).
 - **Dashboard Tabs**: Browse recipes via dedicated tabs — *Searched*, *My Recipes*, *Liked*, *All Recipes*.
 - **Filter Bar**: Filter by dish type, max cooking time, and dietary flags (Vegetarian, Vegan, Gluten-Free, Kosher).
-- **User Settings**: Persistent default preferences saved per user and auto-applied to searches.
+- **Default Filter Settings**: Persistent default preferences saved per user and auto-applied to searches.
 - **Recipe Builder**: Create and edit custom recipes with drag-and-drop ingredient management, rich text instructions, and image upload.
 - **Like System**: Toggle recipe likes with optimistic UI updates — instant feedback, auto-rollback on failure.
 
@@ -19,7 +19,7 @@ A recipe search and AI-assisted kitchen helper built with **Flask**, **Jinja2**,
 - **Adaptive Ingredient Substitution**: Select ingredients and let AI remake the recipe around alternatives.
 - **Quick AI Suggestions**: Get a rapid substitute recommendation for any single ingredient.
 
-### ⚡ Partial Page Updates (HTMX)
+### Partial Page Updates (HTMX)
 - Navigation between Home, Search, and Settings swaps only the `#page-content` div — no full browser refresh.
 - Tab switching within the dashboard reloads only recipe content.
 - Animated loading bar + spinner appear during any HTMX request.
@@ -137,11 +137,9 @@ DATABASE_USERNAME=your_db_user
 DATABASE_PASSWORD=your_db_password
 DATABASE_NAME=recipe_db
 SECRET_KEY=your_secret_key
-ALGORITHM=HS256
 SPOONACULAR_API_KEY=your_spoonacular_api_key
 SPOONACULAR_URL=https://api.spoonacular.com/recipes/findByIngredients
 AI_URL=http://localhost:11434/chat/completions
-BACKEND_URL=http://127.0.0.1:5000
 ```
 
 > Settings are validated at startup via Pydantic Settings.
@@ -172,7 +170,7 @@ All recipe and AI routes are protected by the `@login_required` decorator.
 
 ---
 
-## 🍳 Routes Reference
+## Routes Reference
 
 ### Recipe Routes
 

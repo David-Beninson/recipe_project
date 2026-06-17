@@ -1,8 +1,6 @@
 /* components.css — Buttons, Forms, Badges, Alerts */
 
-/* ════════════════════════════════════════════════
-   BUTTONS
-════════════════════════════════════════════════ */
+/* BUTTONS */
 .btn {
     display: inline-flex;
     align-items: center;
@@ -62,9 +60,7 @@
 }
 .btn-muted:hover { background: var(--border); color: var(--text); }
 
-/* ════════════════════════════════════════════════
-   FORM CONTROLS
-════════════════════════════════════════════════ */
+/* FORM CONTROLS */
 .form-group {
     display: flex;
     flex-direction: column;
@@ -115,9 +111,7 @@ select.filter-input {
 
 .search-form { display: flex; flex-direction: column; gap: 4px; }
 
-/* ════════════════════════════════════════════════
-   BADGES
-════════════════════════════════════════════════ */
+/* BADGES */
 .badge {
     display: inline-flex;
     align-items: center;
@@ -147,9 +141,7 @@ select.filter-input {
 .difficulty-tag.hard    { background: #fee2e2; color: #991b1b; }
 .difficulty-tag.unknown { background: var(--surface-2); color: var(--text-muted); }
 
-/* ════════════════════════════════════════════════
-   NO RESULTS
-════════════════════════════════════════════════ */
+/* NO RESULTS */
 .no-recipes {
     background: var(--surface);
     border: 1.5px dashed var(--border);
