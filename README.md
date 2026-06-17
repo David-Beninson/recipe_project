@@ -2,6 +2,39 @@
 
 A recipe search and AI-assisted kitchen helper built with **Flask**, **Jinja2**, **SQLAlchemy**, and **HTMX** for seamless partial page updates.
 
+<p align="center">
+  <a href="https://recipe-project-pi-seven.vercel.app/">
+    <img src="https://img.shields.io/badge/Live_Demo-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Demo" />
+  </a>
+</p>
+
+---
+
+## App Preview
+
+<table width="100%">
+  <tr>
+    <td width="50%" align="center" valign="top">
+      <b>Dashboard</b><br>
+      <img src="images/dashboard.png" alt="Dashboard" style="border-radius: 8px; border: 1px solid #e1e4e8; width: 100%; margin-top: 8px;">
+    </td>
+    <td width="50%" align="center" valign="top">
+      <b>Find & Ask AI</b><br>
+      <img src="images/search_ai.png" alt="Find & Ask AI" style="border-radius: 8px; border: 1px solid #e1e4e8; width: 100%; margin-top: 8px;">
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center" valign="top">
+      <b>Recipe Steps & Substitutes</b><br>
+      <img src="images/recipe_detail.png" alt="Recipe Steps" style="border-radius: 8px; border: 1px solid #e1e4e8; width: 100%; margin-top: 8px;">
+    </td>
+    <td width="50%" align="center" valign="top">
+      <b>Recipe Builder (Drag & Drop)</b><br>
+      <img src="images/recipe_builder.png" alt="Recipe Builder" style="border-radius: 8px; border: 1px solid #e1e4e8; width: 100%; margin-top: 8px;">
+    </td>
+  </tr>
+</table>
+
 ---
 
 ## Key Features
@@ -52,6 +85,7 @@ Routes detect `HX-Request: true` headers and return lightweight partials instead
 
 ```
 recipe_project/
+├── images/                         # App preview screenshots for README
 ├── app/
 │   ├── config.py                   # Pydantic settings loaded from .env
 │   ├── main.py                     # Flask entry point, blueprint registration, DB init
