@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     
     # URL for AI recipe generator service
     ai_url: str
+    model: str
+    ai_api_key: str
     
     # Configure Pydantic to read from .env and ignore any unrecognized/extra fields
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")

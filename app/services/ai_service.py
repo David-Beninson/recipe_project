@@ -15,12 +15,11 @@ def _get_recipe_by_id(recipe_id: int, db) -> Optional[models.Recipe]:
         print(f"Error querying recipe by ID {recipe_id}: {e}")
         return None
 
-def _call_ai_api(system_prompt: str, user_prompt: str) -> dict:
+def _call_ai_api(user_prompt: str) -> dict:
     """Helper to call the configured OpenAI-compatible completions API."""
     payload = {
-        "model": "qwen2.5:3b",
+        "model": settings.model,
         "messages": [
-            {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}
         ],
         "temperature": 0.2
@@ -29,7 +28,10 @@ def _call_ai_api(system_prompt: str, user_prompt: str) -> dict:
         response = httpx.post(
             settings.ai_url,
             json=payload,
-            headers={"Content-Type": "application/json"},
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {settings.ai_api_key}"
+            },
             timeout=35.0
         )
         if response.status_code != 200:
@@ -107,22 +109,9 @@ def _map_ai_recipe_to_raw_data(ai_data: dict) -> dict:
 def generate_recipe_with_ai(ingredients_str: str, user_id: int, db) -> models.Recipe:
     """Generates a custom recipe from ingredients using AI and saves it to the database."""
     try:
-        system_prompt = (
-            "You are a helpful culinary assistant. Perform TASK 1: Generate a recipe from scratch.\n"
-            "Input: A list of ingredients.\n"
-            "Output: MUST be a valid JSON object matching the SCHEMA below. NO markdown, NO conversational text.\n"
-            "SCHEMA FOR TASK 1:\n"
-            "{\n"
-            '  "title": "string",\n'
-            '  "ingredients": ["string"],\n'
-            '  "instructions": ["string"],\n'
-            '  "prep_time": "string",\n'
-            '  "servings": 4\n'
-            "}"
-        )
-        user_prompt = f"Ingredients available: {ingredients_str}"
+        user_prompt = f"TASK 1: Generate a recipe from scratch.\nIngredients available: {ingredients_str}"
         
-        ai_data = _call_ai_api(system_prompt, user_prompt)
+        ai_data = _call_ai_api(user_prompt)
         raw_data = _map_ai_recipe_to_raw_data(ai_data)
         
         db_recipe = models.Recipe(
@@ -158,22 +147,9 @@ def substitute_ingredient_with_ai(recipe_id: int, ingredient_to_replace: str, us
         
         orig_instructions = orig_recipe.raw_data.get("instructions", "") if orig_recipe.raw_data else ""
 
-        system_prompt = (
-            "You are a helpful culinary assistant. Perform TASK 2: Adapt an existing recipe.\n"
-            "Input: An existing recipe and ingredients to substitute.\n"
-            "Output: MUST be a valid JSON object matching the SCHEMA below. NO markdown, NO conversational text.\n"
-            "SCHEMA FOR TASK 2:\n"
-            "{\n"
-            '  "title": "string",\n'
-            '  "ingredients": ["string"],\n'
-            '  "instructions": ["string"],\n'
-            '  "prep_time": "string",\n'
-            '  "servings": 4\n'
-            "}"
-        )
-        user_prompt = f"Original Recipe Title: {orig_title}\nOriginal Ingredients: {json.dumps(orig_ingredients)}\nOriginal Instructions: {orig_instructions}\nIngredient to Replace: {ingredient_to_replace}"
+        user_prompt = f"TASK 2: Adapt an existing recipe.\nOriginal Recipe Title: {orig_title}\nOriginal Ingredients: {json.dumps(orig_ingredients)}\nOriginal Instructions: {orig_instructions}\nIngredient to Replace: {ingredient_to_replace}"
 
-        ai_data = _call_ai_api(system_prompt, user_prompt)
+        ai_data = _call_ai_api(user_prompt)
         raw_data = _map_ai_recipe_to_raw_data(ai_data)
         
         db_recipe = models.Recipe(
@@ -201,17 +177,11 @@ def get_quick_substitute_from_ai(recipe_id: int, ingredient_to_replace: str, db)
         orig_recipe = _get_recipe_by_id(recipe_id, db)
         recipe_title = orig_recipe.title if orig_recipe else "Recipe"
         
-        system_prompt = (
-            "You are a helpful culinary assistant. Perform TASK 3: Quick ingredient substitute recommendation.\n"
-            "Input: A recipe title and an ingredient to replace.\n"
-            "Output: A quick, professional 1-2 sentence suggestion directly as plain text. Do NOT output JSON or markdown."
-        )
-        user_prompt = f"Recipe: {recipe_title}\nIngredient to replace: {ingredient_to_replace}"
+        user_prompt = f"TASK 3: Quick ingredient substitute recommendation.\nRecipe: {recipe_title}\nIngredient to replace: {ingredient_to_replace}"
         
         payload = {
-            "model": "qwen2.5:3b",
+            "model": settings.model,
             "messages": [
-                {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
             "temperature": 0.5
@@ -220,7 +190,10 @@ def get_quick_substitute_from_ai(recipe_id: int, ingredient_to_replace: str, db)
         response = httpx.post(
             settings.ai_url,
             json=payload,
-            headers={"Content-Type": "application/json"},
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {settings.ai_api_key}"
+            },
             timeout=25.0
         )
         if response.status_code != 200:

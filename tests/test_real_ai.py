@@ -6,7 +6,7 @@ from app.services.ai_service import _call_ai_api
 def test_real_ai_endpoint_connection():
     """Verify that we can reach the configured AI endpoint and it responds, without mocking."""
     payload = {
-        "model": "qwen2.5:3b",
+        "model": "{settings.model}",
         "messages": [
             {"role": "system", "content": "You are a test helper."},
             {"role": "user", "content": "Respond with 'OK'"}
