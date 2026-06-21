@@ -16,13 +16,9 @@ def _get_recipe_by_id(recipe_id: int, db) -> Optional[models.Recipe]:
         return None
 
 def _call_ai_api(user_prompt: str) -> dict:
-    """Helper to call the configured OpenAI-compatible completions API."""
+    """Helper to call the configured dedicated recipes API."""
     payload = {
-        "model": settings.model,
-        "messages": [
-            {"role": "user", "content": user_prompt}
-        ],
-        "temperature": 0.2
+        "question": user_prompt
     }
     try:
         response = httpx.post(
@@ -38,7 +34,7 @@ def _call_ai_api(user_prompt: str) -> dict:
             raise RuntimeError(f"AI API error: {response.text}")
         
         result = response.json()
-        content = result["choices"][0]["message"]["content"].strip()
+        content = result["recipe"].strip()
         
         # Strip markdown json code block wraps if present
         if content.startswith("```"):
@@ -180,11 +176,7 @@ def get_quick_substitute_from_ai(recipe_id: int, ingredient_to_replace: str, db)
         user_prompt = f"TASK 3: Quick ingredient substitute recommendation.\nRecipe: {recipe_title}\nIngredient to replace: {ingredient_to_replace}"
         
         payload = {
-            "model": settings.model,
-            "messages": [
-                {"role": "user", "content": user_prompt}
-            ],
-            "temperature": 0.5
+            "question": user_prompt
         }
         
         response = httpx.post(
@@ -200,7 +192,7 @@ def get_quick_substitute_from_ai(recipe_id: int, ingredient_to_replace: str, db)
             raise RuntimeError(f"AI API error: {response.text}")
         
         result = response.json()
-        return result["choices"][0]["message"]["content"].strip()
+        return result["recipe"].strip()
     except Exception as e:
         print(f"Error fetching quick substitute from AI: {e}")
         return f"Failed to retrieve quick suggestion for {ingredient_to_replace}."
